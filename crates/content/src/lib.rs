@@ -149,7 +149,7 @@ pub fn parse(data: &[u8]) -> Parsed {
 }
 
 /// Read an inline image starting after `BI`: (parameters, data, position after `EI`). `Err` holds
-/// the position after the `EI` of an image whose parameters can't be read.
+/// the position after the `EI` (or the end of the stream) of an image whose parameters can't be read.
 fn inline_image(data: &[u8], pos: usize) -> Result<(Dict, Vec<u8>, usize), usize> {
     let mut lx = Lexer::new(data, pos);
     let mut dict = Dict::new();
@@ -164,11 +164,12 @@ fn inline_image(data: &[u8], pos: usize) -> Result<(Dict, Vec<u8>, usize), usize
             _ => None,
         };
         let Some((k, v)) = entry else {
-            // Without an `EI` after it, the image runs to the end of the stream, as before.
-            return match end_of_image(data, at) {
-                Some((_, end)) => Err(end),
-                None => Ok((dict, Vec::new(), data.len())),
-            };
+            // A stream that ends inside the parameters is cut short, not unreadable: keep what was read.
+            if at >= data.len() {
+                return Ok((dict, Vec::new(), data.len()));
+            }
+            // Without an `EI` after it, the image runs to the end of the stream.
+            return Err(end_of_image(data, at).map_or(data.len(), |(_, end)| end));
         };
         dict.set(k, v);
     }
