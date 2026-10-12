@@ -193,9 +193,7 @@ fn marking_while_searching_does_not_jitter_or_reset_search_state() {
     assert!(h.state().views[0].goto.is_none());
 
     // User draws or marks an annotation on page 0
-    let shape = pdfcraft_engine::Shape::Ink {
-        strokes: vec![vec![[10.0, 10.0], [20.0, 20.0]]],
-    };
+    let shape = pdfcraft_engine::Shape::Ink { strokes: vec![vec![[10.0, 10.0], [20.0, 20.0]]] };
     let stroke = pdfcraft_engine::Edit::AddAnnotation(pdfcraft_engine::NewAnnotation {
         page: 0,
         style: pdfcraft_engine::Style::default_for(&shape),
@@ -206,11 +204,7 @@ fn marking_while_searching_does_not_jitter_or_reset_search_state() {
     h.state_mut().apply_edit(stroke);
 
     // Right after applying the edit, search matches and current match must still be valid
-    assert_eq!(
-        h.state().views[0].find.as_ref().unwrap().current,
-        current_before,
-        "applying an annotation must not wipe current search match"
-    );
+    assert_eq!(h.state().views[0].find.as_ref().unwrap().current, current_before, "applying an annotation must not wipe current search match");
 
     // Let the canvas process the reload
     let reload_deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);

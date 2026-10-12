@@ -3967,7 +3967,8 @@ fn edits_let_go_of_the_previous_working_file() {
         || Edit::AddWatermark { pages: vec![0], settings: Watermark { text: "Draft".into(), ..Watermark::default() }, file: None, replace: false };
     s.apply(id, Edit::RotatePages { pages: vec![1], degrees: 90 }).unwrap();
     // A full refresh, a comment refresh, a content refresh, then undo and redo.
-    let steps: [(&str, Box<dyn Fn(&mut Session)>); 5] = [
+    type Step<'a> = Box<dyn Fn(&mut Session) + 'a>;
+    let steps: [(&str, Step<'_>); 5] = [
         ("rotate", Box::new(|s: &mut Session| s.apply(id, Edit::RotatePages { pages: vec![0], degrees: 90 }).unwrap())),
         ("comment", Box::new(move |s: &mut Session| s.apply(id, comment()).unwrap())),
         ("watermark", Box::new(move |s: &mut Session| s.apply(id, watermark()).unwrap())),
