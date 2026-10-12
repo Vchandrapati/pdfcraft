@@ -1825,6 +1825,21 @@ fn a_line_drawn_twice_is_replaced_everywhere() {
 }
 
 #[test]
+fn a_paragraph_dragged_across_another_leaves_it_alone() {
+    // #1368: each drag is its own edit. Dropping Alpha on Bravo, then dragging it on, treated
+    // Bravo (now under Alpha) as a copy of Alpha and deleted it.
+    let mut doc = text_page("BT /F1 12 Tf 100 700 Td (Alpha line) Tj ET BT /F1 12 Tf 100 500 Td (Bravo line) Tj ET");
+    let down = text::BlockStyle { offset: Some([0.0, -200.0]), ..Default::default() };
+    text::rewrite_block(&mut doc, 0, 0, None, &down).unwrap();
+    let alpha = text::text_blocks(&doc, 0).unwrap().iter().position(|b| b.text == "Alpha line").unwrap();
+    text::rewrite_block(&mut doc, 0, alpha, None, &down).unwrap();
+    let doc = reopen(&doc);
+    let mut texts: Vec<_> = text::text_lines(&doc, 0).unwrap().into_iter().map(|l| l.text).collect();
+    texts.sort();
+    assert_eq!(texts, ["Alpha line", "Bravo line"]);
+}
+
+#[test]
 fn paragraphs_move_and_rewrap_to_a_new_width() {
     let para = "BT /F1 10 Tf 12 TL 100 700 Td (One two three four five six seven) Tj T* (eight nine ten eleven twelve) Tj ET";
     let close = |a: f64, b: f64| (a - b).abs() < 0.5;
