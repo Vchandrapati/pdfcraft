@@ -38,11 +38,13 @@ pub struct TextGlyph {
 /// combining dot (two characters) and leaves `ı` alone, so neither `İSTANBUL` nor `IRMAK` could
 /// be found by typing `istanbul` or `ırmak`. Search can't know the document's language, so the
 /// four are treated as one letter; this only adds matches where an `ı` or `İ` is involved.
+/// Greek sigma's normal and word-final forms (`σ`/`ς`) both fold to `σ`, as does `Σ`.
 pub fn fold_case(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     for c in s.chars() {
         match c {
             'I' | 'i' | '\u{130}' | '\u{131}' => out.push('i'),
+            'Σ' | 'σ' | 'ς' => out.push('σ'),
             _ => out.extend(c.to_lowercase()),
         }
     }
@@ -1792,13 +1794,37 @@ mod tests {
     }
 
     #[test]
+    fn greek_sigma_forms_match_without_changing_exact_search_or_glyph_ranges() {
+        let mut v = Vec::new();
+        word(&mut v, "κόσμος", 10.0, 10.0, 7.0);
+        word(&mut v, "ΚΌΣΜΟΣ", 80.0, 10.0, 7.0);
+        word(&mut v, "σςΣ", 150.0, 10.0, 7.0);
+        let text = layout(v);
+        assert_eq!(text.plain_text(), "κόσμος ΚΌΣΜΟΣ σςΣ");
+        for query in ["κόσμος", "ΚΌΣΜΟΣ"] {
+            assert_eq!(text.find(query), vec![0..6, 6..12]);
+            assert_eq!(text.find_opts(query, false, true), vec![0..6, 6..12]);
+        }
+        for query in ["σ", "ς", "Σ"] {
+            assert_eq!(text.find(query), vec![2..3, 5..6, 8..9, 11..12, 12..13, 13..14, 14..15]);
+            assert!(text.find_opts(query, false, true).is_empty());
+        }
+        assert_eq!(text.find_opts("κόσμος", true, false), vec![0..6]);
+        assert_eq!(text.find_opts("ΚΌΣΜΟΣ", true, false), vec![6..12]);
+        assert_eq!(text.find_opts("ς", true, false), vec![5..6, 13..14]);
+        assert_eq!(text.find_opts_limited("ς", false, false, 2), vec![2..3, 5..6]);
+        assert_eq!(text.line_rects(text.find("κόσμος")[1].clone()), text.line_rects(6..12));
+    }
+
+    #[test]
     fn case_folding_keeps_one_character_per_character() {
-        for s in ["İSTANBUL", "ırmak", "Hello WORLD", "ÇAĞLAR", "Straße", "ΣΟΦΙΑ", "日本語"] {
+        for s in ["İSTANBUL", "ırmak", "Hello WORLD", "ÇAĞLAR", "Straße", "ΣΟΦΙΑ", "Σσς", "日本語"] {
             assert_eq!(fold_case(s).chars().count(), s.chars().count(), "{s}");
         }
         assert_eq!(fold_case("Hello WORLD"), "hello world");
         assert_eq!(fold_case("ÇAĞLAR Şişli"), "çağlar şişli");
         assert_eq!(fold_case("İIıi"), "iiii");
+        assert_eq!(fold_case("Σσς"), "σσσ");
     }
 
     fn g(t: &str, x0: f32, y0: f32, x1: f32) -> TextGlyph {
