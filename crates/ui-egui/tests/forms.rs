@@ -650,3 +650,26 @@ fn overlay_clears_after_fresh_tiles_zoom_then_edit_and_rejected_edit() {
     }
     assert!(!h.state().views[0].forms.unbaked.contains(&("name".to_string(), 0)));
 }
+
+/// A field whose /P is a page number past the document's end (#1307) is listed under
+/// "Unplaced" instead of panicking while the Fields panel labels its page.
+#[test]
+fn the_fields_panel_lists_a_field_on_a_missing_page_as_unplaced() {
+    use egui_kittest::kittest::Queryable;
+    let bytes = pdf_from_objects(&[
+        "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [4 0 R] >> >>",
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 300] /Annots [4 0 R] >>",
+        "<< /Type /Annot /Subtype /Widget /FT /Tx /T (orphan) /Rect [10 10 100 30] /P 99 /F 4 >>",
+    ]);
+    let mut h = Harness::builder().with_size(egui::vec2(1400.0, 900.0)).build_eframe(|_cc| {
+        let mut app = PdfCraftApp::new();
+        app.set_option("language", "en").unwrap();
+        app.open_bytes("orphan.pdf", None, bytes).unwrap();
+        app.set_option("panel", "fields").unwrap();
+        app
+    });
+    h.run_steps(6);
+    h.get_by_label("Unplaced");
+    assert_eq!(h.query_all_by_label("orphan").count(), 1);
+}
