@@ -3756,6 +3756,61 @@ fn recovered_user_passwords_reach_the_renderer_byte_for_byte() {
     assert_eq!(crate::renderer_password(&[0xC7, b'o', b'k']), "Çok");
 }
 
+/// AES-256 passwords as typed, each with its SASLprep form, which ISO 32000-2 keys the file on:
+/// a decomposed é (NFKC composes it), a no-break space (mapped to a space) and fullwidth letters
+/// (what a Japanese IME types in full-width mode; NFKC narrows them). Precomposed "café" is the
+/// control: SASLprep leaves it as it is.
+const SASLPREP_CHANGES: [(&str, &str); 4] =
+    [("cafe\u{301}", "caf\u{E9}"), ("a\u{A0}b", "a b"), ("\u{FF41}\u{FF42}", "ab"), ("caf\u{E9}", "caf\u{E9}")];
+
+#[test]
+fn aes256_open_passwords_that_saslprep_changes_protect_and_reopen_as_typed() {
+    for (typed, prepared) in SASLPREP_CHANGES {
+        let (mut s, id) = session_with(1);
+        // The renderer used to take the password as typed, so the protected file didn't reopen
+        // and the edit was rolled back: "the password is incorrect".
+        s.apply(id, Edit::Protect(protection(Some(typed), None))).unwrap_or_else(|e| panic!("{typed:?}: {e:?}"));
+        assert!(s.get(id).unwrap().info.encrypted, "{typed:?}");
+        assert_eq!(page_texts(&s, id), ["Page 1"], "{typed:?}");
+        let saved = s.save_bytes(id).unwrap();
+        for pw in [typed, prepared] {
+            let mut again = Session::new();
+            let reopened = again.open("x.pdf", None, saved.clone(), Some(pw)).unwrap_or_else(|e| panic!("{typed:?} as {pw:?}: {e:?}"));
+            assert_eq!(page_texts(&again, reopened), ["Page 1"], "{typed:?} as {pw:?}");
+        }
+        assert!(matches!(Session::new().open("x.pdf", None, saved, Some("cafe")), Err(OpenError::WrongPassword)), "{typed:?}");
+    }
+}
+
+#[test]
+fn aes256_files_whose_passwords_saslprep_changes_open_as_typed() {
+    // A fullwidth Ｏ: SASLprep makes the owner password "Owner".
+    let (owner, owner_prepared) = ("\u{FF2F}wner", "Owner");
+    for (typed, prepared) in SASLPREP_CHANGES {
+        // pdfcraft-cos keys the file on the SASLprep forms, as ISO 32000-2 asks.
+        let mut cos = pdfcraft_cos::Document::open(Arc::new(fixture(1))).unwrap();
+        let params = pdfcraft_cos::NewEncryption {
+            algorithm: pdfcraft_cos::Algorithm::Aes256,
+            user_password: typed,
+            owner_password: owner,
+            permissions: -1,
+            encrypt_metadata: true,
+            seed: [7; 32],
+        };
+        cos.set_encryption(&params).unwrap();
+        let bytes = Arc::new(pdfcraft_cos::write_full(&cos, &pdfcraft_cos::SaveOptions::default()).unwrap());
+        let mut s = Session::new();
+        // pdfcraft-cos accepts the password as typed (it applies SASLprep); the renderer used to
+        // refuse it, so the session called it a wrong password.
+        for pw in [typed, prepared, owner, owner_prepared] {
+            let id = s.open("x.pdf", None, bytes.clone(), Some(pw)).unwrap_or_else(|e| panic!("{typed:?} as {pw:?}: {e:?}"));
+            assert_eq!(page_texts(&s, id), ["Page 1"], "{typed:?} as {pw:?}");
+            assert!(s.get(id).unwrap().info.encrypted, "{typed:?} as {pw:?}");
+        }
+        assert!(matches!(s.open("x.pdf", None, bytes, Some("cafe")), Err(OpenError::WrongPassword)), "{typed:?}");
+    }
+}
+
 /// A synthetic phone photo, 400 × 300 px: a white sheet, tilted, on a grey table, with a black
 /// mark in the sheet's top-left corner. Returns the PNG and the sheet's corners in pixels.
 fn camera_photo() -> (Vec<u8>, [[f64; 2]; 4]) {
