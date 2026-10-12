@@ -96,16 +96,15 @@ Copy-Item (Join-Path $Root 'assets\app-icon\LICENSE-document.txt') $Stage
 
 & (Join-Path $PSScriptRoot 'sign.ps1') (Join-Path $Stage 'pdfcraft.exe') (Join-Path $Stage 'pdfcraft-cli.exe')
 
-# OCR models (#103): the app looks in models\ beside pdfcraft.exe. `cargo xtask models` fetches every
-# ATTRIBUTION.toml `kind = "model"` file (verified by SHA-256) with its licence and ATTRIBUTION.txt;
-# the MSI and the portable zip take the whole folder, so new models ship without naming them here.
+# OCR model: `cargo xtask models` stages the pinned English Tesseract BEST data file, its licence and
+# ATTRIBUTION.txt. The Tesseract 5 executable remains a separately installed runtime prerequisite.
 $Models = Join-Path $Stage 'models'
 New-Item -ItemType Directory -Force -Path $Models | Out-Null
 Push-Location $Root
 try { Invoke-Native 'cargo xtask models' { cargo xtask models $Models } } finally { Pop-Location }
 Remove-Item -Force (Join-Path $Models '*.part') -ErrorAction SilentlyContinue
-if (-not (Test-Path (Join-Path $Models 'ATTRIBUTION.txt')) -or -not (Get-ChildItem (Join-Path $Models '*.LICENCE.txt'))) {
-  throw "no OCR models in $Models after cargo xtask models"
+if (-not (Test-Path (Join-Path $Models 'ATTRIBUTION.txt')) -or -not (Test-Path (Join-Path $Models 'eng.traineddata.LICENCE.txt')) -or -not (Test-Path (Join-Path $Models 'eng.traineddata'))) {
+  throw "English Tesseract model, its licence, or ATTRIBUTION.txt is missing from $Models after cargo xtask models"
 }
 
 # ---- MSI ---------------------------------------------------------------------------------------

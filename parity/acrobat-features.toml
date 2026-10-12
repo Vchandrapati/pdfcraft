@@ -6427,7 +6427,7 @@ status = "shipped"
 commands = ["ocr.recognize"]
 tools = ["ocr_recognize", "ocr_status"]
 evidence = ["crates/engine/src/tests.rs::recognize_text_makes_a_scanned_page_searchable", "crates/automation/tests/automation.rs::ocr_tools_make_a_scan_searchable", "crates/ui-egui/tests/ocr.rs::recognize_text_dialog_adds_searchable_text"]
-notes = "ocrs engine (MIT/Apache) with CC-BY-SA models fetched by `cargo xtask models`; the desktop release packages ship them (#103; packaging/env.sh stage_models), the web build does not yet; runs on a worker thread with progress; one undoable step; pages with text are skipped unless asked (ocr.skip-renderable-text)."
+notes = "Tesseract 5 CLI with the pinned English-only `eng.traineddata` BEST model fetched by `cargo xtask models`; the engine must be installed separately. Desktop packages include the model, but the current Flatpak does not bundle the engine and the web build cannot run it; runs on a worker thread with progress; one undoable step; pages with text are skipped unless asked (ocr.skip-renderable-text)."
 
 [[feature]]
 id = "ocr.recognize-range"
@@ -6463,7 +6463,7 @@ status = "partial"
 commands = ["ocr.recognize"]
 tools = ["ocr_recognize"]
 evidence = ["crates/ui-egui/tests/ocr.rs::recognize_text_dialog_adds_searchable_text"]
-notes = "Language choice exists, but the models read only the Latin alphabet without accents (English)."
+notes = "The included model is English-only (`eng.traineddata`); language selection and models for other languages are not available. Tesseract 5 must be installed separately."
 
 [[feature]]
 id = "ocr.searchable-image"
@@ -6671,7 +6671,7 @@ notes = ""
 
 [[feature]]
 id = "ocr.ocr-engines"
-title = "Pluggable OCR engines (ocrs default; tesseract optional)"
+title = "Pluggable OCR engines"
 area = "I"
 tier = "P1"
 milestone = "M10"

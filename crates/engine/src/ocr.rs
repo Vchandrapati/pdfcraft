@@ -18,7 +18,7 @@ use crate::{DocId, Edit, EditError, Session};
 pub struct OcrSettings {
     /// Resolution pages are rendered at for recognition (Acrobat's "Downsample to" choices).
     pub dpi: f32,
-    /// Language code from [`LANGUAGES`] (the models read the Latin alphabet, whatever this says).
+    /// Language code from [`LANGUAGES`].
     pub language: String,
     /// Leave pages that already have text alone (Acrobat reports "page contains renderable
     /// text" and skips them). When `false`, such pages are read too (a picture on a page that
@@ -60,6 +60,8 @@ pub struct OcrPage {
     pub already_on_page: usize,
     /// Why the page was not read, if it was skipped.
     pub skipped: Option<String>,
+    /// Why recognition failed for this page, if the renderer or OCR backend returned an error.
+    pub error: Option<String>,
 }
 
 impl OcrPage {
@@ -82,7 +84,12 @@ pub fn engine() -> Result<Arc<Ocr>, String> {
 
 /// Whether the recognition models are installed.
 pub fn available() -> bool {
-    Models::find().is_some()
+    Ocr::available()
+}
+
+/// Why OCR is unavailable, if either the model or Tesseract runtime is missing.
+pub fn unavailable_reason() -> Option<String> {
+    Ocr::unavailable_reason()
 }
 
 /// Everything recognition needs from a document, detached from the session.
@@ -110,7 +117,8 @@ impl OcrJob {
                 break;
             }
             let Some(info) = self.infos.get(page) else { continue };
-            let skip = |why: &str| OcrPage { page, words: Vec::new(), already_on_page: 0, skipped: Some(why.into()) };
+            let skipped = |why: &str| OcrPage { page, words: Vec::new(), already_on_page: 0, skipped: Some(why.into()), error: None };
+            let failed = |why: &str| OcrPage { page, words: Vec::new(), already_on_page: 0, skipped: None, error: Some(why.into()) };
             // The boxes of the page's own text (an earlier OCR layer's included), in view space.
             let existing: Vec<[f32; 4]> = r
                 .render(RenderRequest { page, kind: RequestKind::Text, scale: 1.0, ..Default::default() })
@@ -118,7 +126,7 @@ impl OcrJob {
                 .map(|t| t.glyphs.iter().filter(|g| !g.text.trim().is_empty()).map(|g| g.rect).collect())
                 .unwrap_or_default();
             if self.settings.skip_text_pages && !existing.is_empty() {
-                out.push(skip("the page already contains text"));
+                out.push(skipped("the page already contains text"));
                 continue;
             }
             // A scan is read at its own resolution (enlarging it only blurs the letters), at most
@@ -127,17 +135,18 @@ impl OcrJob {
             let scale = self.native.get(page).copied().flatten().map_or(wanted, |n| n.clamp(1.0, wanted));
             let shot = r.render(RenderRequest { page, scale, ..Default::default() });
             if let Some(e) = shot.error {
-                out.push(skip(&e));
+                out.push(failed(&e));
                 continue;
             }
-            let lines = match ocr.recognize(&shot.rgba, shot.width, shot.height) {
+            let scale = shot.width as f32 / info.width.max(1e-3);
+            let dpi = (scale * 72.0).round().clamp(72.0, 600.0) as u32;
+            let lines = match ocr.recognize_at_dpi(&shot.rgba, shot.width, shot.height, dpi) {
                 Ok(l) => l,
                 Err(e) => {
-                    out.push(skip(&e.to_string()));
+                    out.push(failed(&e.to_string()));
                     continue;
                 }
             };
-            let scale = shot.width as f32 / info.width.max(1e-3);
             let to_user = |x: f32, y: f32| {
                 let [u, v] = info.view_to_user(x / scale, y / scale);
                 [u as f64, v as f64]
@@ -146,7 +155,7 @@ impl OcrJob {
             let (fresh, already): (Vec<_>, Vec<_>) =
                 lines.iter().flat_map(|l| &l.words).partition(|w| covered(w.rect.map(|v| v / scale), &existing) < ALREADY_ON_PAGE);
             let words = fresh.into_iter().map(|w| PlacedWord::place(w, to_user)).collect();
-            out.push(OcrPage { page, words, already_on_page: already.len(), skipped: None });
+            out.push(OcrPage { page, words, already_on_page: already.len(), skipped: None, error: None });
         }
         progress(total, total);
         out
@@ -180,6 +189,9 @@ impl Session {
 
     /// Add the words found by [`OcrJob::run`] as one undoable step. Returns the number of words.
     pub fn apply_ocr(&mut self, id: DocId, found: &[OcrPage]) -> Result<usize, EditError> {
+        if let Some(page) = found.iter().find(|p| p.error.is_some()) {
+            return Err(EditError::Invalid(format!("OCR failed on page {}: {}", page.page + 1, page.error.as_deref().unwrap_or("unknown error"))));
+        }
         let edits: Vec<Edit> =
             found.iter().filter(|p| !p.words.is_empty()).map(|p| Edit::AddOcrText { page: p.page, words: p.words.clone() }).collect();
         let words = found.iter().map(|p| p.words.len()).sum();

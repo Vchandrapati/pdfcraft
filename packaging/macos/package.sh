@@ -104,8 +104,8 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$WORK/bin/pdfcraft" "$APP/Contents/MacOS/PdfCraft"
 cp "$ROOT/assets/app-icon/pdfcraft.icns" "$APP/Contents/Resources/PdfCraft.icns"
 copy_font_licences "$APP/Contents/Resources"
-# OCR models: the app finds them at Contents/MacOS/../Resources/models. Before signing, so the
-# bundle's seal covers them.
+# The English Tesseract model and licence are staged before signing, so the bundle's seal covers
+# Contents/Resources/models.
 stage_models "$APP/Contents/Resources/models"
 sed -e "s/@VERSION@/$VERSION/g" -e "s/@SHORT_VERSION@/$SHORT_VERSION/g" \
   -e "s/@BUILD_SHA@/${PDFCRAFT_BUILD_SHA:-unknown}/g" \

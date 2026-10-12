@@ -3537,19 +3537,35 @@ fn ocr_tools_make_a_scan_searchable() {
     let mut a = auto(&dir);
     let status = ok(&mut a, "ocr_status", json!({}));
     assert_eq!(status["languages"][0]["code"], "en");
+    assert_eq!(status["backend"], "tesseract");
+    assert_eq!(status["model"], "tessdata_best/eng");
+    assert_eq!(status["available"], status["model_available"] == true && status["runtime_available"] == true);
     if status["available"] != true {
-        eprintln!("skipped: OCR models not installed");
+        eprintln!("skipped: OCR unavailable: {}", status["unavailable_reason"].as_str().unwrap_or("no reason reported"));
         return;
     }
-    let text = ok(&mut a, "doc_create", json!({ "from": "text", "text": "Searchable scans with recognised words" }))["doc"].as_u64().unwrap();
-    ok(&mut a, "doc_export_images", json!({ "doc": text, "folder": "scan", "dpi": 150, "pages": [1] }));
+    let text = ok(&mut a, "doc_create", json!({ "from": "text", "text": "INVOICE 4711.25\nTOTAL 123.45" }))["doc"].as_u64().unwrap();
+    ok(&mut a, "doc_export_images", json!({ "doc": text, "folder": "scan", "dpi": 300, "pages": [1] }));
     let png = std::fs::read_dir(dir.join("scan")).unwrap().next().unwrap().unwrap().path();
     let scan = ok(&mut a, "doc_create", json!({ "from": "images", "paths": [png.to_string_lossy()] }))["doc"].as_u64().unwrap();
     let r = ok(&mut a, "ocr_recognize", json!({ "doc": scan }));
-    assert!(r["pages"][0]["text"].as_str().unwrap().to_lowercase().contains("searchable"), "{r}");
-    assert!(r["words"].as_u64().unwrap() >= 4);
+    let recognized = r["pages"][0]["text"].as_str().unwrap();
+    assert!(recognized.contains("4711.25") && recognized.contains("123.45"), "numeric text was not recognized accurately: {r}");
+    assert!(r["words"].as_u64().unwrap() >= 4, "{r}");
     let again = ok(&mut a, "ocr_recognize", json!({ "doc": scan, "pages": [1] }));
     assert!(again["pages"][0]["skipped"].is_string(), "{again}");
+    let count = |a: &mut Automation, query: &str| ok(a, "text_find", json!({ "doc": scan, "query": query }))["count"].as_u64().unwrap();
+    assert_eq!((count(&mut a, "4711.25"), count(&mut a, "123.45")), (1, 1), "repeated OCR must not duplicate recognized text");
+    ok(&mut a, "edit_undo", json!({ "doc": scan }));
+    assert_eq!((count(&mut a, "4711.25"), count(&mut a, "123.45")), (0, 0), "undo removes the OCR text layer");
+    ok(&mut a, "edit_redo", json!({ "doc": scan }));
+    assert_eq!((count(&mut a, "4711.25"), count(&mut a, "123.45")), (1, 1), "redo restores one OCR text layer");
+    ok(&mut a, "doc_save", json!({ "doc": scan, "path": "searchable.pdf" }));
+    let reopened = ok(&mut a, "doc_open", json!({ "path": "searchable.pdf" }))["doc"].as_u64().unwrap();
+    let persisted = ok(&mut a, "text_find", json!({ "doc": reopened, "query": "4711.25" }));
+    assert_eq!(persisted["count"], 1, "saved OCR text must remain searchable after reopening");
+    let persisted = ok(&mut a, "text_find", json!({ "doc": reopened, "query": "123.45" }));
+    assert_eq!(persisted["count"], 1, "saved numeric OCR text must remain searchable after reopening");
     assert!(matches!(a.call("ocr_recognize", &json!({ "doc": scan, "language": "xx" })), Err(ToolError::InvalidArgs(_))));
 }
 
@@ -3559,8 +3575,9 @@ fn ocr_tools_make_a_scan_searchable() {
 fn ocr_recognize_reads_pictures_on_pages_with_text() {
     let dir = workdir("ocr-hybrid");
     let mut a = auto(&dir);
-    if ok(&mut a, "ocr_status", json!({}))["available"] != true {
-        eprintln!("skipped: OCR models not installed");
+    let status = ok(&mut a, "ocr_status", json!({}));
+    if status["available"] != true {
+        eprintln!("skipped: OCR unavailable: {}", status["unavailable_reason"].as_str().unwrap_or("no reason reported"));
         return;
     }
     let text = ok(&mut a, "doc_create", json!({ "from": "text", "text": "Pictures of words become searchable" }))["doc"].as_u64().unwrap();
@@ -3597,8 +3614,9 @@ fn ocr_recognize_files_refuses_paths_outside_the_root() {
 fn ocr_recognize_files_writes_searchable_copies() {
     let dir = workdir("ocr-files");
     let mut a = auto(&dir);
-    if ok(&mut a, "ocr_status", json!({}))["available"] != true {
-        eprintln!("skipped: OCR models not installed");
+    let status = ok(&mut a, "ocr_status", json!({}));
+    if status["available"] != true {
+        eprintln!("skipped: OCR unavailable: {}", status["unavailable_reason"].as_str().unwrap_or("no reason reported"));
         return;
     }
     let text = ok(&mut a, "doc_create", json!({ "from": "text", "text": "Batch recognition works" }))["doc"].as_u64().unwrap();

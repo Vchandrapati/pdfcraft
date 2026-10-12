@@ -124,11 +124,13 @@ pub(crate) fn body(ui: &mut egui::Ui, app: &mut PdfCraftApp, t: &Tokens) -> (boo
             .on_hover_text(tl!("Pictures on those pages are recognized too; words already in the page's text are not added again"));
     });
     if !available {
-        ui.label(
-            egui::RichText::new(tl!("Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them."))
-                .small()
-                .color(t.text_muted),
-        );
+        let reason = pdfcraft_engine::ocr::unavailable_reason().unwrap_or_else(|| "Tesseract or its English model could not be found.".into());
+        let message = if reason == pdfcraft_engine::ocr::OcrError::NoModels.to_string() {
+            tl!("Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.").to_string()
+        } else {
+            format!("Text recognition is unavailable: {reason}")
+        };
+        ui.label(egui::RichText::new(message).small().color(t.text_muted));
         ui.add_space(6.0);
     }
     ui.add_space(6.0);
@@ -169,13 +171,18 @@ impl PdfCraftApp {
         let progress = Arc::new(Mutex::new(OcrProgress { total: job.pages.len(), ..Default::default() }));
         let p = progress.clone();
         let work = move || {
-            let result = pdfcraft_engine::ocr::engine().map(|ocr| {
-                job.run(&ocr, |done, total| {
+            let result = pdfcraft_engine::ocr::engine().and_then(|ocr| {
+                let found = job.run(&ocr, |done, total| {
                     let Ok(mut s) = p.lock() else { return false };
                     s.done = done;
                     s.total = total;
                     !s.cancel
-                })
+                });
+                if let Some(page) = found.iter().find(|page| page.error.is_some()) {
+                    Err(format!("OCR failed on page {}: {}", page.page + 1, page.error.as_deref().unwrap_or("unknown error")))
+                } else {
+                    Ok(found)
+                }
             });
             if let Ok(mut s) = p.lock() {
                 s.result = Some(result);
@@ -185,7 +192,10 @@ impl PdfCraftApp {
         if self.run_inline {
             work();
         } else {
-            std::thread::Builder::new().name("pdfcraft-ocr".into()).spawn(work).ok();
+            if let Err(e) = std::thread::Builder::new().name("pdfcraft-ocr".into()).spawn(work) {
+                self.notify_error(format!("Could not start text recognition: {e}"));
+                return;
+            }
         }
         #[cfg(target_arch = "wasm32")]
         work();
@@ -253,7 +263,9 @@ impl PdfCraftApp {
                     }
                 }
             }
-            let done = if ok == 1 {
+            let done = if ok == 0 && !failed.is_empty() {
+                "Text recognition failed for all files".to_string()
+            } else if ok == 1 {
                 crate::i18n::fmt(tl!("Recognized {w} words in 1 file"), &[("w", &words.to_string())])
             } else {
                 crate::i18n::fmt(tl!("Recognized {w} words in {n} files"), &[("w", &words.to_string()), ("n", &ok.to_string())])
@@ -271,7 +283,10 @@ impl PdfCraftApp {
         if self.run_inline {
             work();
         } else {
-            std::thread::Builder::new().name("pdfcraft-ocr-files".into()).spawn(work).ok();
+            if let Err(e) = std::thread::Builder::new().name("pdfcraft-ocr-files".into()).spawn(work) {
+                self.notify_error(format!("Could not start OCR batch: {e}"));
+                return;
+            }
         }
         #[cfg(target_arch = "wasm32")]
         work();
@@ -338,8 +353,8 @@ impl PdfCraftApp {
                 return;
             }
         };
-        let read = found.iter().filter(|p| p.skipped.is_none()).count();
-        let skipped = found.len() - read;
+        let read = found.iter().filter(|p| p.skipped.is_none() && p.error.is_none()).count();
+        let skipped = found.iter().filter(|p| p.skipped.is_some()).count();
         match self.session.apply_ocr(doc, &found) {
             Ok(words) => {
                 if let Some(info) = self.session.get(doc).map(|d| d.info.clone())

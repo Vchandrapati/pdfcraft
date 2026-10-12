@@ -33,6 +33,7 @@ overrides:
       - libgcc-s1
       - libxkbcommon0
       - libvulkan1 | libegl1
+      - tesseract-ocr (>= 5.0)
     recommends:
       - cups-client
       - libwayland-client0
@@ -47,6 +48,7 @@ overrides:
     depends:
       - libxkbcommon
       - (vulkan-loader or libglvnd-egl)
+      - tesseract >= 5.0
     recommends:
       - cups-client
       - libwayland-client

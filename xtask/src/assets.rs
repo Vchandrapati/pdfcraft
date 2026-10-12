@@ -351,7 +351,11 @@ pub fn models(args: &[String]) -> Result<()> {
 
 /// The credits shipped beside the models (their licences require attribution).
 fn models_attribution(m: &Manifest) -> String {
-    let mut s = String::from("PdfCraft's text recognition (Scan & OCR) uses these models, unmodified.\n");
+    let mut s = String::from(
+        "PdfCraft's Scan & OCR includes the English-only Tesseract BEST model below, unmodified.\n\
+         The Tesseract 5 executable is a separate runtime dependency and is not bundled. OCR is unavailable\n\
+         in Flatpak packages until they bundle the Tesseract runtime.\n",
+    );
     for f in m.fetched.iter().filter(|f| f.kind == "model") {
         let _ = write!(
             s,

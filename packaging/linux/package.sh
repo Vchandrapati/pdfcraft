@@ -72,7 +72,7 @@ mkdir -p "$STAGE/usr/share/icons"
 cp -R "$ROOT/assets/app-icon/hicolor" "$STAGE/usr/share/icons/"
 mkdir -p "$STAGE/usr/share/doc/pdfcraft"
 copy_docs "$STAGE/usr/share/doc/pdfcraft"
-# OCR models: the app finds them at <bin>/../share/pdfcraft/models, so in every format below.
+# The English Tesseract model and licence are staged at <bin>/../share/pdfcraft/models.
 stage_models "$STAGE/usr/share/pdfcraft/models"
 
 if command -v desktop-file-validate >/dev/null; then

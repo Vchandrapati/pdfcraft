@@ -182,3 +182,47 @@ driver's shader compilation, and explicit `PDFCRAFT_RENDERER=wgpu` still disable
 | `PDFCRAFT_RENDERER` | `gl` starts with OpenGL (glow) and never loads wgpu; `wgpu` reports a wgpu failure instead of retrying with OpenGL; unset, wgpu is retried with OpenGL when it can't start (see [Renderer fallback](#renderer-fallback)) |
 | `CRAFT_FONTS_DIR` | Build time: a [craft-fonts](https://github.com/storytold/craft-fonts) checkout to embed (Japanese fonts) |
 | `PDFCRAFT_SYSTEM_FONTS` | `0` stops the desktop app from using an installed font for characters its embedded fonts lack (`cargo xtask screenshots` sets it) |
+| `PDFCRAFT_MODELS` | Strict override for OCR model lookup; the directory must contain `eng.traineddata` |
+| `PDFCRAFT_TESSERACT` | Strict override for the path to the Tesseract 5 executable used for OCR |
+
+## OCR runtime
+
+PdfCraft packages one English Tesseract BEST model, `eng.traineddata`, pinned to commit
+[`e12c65a`](https://github.com/tesseract-ocr/tessdata_best/tree/e12c65a915945e4c28e237a9b52bc4a8f39a0cec).
+The model is Apache-2.0 licensed and is fetched with its licence by `cargo xtask models`. It does
+not provide other languages.
+
+Install Tesseract 5 separately and make `tesseract` available on `PATH`, or set
+`PDFCRAFT_TESSERACT` to its executable. Windows installers are linked from the
+[Tesseract installation guide](https://tesseract-ocr.github.io/tessdoc/Installation.html); macOS
+users can run `brew install tesseract`; Debian/Ubuntu users can run `sudo apt install tesseract-ocr`;
+FreeBSD users can run `pkg install tesseract`. RPM packages declare the `tesseract` dependency and
+Debian packages declare `tesseract-ocr`; AppImage, tar, macOS, Windows, and FreeBSD archives rely on
+the separately installed executable.
+
+The Flatpak carries the model and licence, but does not bundle Tesseract. Flatpak's sandbox cannot
+run a host-installed copy, so OCR is unavailable in that package. The web build also cannot run the
+native executable.
+
+Recognition keeps the existing Scan & OCR dialog, page/range choices, background progress,
+multi-file workflow, duplicate suppression and one-step undo. Each page is passed to a local
+Tesseract process as a temporary PNG; no document is uploaded. Temporary inputs are removed after
+the process exits. Each page has a 120-second timeout, a 100-million-pixel input limit and bounded
+output (32 MiB TSV, 64 KiB diagnostics). Any failed page refuses the whole document edit; batch
+processing reports failures per file. Missing models, executables and unsupported runtime versions
+produce explicit errors. The saved searchable layer still supports WinAnsi text only; unsupported
+recognized characters produce an error instead of silently becoming question marks.
+
+For local Windows development, an unpacked Tesseract runtime can be staged under the ignored
+`target/tesseract/` directory; source launches can find it there. This is a developer convenience,
+not a packaged or attributed asset. Do not commit the executable or its runtime files.
+
+Migration validation (2026-10-13, Windows, Tesseract 5.5.3): `cargo test --offline --workspace`
+passed 2,660 tests, with 13 ignored. Real OCR tests exercised searchable text, numeric values,
+hybrid pages, batch processing, repeat-run suppression, undo/redo and save/reopen. Six additional
+CLI scan checks preserved the visible page image and saved text; blank and graphics-only controls
+returned no words. Missing runtime/model, wrong runtime version and corrupt model checks left
+documents unchanged. The real desktop dialog and background run were also exercised. `cargo
+xtask wasm` passed for all 31 shared crates; OCR remains disabled in the browser. Cross-platform
+installer builds have not been exercised for this migration. Formatting, all-target Clippy, native
+builds, asset attribution, dependency layering and parity checks also passed.

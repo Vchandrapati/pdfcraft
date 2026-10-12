@@ -312,9 +312,10 @@ impl Automation {
         let found = self.session.recognize_text(id, &pages, settings).map_err(failed)?;
         let list: Vec<Value> = found
             .iter()
-            .map(|p| match &p.skipped {
-                Some(why) => json!({ "page": p.page + 1, "skipped": why }),
-                None => json!({ "page": p.page + 1, "words": p.words.len(), "already_on_page": p.already_on_page, "text": p.text() }),
+            .map(|p| match (&p.error, &p.skipped) {
+                (Some(error), _) => json!({ "page": p.page + 1, "error": error }),
+                (_, Some(why)) => json!({ "page": p.page + 1, "skipped": why }),
+                _ => json!({ "page": p.page + 1, "words": p.words.len(), "already_on_page": p.already_on_page, "text": p.text() }),
             })
             .collect();
         Ok(json!({ "words": found.iter().map(|p| p.words.len()).sum::<usize>(), "pages": list }))
@@ -323,8 +324,21 @@ impl Automation {
     pub(crate) fn ocr_status(&self) -> Result<Value> {
         use pdfcraft_engine::ocr;
         let dirs: Vec<String> = ocr::Models::search_dirs().iter().map(|d| d.to_string_lossy().into_owned()).collect();
+        let recognition_model = ocr::Models::find().map(|models| models.recognition.to_string_lossy().into_owned());
+        let executable = ocr::Ocr::executable_path().map(|path| path.to_string_lossy().into_owned());
         let langs: Vec<Value> = ocr::LANGUAGES.iter().map(|(c, n)| json!({ "code": c, "name": n })).collect();
-        Ok(json!({ "available": ocr::available(), "search_dirs": dirs, "languages": langs }))
+        Ok(json!({
+            "available": ocr::available(),
+            "backend": "tesseract",
+            "model": "tessdata_best/eng",
+            "model_available": recognition_model.is_some(),
+            "model_path": recognition_model,
+            "runtime_available": executable.is_some(),
+            "runtime_path": executable,
+            "unavailable_reason": ocr::unavailable_reason(),
+            "search_dirs": dirs,
+            "languages": langs
+        }))
     }
 }
 

@@ -1,6 +1,6 @@
 # File format parity
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (Word invoice export, #773; encrypted output opens in Acrobat, #774; XFDF fixes #807, #809, #819) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
+> **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (OCR migrated to the pinned English Tesseract BEST model; Tesseract runtime prerequisites recorded) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 
 Every format Acrobat Pro reads or writes, and PdfCraft's support for it. Acrobat's list comes from
 its bundle's `Info.plist` `CFBundleDocumentTypes` (what it opens) and its public documentation
@@ -98,17 +98,24 @@ features total).
 
 | Capability | Acrobat | PdfCraft | Fidelity |
 |---|---|---|---|
-| Searchable image (invisible text layer) | yes | yes (Tr 3 text fitted to word boxes) | good for English |
+| Searchable image (invisible text layer) | yes | yes (Tesseract 5; text fitted to word boxes) | good for English |
 | Editable text and images output | yes | no | none |
-| Languages | dozens (Latin with accents, Cyrillic, Greek, CJK, Arabic, Hebrew, Indic) | Latin without accents only (ocrs models) | **basic** (#744) |
+| Languages | dozens (Latin with accents, Cyrillic, Greek, CJK, Arabic, Hebrew, Indic) | English only (`eng.traineddata`) | **basic** (#744) |
 | Deskew, rotation, despeckle, background and halo removal, descreen | yes | no | none |
 | Camera images (edges, perspective, whiteboard, card) | yes | no | none |
 | MRC (adaptive) compression, PDF/A output of scans | yes | no | none |
+
+The release packages fetch one unmodified English model from the pinned
+[`tessdata_best` commit](https://github.com/tesseract-ocr/tessdata_best/tree/e12c65a915945e4c28e237a9b52bc4a8f39a0cec).
+Tesseract 5 itself is a system prerequisite for OCR. Debian and RPM packages declare it; the
+Flatpak does not bundle it and cannot invoke a host executable. Setup details for other platforms
+are in [development.md](development.md#ocr-runtime).
 
 ## Revision history
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-13 | minor | English OCR migrated to Tesseract BEST; runtime and package prerequisites recorded. |
 | 2026-10-11 | minor | #773: inferred tables have no invented borders; rotated or overlapping invoice pages use floating shapes and page sections. Full Office layout fidelity remains partial. |
 | 2026-10-11 | minor | Encrypted PDF row: written files open in Acrobat DC (#774, fixed by #836). FDF row: #807, #809 and #819 fixed |
 | 2026-10-10 | major | Created from Acrobat 26.002.21931's `CFBundleDocumentTypes`, Acrobat's public Create/Export documentation, and PdfCraft's code and checklist |

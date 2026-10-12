@@ -10,6 +10,8 @@
 # For Flathub, replace the `dir` source with a `git` source pinned to a release tag and commit.
 # The single-file .flatpak attached to each release comes from ai.storyteller.pdfcraft.bundle.yml,
 # which repackages the prebuilt release binaries. Keep runtime-version and finish-args identical.
+# The Flatpak currently ships the English model but not the Tesseract executable. The sandbox cannot
+# use a host-installed Tesseract, so OCR is unavailable in this package until the runtime is bundled.
 id: ai.storyteller.pdfcraft
 runtime: org.freedesktop.Platform
 runtime-version: '25.08'

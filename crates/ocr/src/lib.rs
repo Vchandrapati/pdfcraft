@@ -1,29 +1,27 @@
 //! pdfcraft-ocr — Scan & OCR ▸ Recognize text (L4).
 //!
-//! Recognition runs the ocrs engine (MIT/Apache-2.0) with its pre-trained models (CC-BY-SA-4.0,
-//! fetched by `cargo xtask models`; see ATTRIBUTION.toml). The caller renders a page to pixels;
+//! Recognition runs a local Tesseract 5 process with the pinned English `tessdata_best` model
+//! (Apache-2.0, fetched by `cargo xtask models`; see ATTRIBUTION.toml). No network is used for OCR.
+//! The caller renders a page to pixels;
 //! [`Ocr::recognize`] finds the words in them, and [`text_layer`] turns words placed in user space
 //! into page content: invisible text (rendering mode 3) over each word, so the page becomes a
 //! searchable image (Acrobat's "Searchable Image (Exact)": the image is left untouched).
 //!
-//! The models read the Latin alphabet (English and other languages written without accents).
+//! Desktop only: browser builds cannot launch Tesseract. The searchable text layer uses WinAnsi.
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
 use std::path::{Path, PathBuf};
 
+#[cfg(not(target_arch = "wasm32"))]
+mod native;
+
 pub use pdfcraft_fonts::helvetica_width;
 
-/// The model files, as named in ATTRIBUTION.toml.
-pub const DETECTION_MODEL: &str = "text-detection.rten";
-pub const RECOGNITION_MODEL: &str = "text-recognition.rten";
+/// The English Best model, pinned in ATTRIBUTION.toml.
+pub const RECOGNITION_MODEL: &str = "eng.traineddata";
 
-/// The recognition model's alphabet, as it was trained (ocrs-models' `DEFAULT_ALPHABET`): its
-/// output classes follow this order. The ocrs crate's own copy has an `E` where the training had
-/// `€`, which made a scanned "€250" read as "E250".
-pub const ALPHABET: &str = " 0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~€ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-/// The languages the models read (ISO 639-1); all use the Latin alphabet without accents.
+/// The installed language choices (ISO 639-1).
 pub const LANGUAGES: &[(&str, &str)] = &[("en", "English")];
 
 #[derive(Debug, thiserror::Error)]
@@ -32,6 +30,8 @@ pub enum OcrError {
     /// `cargo xtask models`). The UI catalogs key this exact text.
     #[error("the text recognition models are not installed (reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them)")]
     NoModels,
+    #[error("Tesseract 5 is not installed: install it, or set PDFCRAFT_TESSERACT to its executable")]
+    NoRuntime,
     #[error("loading {0}: {1}")]
     Load(String, String),
     #[error("text recognition failed: {0}")]
@@ -40,32 +40,34 @@ pub enum OcrError {
     EmptyImage,
 }
 
-/// Where the two model files are.
+/// Where the English Best model is.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Models {
-    pub detection: PathBuf,
     pub recognition: PathBuf,
 }
 
 impl Models {
-    /// The models in `dir`, if both files are there.
+    /// The model in `dir`, if it is there.
     pub fn in_dir(dir: &Path) -> Option<Models> {
-        let m = Models { detection: dir.join(DETECTION_MODEL), recognition: dir.join(RECOGNITION_MODEL) };
-        (m.detection.is_file() && m.recognition.is_file()).then_some(m)
+        let m = Models { recognition: dir.join(RECOGNITION_MODEL) };
+        m.recognition.is_file().then_some(m)
     }
 
     /// Look for the models: `$PDFCRAFT_MODELS`, then where the release packages install them
     /// beside the executable ([`Models::dirs_beside_exe`]), then the source tree's `assets/models/`.
     pub fn find() -> Option<Models> {
+        if let Some(dir) = std::env::var_os("PDFCRAFT_MODELS") {
+            return Self::in_dir(Path::new(&dir));
+        }
         Self::search_dirs().iter().find_map(|d| Self::in_dir(d))
     }
 
     /// The directories [`Models::find`] looks in, in order.
     pub fn search_dirs() -> Vec<PathBuf> {
-        let mut dirs = Vec::new();
         if let Some(d) = std::env::var_os("PDFCRAFT_MODELS") {
-            dirs.push(PathBuf::from(d));
+            return vec![PathBuf::from(d)];
         }
+        let mut dirs = Vec::new();
         if let Some(exe) = std::env::current_exe().ok().and_then(|e| e.parent().map(Path::to_path_buf)) {
             dirs.extend(Self::dirs_beside_exe(&exe));
         }
@@ -103,22 +105,31 @@ impl Line {
     }
 }
 
-/// A loaded recogniser. Loading takes a moment; keep one and reuse it.
+/// A configured recogniser. Each page runs in a bounded local process so a failed OCR worker
+/// cannot corrupt the document. The UI keeps this configuration and runs it off the UI thread.
 pub struct Ocr {
-    engine: ocrs::OcrEngine,
+    #[cfg(not(target_arch = "wasm32"))]
+    executable: PathBuf,
+    #[cfg(not(target_arch = "wasm32"))]
+    models: Models,
 }
 
 impl Ocr {
     pub fn load(models: &Models) -> Result<Ocr, OcrError> {
-        let load = |p: &Path| rten::Model::load_file(p).map_err(|e| OcrError::Load(p.display().to_string(), e.to_string()));
-        let params = ocrs::OcrEngineParams {
-            detection_model: Some(load(&models.detection)?),
-            recognition_model: Some(load(&models.recognition)?),
-            alphabet: Some(ALPHABET.into()),
-            ..Default::default()
-        };
-        let engine = ocrs::OcrEngine::new(params).map_err(|e| OcrError::Load("ocr engine".into(), e.to_string()))?;
-        Ok(Ocr { engine })
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            if !models.recognition.is_file() {
+                return Err(OcrError::NoModels);
+            }
+            let executable = Self::executable_path().ok_or(OcrError::NoRuntime)?;
+            native::check_version(&executable)?;
+            Ok(Ocr { executable, models: models.clone() })
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = models;
+            Err(OcrError::Recognize("Tesseract OCR requires the desktop application".into()))
+        }
     }
 
     /// Load the models found by [`Models::find`].
@@ -126,39 +137,51 @@ impl Ocr {
         Self::load(&Models::find().ok_or(OcrError::NoModels)?)
     }
 
+    /// Find the local executable without launching it (safe to use when drawing the UI).
+    pub fn executable_path() -> Option<PathBuf> {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            native::executable_path()
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            None
+        }
+    }
+
+    /// An actionable installation problem, without launching a process or loading the model.
+    pub fn unavailable_reason() -> Option<String> {
+        if cfg!(target_arch = "wasm32") {
+            Some("Tesseract OCR requires the desktop application".into())
+        } else if Models::find().is_none() {
+            Some(OcrError::NoModels.to_string())
+        } else if Self::executable_path().is_none() {
+            Some(OcrError::NoRuntime.to_string())
+        } else {
+            None
+        }
+    }
+
+    pub fn available() -> bool {
+        Self::unavailable_reason().is_none()
+    }
+
     /// Recognise the text in an RGBA (or RGB, or grey) image, `width` × `height` pixels.
     pub fn recognize(&self, pixels: &[u8], width: u32, height: u32) -> Result<Vec<Line>, OcrError> {
-        if width == 0 || height == 0 || pixels.is_empty() {
-            return Err(OcrError::EmptyImage);
+        self.recognize_at_dpi(pixels, width, height, 300)
+    }
+
+    /// Recognise at the actual raster resolution; this matters for low-resolution scans.
+    pub fn recognize_at_dpi(&self, pixels: &[u8], width: u32, height: u32, dpi: u32) -> Result<Vec<Line>, OcrError> {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            native::recognize(&self.executable, &self.models, pixels, width, height, dpi)
         }
-        // ocrs wants 1 or 3 channels.
-        let rgb: std::borrow::Cow<[u8]> = if pixels.len() == (width * height * 4) as usize {
-            pixels.as_chunks::<4>().0.iter().flat_map(|p| [p[0], p[1], p[2]]).collect::<Vec<u8>>().into()
-        } else {
-            pixels.into()
-        };
-        let err = |e: &dyn std::fmt::Display| OcrError::Recognize(e.to_string());
-        let source = ocrs::ImageSource::from_bytes(&rgb, (width, height)).map_err(|e| err(&e))?;
-        let input = self.engine.prepare_input(source).map_err(|e| err(&e))?;
-        let found = self.engine.detect_words(&input).map_err(|e| err(&e))?;
-        let lines = self.engine.find_text_lines(&input, &found);
-        let read = self.engine.recognize_text(&input, &lines).map_err(|e| err(&e))?;
-        use ocrs::TextItem;
-        Ok(read
-            .into_iter()
-            .flatten()
-            .map(|line| Line {
-                words: line
-                    .words()
-                    .map(|w| {
-                        let r = w.bounding_rect();
-                        Word { text: w.to_string(), rect: [r.left() as f32, r.top() as f32, r.right() as f32, r.bottom() as f32] }
-                    })
-                    .filter(|w| !w.text.trim().is_empty())
-                    .collect(),
-            })
-            .filter(|l| !l.words.is_empty())
-            .collect())
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = (pixels, width, height, dpi);
+            Err(OcrError::Recognize("Tesseract OCR requires the desktop application".into()))
+        }
     }
 }
 
@@ -234,14 +257,6 @@ mod tests {
         assert_eq!(w.up, [0.0, 20.0]);
     }
 
-    /// The text layer is Helvetica in WinAnsiEncoding: every character the model can recognise
-    /// must be one it can hold, or recognised text would be saved as `?`. A model with a wider
-    /// alphabet (Chinese, for example) needs a text layer in another font first.
-    #[test]
-    fn the_model_alphabet_fits_the_text_layer_font() {
-        assert_eq!(pdfcraft_fonts::first_undrawable(ALPHABET), None);
-    }
-
     #[test]
     fn text_layer_is_invisible_text_fitted_to_each_box() {
         let w = PlacedWord { text: "Hi".into(), origin: [10.0, 20.0], across: [30.0, 0.0], up: [0.0, 9.3] };
@@ -282,23 +297,11 @@ mod tests {
             std::fs::create_dir_all(&models_dir).unwrap();
             let found = || Models::dirs_beside_exe(&exe_dir).iter().find_map(|d| Models::in_dir(d));
             assert_eq!(found(), None, "{name}: no models yet");
-            for file in [DETECTION_MODEL, RECOGNITION_MODEL] {
-                std::fs::write(models_dir.join(file), b"model").unwrap();
-            }
+            std::fs::write(models_dir.join(RECOGNITION_MODEL), b"model").unwrap();
             let models = found().unwrap_or_else(|| panic!("{name}: models in {} not found", models_dir.display()));
-            assert_eq!(models.detection.canonicalize().unwrap(), models_dir.join(DETECTION_MODEL).canonicalize().unwrap(), "{name}");
+            assert_eq!(models.recognition.canonicalize().unwrap(), models_dir.join(RECOGNITION_MODEL).canonicalize().unwrap(), "{name}");
         }
         let _ = std::fs::remove_dir_all(&base);
-    }
-
-    /// The message tells end users what to do; release builds have no cargo.
-    #[test]
-    fn the_alphabet_is_the_trained_one() {
-        let chars: Vec<char> = ALPHABET.chars().collect();
-        assert_eq!(chars.len(), 96);
-        // The euro sign follows the ASCII punctuation (class 44; 0 is the CTC blank), not a second E.
-        assert_eq!(chars.iter().position(|&c| c == '€'), Some(43));
-        assert_eq!(chars.iter().filter(|&&c| c == 'E').count(), 1);
     }
 
     #[test]
@@ -307,9 +310,18 @@ mod tests {
         assert!(!message.contains("cargo") && message.contains("PDFCRAFT_MODELS"), "{message}");
     }
 
+    #[test]
+    fn missing_runtime_message_explains_how_to_install_it() {
+        assert!(OcrError::NoRuntime.to_string().contains("PDFCRAFT_TESSERACT"));
+    }
+
     /// End to end on rendered text, when the models are installed (`cargo xtask models`).
     #[test]
     fn reads_rendered_text() {
+        if let Some(reason) = Ocr::unavailable_reason() {
+            eprintln!("skipped: {reason}");
+            return;
+        }
         let Some(models) = Models::find() else {
             eprintln!("skipped: OCR models not installed");
             return;
@@ -331,7 +343,7 @@ mod tests {
                 ('E', ["XXXXX", "X....", "X....", "XXXX.", "X....", "X....", "XXXXX"]),
                 ('L', ["X....", "X....", "X....", "X....", "X....", "X....", "XXXXX"]),
                 ('O', [".XXX.", "X...X", "X...X", "X...X", "X...X", "X...X", ".XXX."]),
-                ('W', ["X...X", "X...X", "X...X", "X.X.X", "X.X.X", "XX.XX", "X...X"]),
+                ('W', ["X...X", "X...X", "X...X", "X.X.X", "X.X.X", "XX.XX", ".X.X."]),
                 ('R', ["XXXX.", "X...X", "X...X", "XXXX.", "X.X..", "X..X.", "X...X"]),
                 ('D', ["XXXX.", "X...X", "X...X", "X...X", "X...X", "X...X", "XXXX."]),
             ];

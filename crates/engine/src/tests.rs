@@ -2267,8 +2267,26 @@ fn recognize_text_reads_the_euro_sign() {
     let id = s.open("scan.pdf", None, scan, None).unwrap();
     s.recognize_text(id, &[], ocr::OcrSettings::default()).unwrap();
     let text = page_texts(&s, id)[0].clone();
-    // The model was trained with € where the ocrs crate's alphabet has a second E.
+    // English OCR and the saved WinAnsi layer must both preserve the currency symbol.
     assert!(text.contains("€250"), "{text}");
+}
+
+#[test]
+fn ocr_page_failure_preserves_the_whole_document() {
+    let (mut s, id) = session_with(2);
+    let before = s.get(id).unwrap().bytes.clone();
+    let successful = ocr::OcrPage {
+        page: 0,
+        words: vec![ocr::PlacedWord { text: "Recognized".into(), origin: [20.0, 30.0], across: [60.0, 0.0], up: [0.0, 12.0] }],
+        already_on_page: 0,
+        skipped: None,
+        error: None,
+    };
+    let failed = ocr::OcrPage { page: 1, words: Vec::new(), already_on_page: 0, skipped: None, error: Some("Tesseract timed out".into()) };
+    let error = s.apply_ocr(id, &[successful, failed]).unwrap_err();
+    assert!(error.to_string().contains("page 2") && error.to_string().contains("timed out"), "{error}");
+    assert_eq!(s.get(id).unwrap().bytes, before);
+    assert_eq!(s.get(id).unwrap().can_undo(), None);
 }
 
 #[test]
