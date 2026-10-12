@@ -24,7 +24,7 @@
 pub mod icc;
 mod xmp;
 
-use pdfcraft_cos::{Dict, Document, ObjRef, Object, PdfString, Stream};
+use pdfcraft_cos::{Dict, Document, ObjRef, Object, PdfString, Stream, is_whitespace};
 
 /// The PDF/A part and conformance level.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -287,8 +287,8 @@ fn uses_device_colour(doc: &Document, objs: &[(ObjRef, std::sync::Arc<Object>)])
             && let Ok(data) = s.decoded()
         {
             // Content streams: rg/RG/g/G/k/K operators.
-            for line in data.split(|b| *b == b'\n' || *b == b' ') {
-                match line {
+            for token in data.split(|b| is_whitespace(*b)) {
+                match token {
                     b"g" | b"G" => used.gray = true,
                     b"rg" | b"RG" => used.rgb = true,
                     b"k" | b"K" => used.cmyk = true,
