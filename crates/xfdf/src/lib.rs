@@ -1093,9 +1093,7 @@ fn import_table(doc: &mut Document, text: &str) -> Result<Report, DataError> {
             })
             .collect()
     } else if t.lines().next().is_some_and(|l| l.contains('\t')) {
-        let mut lines = t.lines();
-        let (Some(head), Some(row)) = (lines.next(), lines.next()) else { return Err(DataError::UnknownFormat) };
-        head.split('\t').map(str::to_string).zip(row.split('\t')).map(|(k, v)| (k, vec![v.to_string()])).collect()
+        tab_delimited(t)?
     } else {
         // CSV with quotes: a quoted value may hold commas, doubled quotes and line breaks.
         let mut records: Vec<Vec<String>> = Vec::new();
@@ -1124,10 +1122,19 @@ fn import_table(doc: &mut Document, text: &str) -> Result<Report, DataError> {
         // Blank lines (such as the one a trailing line break leaves) are not records.
         let mut records = records.into_iter().filter(|r| !matches!(r.as_slice(), [only] if only.is_empty()));
         let (Some(head), Some(row)) = (records.next(), records.next()) else { return Err(DataError::UnknownFormat) };
-        head.into_iter().zip(row).map(|(k, v)| (k, vec![v])).collect()
+        // Text exported from a one-field form has no tab to show for it (#1321). CSV quotes a
+        // value with a comma, so one name over several unquoted cells is that text, not CSV.
+        if head.len() == 1 && row.len() > 1 { tab_delimited(t)? } else { head.into_iter().zip(row).map(|(k, v)| (k, vec![v])).collect() }
     };
     apply_values(doc, &values, &mut report);
     Ok(report)
+}
+
+/// Tab-delimited text: a row of names, a row of values.
+fn tab_delimited(t: &str) -> Result<Vec<(String, Vec<String>)>, DataError> {
+    let mut lines = t.lines();
+    let (Some(head), Some(row)) = (lines.next(), lines.next()) else { return Err(DataError::UnknownFormat) };
+    Ok(head.split('\t').map(str::to_string).zip(row.split('\t')).map(|(k, v)| (k, vec![v.to_string()])).collect())
 }
 
 /// Import comments and/or field values from XFDF, FDF, XML, CSV or tab-delimited text

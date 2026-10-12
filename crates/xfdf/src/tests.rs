@@ -328,6 +328,57 @@ fn csv_values_may_span_lines() {
     assert!(import(&mut blank(), b"Name,Agree\r\n\"Ada, Yes\r\n").is_ok());
 }
 
+/// One page with one text field, `Name`.
+fn one_field() -> Document {
+    let mut doc = Document::new_empty();
+    let pages = doc.get(doc.root().unwrap()).as_dict().unwrap().reference(b"Pages").unwrap();
+    let mut p = Dict::new();
+    p.set(b"Type".to_vec(), Object::name("Page"));
+    p.set(b"Parent".to_vec(), Object::Ref(pages));
+    p.set(b"MediaBox".to_vec(), Object::Array(vec![0.into(), 0.into(), 600.into(), 800.into()]));
+    let page = doc.add(p);
+    doc.update_dict(pages, |d| {
+        d.set(b"Count".to_vec(), Object::Int(1));
+        d.set(b"Kids".to_vec(), Object::Array(vec![Object::Ref(page)]));
+    })
+    .unwrap();
+    add_field(&mut doc, 0, [50.0, 700.0, 250.0, 720.0], &NewField::Text { multiline: false }, Some("Name")).unwrap();
+    Document::open(Arc::new(write_full(&doc, &SaveOptions::default()).unwrap())).unwrap()
+}
+
+/// #1321: the text export of a one-field form has no tab to tell it from CSV, so a comma in the
+/// value used to split it and only the text before the comma was imported.
+#[test]
+fn one_field_text_data_keeps_its_commas() {
+    for value in ["Hello, world", "Say \"hi\", twice"] {
+        let mut src = one_field();
+        set_value(&mut src, "Name", &FieldValue::Text(value.into())).unwrap();
+        let txt = export_data(&src, Format::Txt);
+        assert_eq!(txt, format!("Name\n{value}\n"));
+        let mut dst = one_field();
+        let r = import(&mut dst, txt.as_bytes()).unwrap();
+        assert_eq!(r.fields, 1, "{r:?}");
+        assert!(r.rejected.is_empty(), "{r:?}");
+        assert_eq!(values(&dst)[0].1, [value]);
+    }
+}
+
+/// A one-column CSV is still CSV: quotes come off, and a quoted value keeps its commas and line
+/// breaks.
+#[test]
+fn one_column_csv_still_reads_its_quotes() {
+    let mut src = one_field();
+    set_value(&mut src, "Name", &FieldValue::Text("Hello, world".into())).unwrap();
+    let csv = export_data(&src, Format::Csv);
+    assert_eq!(csv, "Name\n\"Hello, world\"\n");
+    let mut dst = one_field();
+    assert_eq!(import(&mut dst, csv.as_bytes()).unwrap().fields, 1);
+    assert_eq!(values(&dst)[0].1, ["Hello, world"]);
+    let mut dst = one_field();
+    assert_eq!(import(&mut dst, b"Name\r\n\"Ada \"\"the\"\", \r\nCountess\"\r\n").unwrap().fields, 1);
+    assert!(values(&dst)[0].1[0].starts_with("Ada \"the\", ") && values(&dst)[0].1[0].ends_with("Countess"), "{:?}", values(&dst));
+}
+
 #[test]
 fn multi_select_lists_round_trip_through_xml_csv_and_text() {
     let src = filled();
