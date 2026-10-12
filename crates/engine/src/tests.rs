@@ -3923,3 +3923,72 @@ fn fonts_added_by_a_content_edit_show_after_refresh_fonts() {
     session.refresh_fonts(id);
     assert_eq!(format!("{:?}", session.get(id).unwrap().info.fonts), fonts);
 }
+
+/// Gap 13: every edit writes a new working file (the original plus one revision). Before the
+/// next one is written, the current one is let go of by the working bytes, the display bytes and
+/// the renderer: on a 1 GiB file, keeping it is a whole extra gigabyte at the peak of each edit.
+#[test]
+fn the_working_file_is_let_go_of_before_the_next_is_written() {
+    let (mut s, id) = session_with(2);
+    s.apply(id, Edit::RotatePages { pages: vec![1], degrees: 90 }).unwrap();
+    let doc = s.doc_mut(id).unwrap();
+    let (working, original) = (Arc::downgrade(&doc.bytes), doc.editor.as_ref().unwrap().cos.bytes().clone());
+    assert!(!Arc::ptr_eq(&doc.bytes, &original), "an edited working file is a buffer of its own");
+    Session::release_working(doc);
+    assert!(Arc::ptr_eq(&doc.bytes, &original) && Arc::ptr_eq(&doc.display, &original));
+    // The old renderer's workers let go of the file when they exit, just after.
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    while working.upgrade().is_some() {
+        assert!(std::time::Instant::now() < deadline, "the working file is still held");
+        std::thread::sleep(std::time::Duration::from_millis(5));
+    }
+    // The refresh that follows brings everything back.
+    Session::refresh(doc).unwrap();
+    assert_eq!(s.get(id).unwrap().info.pages[1].rotation, 90);
+    let _ = shown(&s, id, 1);
+}
+
+/// Every refresh path (full, comments, content, undo, redo) lets go of the previous working file
+/// and still shows the current state.
+#[test]
+fn edits_let_go_of_the_previous_working_file() {
+    let (mut s, id) = session_with(2);
+    let shape = Shape::Rectangle { rect: [20.0, 20.0, 60.0, 60.0] };
+    let comment = || {
+        Edit::AddAnnotation(NewAnnotation {
+            page: 0,
+            style: Style::default_for(&shape),
+            shape: shape.clone(),
+            contents: String::new(),
+            author: "Test".into(),
+        })
+    };
+    let watermark =
+        || Edit::AddWatermark { pages: vec![0], settings: Watermark { text: "Draft".into(), ..Watermark::default() }, file: None, replace: false };
+    s.apply(id, Edit::RotatePages { pages: vec![1], degrees: 90 }).unwrap();
+    // A full refresh, a comment refresh, a content refresh, then undo and redo.
+    let steps: [(&str, Box<dyn Fn(&mut Session)>); 5] = [
+        ("rotate", Box::new(|s: &mut Session| s.apply(id, Edit::RotatePages { pages: vec![0], degrees: 90 }).unwrap())),
+        ("comment", Box::new(move |s: &mut Session| s.apply(id, comment()).unwrap())),
+        ("watermark", Box::new(move |s: &mut Session| s.apply(id, watermark()).unwrap())),
+        ("undo", Box::new(|s: &mut Session| drop(s.undo(id).unwrap()))),
+        ("redo", Box::new(|s: &mut Session| drop(s.redo(id).unwrap()))),
+    ];
+    for (name, step) in steps {
+        let (bytes, display) = {
+            let doc = s.get(id).unwrap();
+            (Arc::downgrade(&doc.bytes), Arc::downgrade(&doc.display))
+        };
+        step(&mut s);
+        // The old renderer's workers let go of the file when they exit, just after.
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        while bytes.upgrade().is_some() || display.upgrade().is_some() {
+            assert!(std::time::Instant::now() < deadline, "{name}: the previous working file is still held");
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+    }
+    // What is shown is still the current state.
+    let doc = s.get(id).unwrap();
+    assert_eq!(doc.info.annotations.len(), 1);
+    let _ = shown(&s, id, 0);
+}
