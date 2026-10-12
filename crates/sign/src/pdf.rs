@@ -485,6 +485,14 @@ struct Field {
     widgets: Vec<(Option<ObjRef>, Dict)>,
 }
 
+impl Field {
+    /// The signature dictionary in /V. A field without one is unsigned, whether /V is missing,
+    /// null or not a dictionary.
+    fn signature(&self, doc: &Document) -> Option<Dict> {
+        self.dict.get(b"V").map(|v| doc.resolve(v)).and_then(|v| v.as_dict().cloned())
+    }
+}
+
 /// Every signature field, depth first in `/Fields` order.
 fn sig_fields(doc: &Document) -> Vec<Field> {
     let mut out = Vec::new();
@@ -566,7 +574,7 @@ pub fn list_cached(doc: &Document, bytes: &[u8], trust: &TrustStore, cache: &Dig
             .filter(|r| r.len() == 4)
             .map(|r| [r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])]);
         let visible = rect.is_some_and(|r| r[2] - r[0] > 0.5 && r[3] - r[1] > 0.5);
-        let v = f.dict.get(b"V").map(|v| doc.resolve(v)).and_then(|v| v.as_dict().cloned());
+        let v = f.signature(doc);
         let mut info = SignatureInfo {
             field: f.name.clone(),
             signed: v.is_some(),
@@ -1711,7 +1719,7 @@ fn sign_inner(
     let (widget, rect) = match existing {
         Some(f) => {
             let f = f?;
-            if f.dict.contains(b"V") {
+            if f.signature(&doc).is_some() {
                 return Err(SignError::Pdf(format!("the field {:?} is already signed", f.name)));
             }
             let fr = f.r.ok_or_else(|| SignError::Pdf("the field is not an indirect object".into()))?;
