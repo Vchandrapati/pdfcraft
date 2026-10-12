@@ -2946,11 +2946,7 @@ fn image_selection_bounds_respect_clips_and_restore_graphics_state() {
     images::change_image(&mut doc, 0, 0, &images::ImageChange::Transform(pdfcraft_content::Matrix::translate(offset[0], offset[1]).0)).unwrap();
     let reopened = reopen(&doc);
     let after = images::page_images(&reopened, 0).unwrap();
-    assert_eq!(
-        after[0].visible_rect,
-        Some([30.0, 50.0, 130.0, 130.0]),
-        "a clip outside the image's own `q re W n cm Do Q` stays where it is (#1049)"
-    );
+    assert_eq!(after[0].visible_rect, Some([42.0, 64.0, 142.0, 144.0]), "an exclusive crop moves with the image even across nested graphics states");
     for (a, b) in after[0].rect.iter().zip(before[0].rect.iter()).enumerate() {
         assert!((b.0 - b.1 - offset[a % 2]).abs() < 0.001);
     }
@@ -2978,7 +2974,7 @@ fn image_clip_path_and_graphics_state_continue_across_content_streams() {
     )
     .unwrap();
     let after = images::page_images(&reopen(&doc), 0).unwrap();
-    assert!(close(after[0].visible_rect.unwrap(), [20.0, 30.0, 60.0, 80.0]), "a clip split across streams stays where it is");
+    assert!(close(after[0].visible_rect.unwrap(), [20.0, 30.0, 80.0, 105.0]), "an exclusive crop scales with its image across streams");
     assert_eq!(after[1].matrix, images[1].matrix, "graphics state restored across stream boundaries");
 }
 
@@ -3027,6 +3023,35 @@ fn cropped_image_resizing_moves_private_clips_and_keeps_shared_ones() {
 }
 
 #[test]
+fn private_image_crop_with_intervening_state_resizes_across_streams() {
+    let variants: Vec<Vec<&[u8]>> = vec![
+        vec![b"q 1 0 0 1 10 20 cm 20 150 130 80 re W* n 0.5 g q 800 0 0 900 -300 -400 cm /Im0 Do Q Q BT /F1 12 Tf 30 130 Td (Caption) Tj ET"],
+        vec![b"q 1 0 0 1 10 20 cm 20 150 130 80 re W*", b"n 0.5 g q 800 0 0 900 -300 -400 cm /Im0 Do", b"Q Q BT /F1 12 Tf 30 130 Td (Caption) Tj ET"],
+    ];
+    for pieces in variants {
+        let mut doc = image_page();
+        let page = pdfcraft_model::pages(&doc)[0].obj;
+        let refs = pieces.iter().map(|b| Object::Ref(doc.add(Object::Stream(Stream::flate(Dict::new(), b))))).collect();
+        doc.update_dict(page, |d| d.set(b"Contents".to_vec(), Object::Array(refs))).unwrap();
+        let caption = text::text_lines(&doc, 0).unwrap();
+        for target in [[30.0, 170.0, 190.0, 270.0], [30.0, 170.0, 110.0, 220.0], [70.0, 210.0, 150.0, 260.0]] {
+            let before = images::page_images(&doc, 0).unwrap()[0].clone();
+            let transform = images::rect_to_rect(before.visible_rect.unwrap(), target);
+            images::change_image(&mut doc, 0, 0, &images::ImageChange::Transform(transform)).unwrap();
+            doc = reopen(&doc);
+            let after = images::page_images(&doc, 0).unwrap()[0].clone();
+            assert!(close(after.visible_rect.unwrap(), target), "the private crop follows the image without a literal operator pattern");
+            assert!(close(after.rect, pdfcraft_content::Matrix(transform).bbox(before.rect)));
+            assert_eq!(after.object, before.object);
+            assert_eq!(
+                text::text_lines(&doc, 0).unwrap().iter().map(|l| (&l.text, l.rect, l.baseline())).collect::<Vec<_>>(),
+                caption.iter().map(|l| (&l.text, l.rect, l.baseline())).collect::<Vec<_>>()
+            );
+        }
+    }
+}
+
+#[test]
 fn curved_image_clips_have_analytic_bounds_and_holes_do_not_capture_points() {
     let mut doc = image_page();
     let page = pdfcraft_model::pages(&doc)[0].obj;
@@ -3042,9 +3067,9 @@ fn curved_image_clips_have_analytic_bounds_and_holes_do_not_capture_points() {
     assert!(!images[1].contains([150.0, 150.0]), "even-odd hole");
     images::change_image(&mut doc, 0, 1, &images::ImageChange::Transform([1.2, 0.0, 0.0, 1.2, 10.0, 15.0])).unwrap();
     let after = images::page_images(&reopen(&doc), 0).unwrap();
-    // Only a rectangle in the image's own `q re W n cm Do Q` moves with it (#1049): these stay.
-    assert!(!after[1].contains([150.0, 150.0]), "the even-odd hole stays where it is");
-    assert!(after[1].contains([110.0, 110.0]));
+    assert!(!after[1].contains([190.0, 195.0]), "the transformed even-odd hole remains empty");
+    assert!(after[1].contains([142.0, 147.0]), "the transformed filled corner remains selectable");
+    assert_eq!(after[0].visible_rect, images[0].visible_rect, "the neighbouring curved clip stays put");
 }
 
 #[test]
