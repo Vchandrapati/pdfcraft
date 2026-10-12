@@ -1850,3 +1850,23 @@ fn invalid_appearance_patches_are_refused_before_anything_is_written() {
     assert!(set_props(&mut doc, "name", &props).is_err());
     assert_eq!(write_incremental(&doc, &SaveOptions::default()).unwrap(), before);
 }
+
+/// "Off" is a button's off state, not a value; a text or choice field that holds "Off" reads
+/// it (#1320), while an unchecked check box still reads as no value.
+#[test]
+fn a_literal_off_value_reads_as_off_outside_buttons() {
+    for (kind, value) in [
+        (NewField::Text { multiline: false }, FieldValue::Text("Off".into())),
+        (NewField::Combo { options: vec!["On".into(), "Off".into()], editable: false }, FieldValue::Choice(vec!["Off".into()])),
+        (NewField::List { options: vec!["On".into(), "Off".into()], multi: false }, FieldValue::Choice(vec!["Off".into()])),
+    ] {
+        let mut doc = one_page();
+        add_field(&mut doc, 0, [50.0, 600.0, 250.0, 620.0], &kind, Some("power")).unwrap();
+        set_value(&mut doc, "power", &value).unwrap();
+        assert_eq!(field(&fields(&reopen(&doc)), "power").value, ["Off"], "{kind:?}");
+    }
+    let mut doc = one_page();
+    add_field(&mut doc, 0, [50.0, 600.0, 70.0, 620.0], &NewField::CheckBox, Some("power")).unwrap();
+    set_value(&mut doc, "power", &FieldValue::Check(false)).unwrap();
+    assert!(field(&fields(&doc), "power").value.is_empty());
+}
