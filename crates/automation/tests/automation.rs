@@ -346,6 +346,30 @@ fn edit_undo_redo_and_save_round_trip() {
     assert_eq!(after.windows(5).filter(|w| w == b"%%EOF").count(), 2);
 }
 
+/// Issue #1329: an in-place save says it was incremental only when it kept the file it was
+/// saving over: protecting or sanitizing rewrites the file, and the result says so.
+#[test]
+fn an_in_place_save_reports_a_required_rewrite_as_not_incremental() {
+    let dir = workdir("save-incremental-flag");
+    let original = std::fs::read(dir.join("a.pdf")).unwrap();
+    let cases = [
+        ("page_rotate", json!({ "pages": [1], "degrees": 90 }), true),
+        ("doc_protect", json!({ "open_password": "openme" }), false),
+        ("doc_remove_hidden", json!({}), false),
+    ];
+    for (tool, args, incremental) in cases {
+        std::fs::write(dir.join("a.pdf"), &original).unwrap();
+        let mut a = auto(&dir);
+        let doc = ok(&mut a, "doc_open", json!({ "path": "a.pdf" }))["doc"].as_u64().unwrap();
+        let mut args = args;
+        args["doc"] = json!(doc);
+        ok(&mut a, tool, args);
+        let saved = ok(&mut a, "doc_save", json!({ "doc": doc }));
+        let kept = std::fs::read(dir.join("a.pdf")).unwrap().starts_with(&original);
+        assert_eq!((saved["incremental"].as_bool(), kept), (Some(incremental), incremental), "{tool}");
+    }
+}
+
 /// organize.field-name-conflicts: combining files whose forms share a field name keeps the
 /// fields separate by renaming, says so in the result, and can be told to merge instead; any
 /// other policy is an argument error.

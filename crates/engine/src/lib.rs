@@ -685,6 +685,12 @@ impl Document {
         self.editor.as_ref().map(|e| e.cos.revision_ends()).unwrap_or_default()
     }
 
+    /// The file as last opened or saved, without unsaved edits: what an incremental save appends
+    /// to.
+    pub fn saved_bytes(&self) -> Arc<Vec<u8>> {
+        self.editor.as_ref().map_or_else(|| self.bytes.clone(), |e| e.cos.bytes().clone())
+    }
+
     /// Notes about damage repaired while opening (Document Properties ▸ Advanced, notices).
     pub fn repair_log(&self) -> Vec<String> {
         self.editor.as_ref().map(|e| e.cos.repair_log().to_vec()).unwrap_or_default()
