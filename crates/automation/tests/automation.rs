@@ -3739,6 +3739,33 @@ fn comparing_documents_through_tools() {
 }
 
 #[test]
+fn comparison_pages_render_both_sides_without_mutating_documents() {
+    let dir = workdir("compare-pages");
+    let mut a = auto(&dir);
+    let old = ok(&mut a, "doc_open", json!({"path": "a.pdf"}))["doc"].as_u64().unwrap();
+    let new = ok(&mut a, "doc_open", json!({"path": "b.pdf"}))["doc"].as_u64().unwrap();
+    let out = a.call("doc_compare_pages", &json!({"doc": new, "other": old, "page": 1, "other_page": 2, "dpi": 72})).unwrap();
+    let Content::Json(meta) = &out[0] else { panic!("metadata first") };
+    assert_eq!(meta["old"]["page"], 2);
+    assert_eq!(meta["new"]["page"], 1);
+    let images: Vec<_> =
+        out.iter().filter_map(|c| if let Content::Png { data, width, height } = c { Some((data, *width, *height)) } else { None }).collect();
+    assert_eq!(images.len(), 2);
+    assert_eq!((images[0].1, images[0].2), (200, 300));
+    assert_eq!((images[1].1, images[1].2), (200, 300));
+    assert_ne!(images[0].0, images[1].0, "different page text was rendered on each side");
+    let documents = ok(&mut a, "doc_list", json!({}));
+    assert!(documents["documents"].as_array().unwrap().iter().all(|doc| doc["dirty"] == false));
+    for extra in [json!({"other": 999}), json!({"page": 0}), json!({"page": 3}), json!({"other_page": 4}), json!({"dpi": 0}), json!({"dpi": 601})] {
+        let mut args = json!({"doc": new, "other": old});
+        for (key, value) in extra.as_object().unwrap() {
+            args[key] = value.clone();
+        }
+        assert!(a.call("doc_compare_pages", &args).is_err(), "{args}");
+    }
+}
+
+#[test]
 fn actions_through_tools() {
     let dir = workdir("actions");
     let mut a = auto(&dir);

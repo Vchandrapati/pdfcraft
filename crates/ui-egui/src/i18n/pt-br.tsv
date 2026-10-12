@@ -587,7 +587,9 @@
 	Old file:	Arquivo antigo:
 	Open the older version first	Abra a versão mais antiga primeiro
 	New file:	Arquivo novo:
-	Text is compared word by word; the differences are shown on the new file.	O texto é comparado palavra por palavra; as diferenças são exibidas no novo arquivo.
+	Side by side	Lado a lado
+	Link scrolling and zoom	Vincular rolagem e zoom
+	Text is compared word by word; both files open side by side with differences highlighted.	O texto é comparado palavra por palavra; ambos os arquivos abrem lado a lado com as diferenças destacadas.
 	Compare this file with an older version: Compare files… in All tools.	Compare este arquivo com uma versão mais antiga: Comparar arquivos… em Todas as ferramentas.
 	No differences in the text.	Nenhuma diferença no texto.
 	{n} {kind}	{n} {kind}

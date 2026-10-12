@@ -957,7 +957,9 @@
 	Old file:	Старый файл:
 	Open the older version first	Сначала откройте более старую версию
 	New file:	Новый файл:
-	Text is compared word by word; the differences are shown on the new file.	Текст сравнивается пословно; различия показаны в новом файле.
+	Side by side	Рядом
+	Link scrolling and zoom	Связать прокрутку и масштаб
+	Text is compared word by word; both files open side by side with differences highlighted.	Текст сравнивается пословно; оба файла открываются рядом с выделенными различиями.
 	Compare this file with an older version: Compare files… in All tools.	Сравните этот файл с более старой версией: Сравнить файлы… во Всех инструментах.
 	No differences in the text.	В тексте нет различий.
 	{n} {kind}	{n} {kind}

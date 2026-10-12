@@ -648,7 +648,9 @@
 	Old file:	旧文件：
 	Open the older version first	请先打开旧版本
 	New file:	新文件：
-	Text is compared word by word; the differences are shown on the new file.	逐词比较文本；差异显示在新文件上。
+	Side by side	并排显示
+	Link scrolling and zoom	同步滚动和缩放
+	Text is compared word by word; both files open side by side with differences highlighted.	逐词比较文本；两份文件并排打开，并突出显示差异。
 	Compare this file with an older version: Compare files… in All tools.	将此文件与旧版本比较：在所有工具中使用“比较文件…”。
 	No differences in the text.	文本没有差异。
 	{n} {kind}	{n} {kind}

@@ -641,7 +641,9 @@
 	Old file:	Стар файл:
 	Open the older version first	Първо отворете по-старата версия
 	New file:	Нов файл:
-	Text is compared word by word; the differences are shown on the new file.	Текстът се сравнява дума по дума; разликите се показват в новия файл.
+	Side by side	Един до друг
+	Link scrolling and zoom	Свързване на превъртането и мащабирането
+	Text is compared word by word; both files open side by side with differences highlighted.	Текстът се сравнява дума по дума; двата файла се отварят един до друг с подчертани разлики.
 	Compare this file with an older version: Compare files… in All tools.	Сравнете този файл с по-стара версия: „Сравни файлове…“ във „Всички инструменти“.
 	No differences in the text.	Няма разлики в текста.
 	{n} {kind}	{n} {kind}

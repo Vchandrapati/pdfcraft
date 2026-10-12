@@ -37,6 +37,41 @@ fn is_png(path: &Path) -> bool {
 }
 
 #[test]
+fn comparison_script_saves_both_pages_and_confines_both_outputs() {
+    let base = sandbox("compare-pages");
+    let root = base.join("root");
+    let script = base.join("steps.json");
+    let run = |out: &str| {
+        let steps = serde_json::json!([
+            { "tool": "doc_create", "args": { "from": "blank", "width": 100, "height": 100 } },
+            { "tool": "doc_create", "args": { "from": "blank", "width": 200, "height": 100 } },
+            { "tool": "doc_compare_pages", "args": { "doc": 1, "other": 2, "dpi": 72 }, "out": out },
+        ]);
+        std::fs::write(&script, steps.to_string()).unwrap();
+        Command::new(env!("CARGO_BIN_EXE_pdfcraft-cli"))
+            .current_dir(&base)
+            .args(["run", "--script"])
+            .arg(&script)
+            .arg("--root")
+            .arg(&root)
+            .output()
+            .unwrap()
+    };
+    let output = run("pair.png");
+    assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+    assert!(is_png(&root.join("pair-1.png")) && is_png(&root.join("pair-2.png")));
+    assert!(!root.join("pair.png").exists());
+    assert_ne!(std::fs::read(root.join("pair-1.png")).unwrap(), std::fs::read(root.join("pair-2.png")).unwrap());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("pair-1.png") && stdout.contains("pair-2.png"), "{stdout}");
+    let output = run("../outside/escaped.png");
+    assert!(!output.status.success());
+    assert!(String::from_utf8_lossy(&output.stderr).contains("is outside the allowed directory"));
+    assert!(!base.join("outside/escaped-1.png").exists() && !base.join("outside/escaped-2.png").exists());
+    let _ = std::fs::remove_dir_all(base);
+}
+
+#[test]
 fn script_image_output_is_confined_to_the_root() {
     let base = sandbox("run-root");
     let root = base.join("root");

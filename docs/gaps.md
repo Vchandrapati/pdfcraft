@@ -1,6 +1,6 @@
 # Where PdfCraft falls short of Acrobat Pro
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (Word invoice regression coverage, #773; Office fidelity still partial; gap 2: hayro patch counts after the native-gradient backport) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
+> **Last reviewed:** 2026-10-12 · **Last updated:** 2026-10-12 · **Change:** minor (M12 side-by-side comparison and paired-page automation; readiness estimates unchanged) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (gap 1 closed by #836; fixed issues removed from gaps 3, 6 and 16) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (document-font subset completion and curved/shared image clips in the contributor fork; gap 2: hayro patch counts after the native-gradient backport) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 
@@ -41,7 +41,7 @@ update the numbers.
 | 18 | Print production tools absent | feature | 25–45 | [target-app-parity.md](target-app-parity.md) |
 | 19 | Preferences mostly missing | UI/UX | 15–25 | [ui-parity.md](ui-parity.md) |
 | 20 | Scanners, GPU page rendering, pen pressure, Read Out Loud | hardware | 25–50 | [hardware-parity.md](hardware-parity.md) |
-| 21 | Compare: no side-by-side view or filters | feature | 10–20 | [target-app-parity.md](target-app-parity.md) |
+| 21 | Compare: filters, ranges and scanned documents | feature | 10–20 | [target-app-parity.md](target-app-parity.md) |
 | 22 | PDF 2.0 extras, linearization, Arlington validation | spec | 20–35 | [pdf-spec-parity.md](pdf-spec-parity.md) |
 | 23 | Local AI provider (summarize, ask, alt text, redaction suggestions) | AI | 20–40 | [target-app-parity.md](target-app-parity.md) |
 | 24 | Checklist not diffed against Acrobat's own menus | measurement | 4–8 | [target-app-parity.md](target-app-parity.md) |
@@ -277,10 +277,11 @@ update the numbers.
   the CPU and uploaded); pressure-sensitive ink; platform text-to-speech.
 - **Estimate:** 25–50 h; scanners need hardware. **Doc:** [hardware-parity.md](hardware-parity.md).
 
-### 21. Compare: no side-by-side view or filters
+### 21. Compare: filters, ranges and scanned documents
 
-- **Missing:** synchronised side-by-side view, filters by change type, page ranges, scanned
-  documents.
+- **Done:** side-by-side views, linked scrolling/zoom and focused-pane editing in Compare files;
+  independent old/new page rendering through `doc_compare_pages`.
+- **Missing:** automatic page matching, filters by change type, page ranges and scanned documents.
 - **Estimate:** 10–20 h. **Doc:** [target-app-parity.md](target-app-parity.md).
 
 ### 22. PDF 2.0 extras, linearization, Arlington validation
@@ -309,6 +310,7 @@ update the numbers.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-12 | minor | M12: side-by-side Compare workflow added; filters, ranges, automatic page matching and scanned comparison remain open. Estimates unchanged. |
 | 2026-10-11 | minor | Word invoice failure #773 has synthetic regression coverage; broader Office conversion remains gap 8. |
 | 2026-10-11 | minor | Contributor fork: mixed-style visual regions, source-font space reuse and a read-only textless background. Embedded sfnt source faces and Mac subset Unicode mappings keep edit baselines stable; live frames follow Apply/Save geometry as text grows or shrinks. Engine/tool/UI regressions and private all-page checks cover the changes; full matching font import, CFF, range styles, shaping and private Chinese typing checks added; legacy programs and general fidelity remain open; estimates unchanged |
 | 2026-10-11 | patch | Gap 2: 23 hayro-interpret and 10 hayro patches after axial and radial shadings became native gradients (backport of hayro 0.8) |

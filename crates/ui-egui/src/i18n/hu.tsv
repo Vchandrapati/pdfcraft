@@ -927,7 +927,9 @@
 	Old file:	Régi fájl:
 	Open the older version first	Először a régebbi változatot nyisd meg
 	New file:	Új fájl:
-	Text is compared word by word; the differences are shown on the new file.	A szöveg szóról szóra van összehasonlítva; a különbségek az új fájlon látszanak.
+	Side by side	Egymás mellett
+	Link scrolling and zoom	Görgetés és nagyítás összekapcsolása
+	Text is compared word by word; both files open side by side with differences highlighted.	A szöveg összehasonlítása szavanként történik; mindkét fájl egymás mellett nyílik meg, kiemelt eltérésekkel.
 	Compare this file with an older version: Compare files… in All tools.	Hasonlítsd össze ezt a fájlt egy régebbi változattal: Fájlok összehasonlítása… a Minden eszközben.
 	No differences in the text.	Nincs különbség a szövegben.
 	{n} {kind}	{n} {kind}

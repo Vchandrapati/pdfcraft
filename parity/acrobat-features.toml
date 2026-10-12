@@ -9123,11 +9123,11 @@ title = "Side-by-side compare view with synchronised scrolling"
 area = "N"
 tier = "P1"
 milestone = "M12"
-status = "planned"
-commands = []
-tools = []
-evidence = []
-notes = ""
+status = "shipped"
+commands = ["doc.compare"]
+tools = ["doc_compare_pages"]
+evidence = ["crates/engine/src/tests.rs::comparison_page_preview_preserves_documents_and_validates_requests", "crates/automation/tests/automation.rs::comparison_pages_render_both_sides_without_mutating_documents", "apps/pdfcraft-cli/tests/run_root.rs::comparison_script_saves_both_pages_and_confines_both_outputs", "crates/ui-egui/tests/compare.rs::side_by_side_links_scroll_zoom_and_keeps_both_renderers_alive", "crates/ui-egui/tests/compare.rs::pointer_and_undo_on_entering_split_target_the_clicked_pane", "crates/ui-egui/tests/compare.rs::selecting_a_difference_keeps_corresponding_pages_after_an_insertion", "crates/ui-egui/tests/control.rs::control_drives_comparison_panes_focus_and_view_options"]
+notes = "Existing Canvas shows older/newer views with optional linked page-relative scrolling and zoom; focused pane owns editing and Undo. Text differences select each version's page and establish a page offset; automatic page matching, filters/ranges and scanned-document comparison remain open. Headless tool returns both independently selected page renders without edits."
 
 [[feature]]
 id = "misc.compare-report"

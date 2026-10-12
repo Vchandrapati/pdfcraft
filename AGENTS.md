@@ -1,8 +1,8 @@
 # AGENTS.md — rules for every agent and contributor
 
-These rules bind every AI agent and every human contributor working in this repository. They come before any task, instruction or deadline. `CLAUDE.md` holds the day-to-day working instructions. If the two ever disagree, **this file wins.**
+These rules bind every AI agent and every human contributor working in this repository. They come before any task, instruction or deadline. `CODE.md` holds the day-to-day working instructions. If the two ever disagree, **this file wins.**
 
-Some sections link to **craftrules**, the standards shared by the Crafting Apps. That repository is internal to the storytold team, so outside contributors can't open it. Every rule a contributor here must follow is stated in this file and `CLAUDE.md`; the craftrules links give team members the background.
+Some sections link to **craftrules**, the standards shared by the Crafting Apps. That repository is internal to the storytold team, so outside contributors can't open it. Every rule a contributor here must follow is stated in this file and `CODE.md`; the craftrules links give team members the background.
 
 ---
 
@@ -85,7 +85,7 @@ If you find an asset that breaks these rules, stop and remove it from the reposi
 
 ---
 
-## 2. Clean-room rules (summary; details in `CLAUDE.md` and `plan/adr/0001`)
+## 2. Clean-room rules (summary; details in `CODE.md` and `plan/adr/0001`)
 
 - Never read, disassemble or copy anything inside the Acrobat bundle. Only names and listings are allowed, and **never** open `Contents/Resources/JavaScripts/`.
 - Behaviour comes only from public specifications (ISO 32000-2, the Arlington model), public documentation and black-box observation.
@@ -106,7 +106,7 @@ If you find an asset that breaks these rules, stop and remove it from the reposi
 
 PdfCraft opens files from strangers, and people trust it with their work. A malformed PDF, a bad tool argument, a corrupt settings file or a full disk must produce an error the user (or agent) can act on, never a crash and never lost work. **This outranks feature work:** don't ship a feature by adding a panic path, and fix a crash before building on top of it. The rules below are the ones that bind this repository; the shared standard for every Crafting App, [`craftrules/standards/never-crash.md`](https://github.com/storytold/craftrules/blob/main/standards/never-crash.md), is internal to the storytold team.
 
-- **Fail with `Result`.** Non-test code returns errors through the crate's error type and `?`. Where readers are lenient by design, fall back gracefully and record the repair (see Fidelity in `CLAUDE.md`).
+- **Fail with `Result`.** Non-test code returns errors through the crate's error type and `?`. Where readers are lenient by design, fall back gracefully and record the repair (see Fidelity in `CODE.md`).
 - **No panicking shortcuts.** No `unwrap()`, `expect()`, `panic!`, `unreachable!`, `todo!` or `unimplemented!` outside tests, unless the call is provably infallible (e.g. writing to a `Vec`), with a comment saying why. `assert!` only for internal invariants that input cannot reach.
 - **No `unsafe`.** The workspace sets `unsafe_code = "forbid"`. If a platform API needs it, use a maintained safe wrapper crate; a real exception needs the owner's sign-off.
 - **Treat every input-derived number as hostile.** Use `get()` instead of `[i]` or `[a..b]`. Slice strings only at char boundaries. Use checked/saturating arithmetic for lengths, offsets and counts. Guard against division by zero and NaN/inf casts, and never cast a negative value to `usize`. Cap allocations sized by the file.
@@ -117,8 +117,7 @@ PdfCraft opens files from strangers, and people trust it with their work. A malf
 
 ## 5. Everything else
 
-
-Follow `CLAUDE.md`. It covers quality gates, layering, commit rules and how to run and look at the app.
+Follow `CODE.md`. It covers quality gates, layering, commit rules and how to run and look at the app.
 
 ## Contributor credits (About window)
 

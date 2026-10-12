@@ -104,6 +104,41 @@ fn control_resize_reports_observed_dimensions_and_rejects_invalid_sizes() {
 }
 
 #[test]
+fn control_drives_comparison_panes_focus_and_view_options() {
+    let (mut h, c) = harness_pages(5);
+    assert!(call(&mut h, &c, "ui.set", json!({"key": "compare-view", "value": "side-by-side"})).is_err());
+    h.state_mut().open_bytes("new.pdf", None, fixture(3)).unwrap();
+    h.state_mut().compare_old = Some(h.state().views[0].id);
+    ok(&mut h, &c, "ui.command", json!({"id": "doc.compare"}));
+    h.run_steps(3);
+    ok(&mut h, &c, "ui.click", json!({"label": "Compare"}));
+    h.run_steps(6);
+    let compare = ok(&mut h, &c, "ui.state", json!({}))["compare"].clone();
+    assert_eq!(compare["visible"], true);
+    assert_eq!(compare["panes"].as_array().unwrap().len(), 2);
+    let left = compare["panes"][0]["viewport"].as_array().unwrap();
+    let x = (left[0].as_f64().unwrap() + left[2].as_f64().unwrap()) / 2.0;
+    let y = (left[1].as_f64().unwrap() + left[3].as_f64().unwrap()) / 2.0;
+    ok(&mut h, &c, "ui.click", json!({"x": x, "y": y}));
+    assert_eq!(ok(&mut h, &c, "ui.state", json!({}))["active"]["doc"], compare["old"]);
+    ok(&mut h, &c, "ui.set", json!({"key": "zoom", "value": "125"}));
+    h.run_steps(6);
+    let linked = ok(&mut h, &c, "ui.state", json!({}))["compare"].clone();
+    assert_eq!(linked["panes"][0]["zoom_percent"], 125.0);
+    assert_eq!(linked["panes"][1]["zoom_percent"], 125.0);
+    ok(&mut h, &c, "ui.set", json!({"key": "compare-sync", "value": "off"}));
+    ok(&mut h, &c, "ui.set", json!({"key": "compare-focus", "value": "new"}));
+    ok(&mut h, &c, "ui.set", json!({"key": "compare-view", "value": "single"}));
+    assert_eq!(ok(&mut h, &c, "ui.state", json!({}))["compare"]["visible"], false);
+    for (key, value) in [("compare-view", "wrong"), ("compare-sync", "wrong"), ("compare-focus", "wrong")] {
+        assert!(call(&mut h, &c, "ui.set", json!({"key": key, "value": value})).is_err());
+    }
+    ok(&mut h, &c, "ui.set", json!({"key": "compare-view", "value": "side-by-side"}));
+    h.state_mut().close_tab(1);
+    assert!(ok(&mut h, &c, "ui.state", json!({}))["compare"].is_null());
+}
+
+#[test]
 fn control_focus_traverses_real_widgets_and_keyboard_activates() {
     let (mut h, c) = harness();
     ok(&mut h, &c, "ui.focus", json!({"label": "Read"}));

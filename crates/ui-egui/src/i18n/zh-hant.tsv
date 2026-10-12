@@ -593,7 +593,9 @@
 	Old file:	舊檔案：
 	Open the older version first	請先開啟舊版本
 	New file:	新檔案：
-	Text is compared word by word; the differences are shown on the new file.	逐詞比較文字；差異顯示在新檔案上。
+	Side by side	並排顯示
+	Link scrolling and zoom	同步捲動與縮放
+	Text is compared word by word; both files open side by side with differences highlighted.	逐詞比較文字；兩份檔案並排開啟，並醒目標示差異。
 	Compare this file with an older version: Compare files… in All tools.	將此檔案與舊版本比較：在所有工具中使用“比較檔案…”。
 	No differences in the text.	文字沒有差異。
 	{n} {kind}	{n} {kind}

@@ -1030,7 +1030,9 @@ key	Space	Mezerník
 	Old file:	Starý soubor:
 	Open the older version first	Nejdřív otevřete starší verzi
 	New file:	Nový soubor:
-	Text is compared word by word; the differences are shown on the new file.	Text se porovnává slovo po slovu; rozdíly se zobrazí v novém souboru.
+	Side by side	Vedle sebe
+	Link scrolling and zoom	Propojit posouvání a přiblížení
+	Text is compared word by word; both files open side by side with differences highlighted.	Text se porovnává slovo po slovu; oba soubory se otevřou vedle sebe se zvýrazněnými rozdíly.
 	Compare this file with an older version: Compare files… in All tools.	Porovnání tohoto souboru se starší verzí: Porovnat soubory… ve Všech nástrojích.
 	No differences in the text.	V textu nejsou žádné rozdíly.
 	{n} {kind}	{kind}: {n}

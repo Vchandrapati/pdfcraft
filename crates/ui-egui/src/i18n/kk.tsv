@@ -908,7 +908,9 @@
 	Old file:	Ескі файл:
 	Open the older version first	Алдымен ескірек нұсқаны ашыңыз
 	New file:	Жаңа файл:
-	Text is compared word by word; the differences are shown on the new file.	Мәтін сөзбе-сөз салыстырылады; айырмашылықтар жаңа файлда көрсетіледі.
+	Side by side	Қатар көрсету
+	Link scrolling and zoom	Айналдыру мен масштабты байланыстыру
+	Text is compared word by word; both files open side by side with differences highlighted.	Мәтін сөзбе-сөз салыстырылады; екі файл айырмашылықтары белгіленіп қатар ашылады.
 	Compare this file with an older version: Compare files… in All tools.	Бұл файлды ескірек нұсқасымен салыстырыңыз: «Барлық құралдар» ішіндегі «Файлдарды салыстыру…».
 	No differences in the text.	Мәтіндегі айырмашылық жоқ.
 	{n} {kind}	{n} {kind}

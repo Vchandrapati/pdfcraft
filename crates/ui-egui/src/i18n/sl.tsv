@@ -1755,7 +1755,9 @@
 	Text box	Besedilni okvir
 	Text field	Besedilno polje
 	Text in images isn't found; recognise text (OCR) first.	Besedilo v slikah ni najdeno; najprej prepoznajte besedilo (OCR).
-	Text is compared word by word; the differences are shown on the new file.	Besedilo se primerja po besedah; razlike so prikazane na novi datoteki.
+	Side by side	Drug ob drugem
+	Link scrolling and zoom	Poveži pomikanje in povečavo
+	Text is compared word by word; both files open side by side with differences highlighted.	Besedilo se primerja po besedah; obe datoteki se odpreta druga ob drugi z označenimi razlikami.
 	Text language is specified	Jezik besedila je določen
 	Text must contrast enough with its background for people with low vision. Check the colours by eye or with a contrast tool.	Besedilo mora imeti dovolj kontrasta z ozadjem za slabovidne ljudi. Barve preverite na oko ali z orodjem za kontrast.
 	Text recognition is already running	Prepoznavanje besedila že poteka

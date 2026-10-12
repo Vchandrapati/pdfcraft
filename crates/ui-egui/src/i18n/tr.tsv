@@ -915,7 +915,9 @@
 	Old file:	Eski dosya:
 	Open the older version first	Önce eski sürümü açın
 	New file:	Yeni dosya:
-	Text is compared word by word; the differences are shown on the new file.	Metin sözcük sözcük karşılaştırılır; farklılıklar yeni dosyada gösterilir.
+	Side by side	Yan yana
+	Link scrolling and zoom	Kaydırma ve yakınlaştırmayı bağla
+	Text is compared word by word; both files open side by side with differences highlighted.	Metin sözcük sözcük karşılaştırılır; iki dosya, farklar vurgulanarak yan yana açılır.
 	Compare this file with an older version: Compare files… in All tools.	Bu dosyayı daha eski bir sürümle karşılaştırın: Tüm araçlar bölümündeki Dosyaları karşılaştır… aracını kullanın.
 	No differences in the text.	Metinde fark yok.
 	{n} {kind}	{n} {kind}

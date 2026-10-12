@@ -2504,6 +2504,30 @@ fn comparing_two_versions_of_a_document() {
 }
 
 #[test]
+fn comparison_page_preview_preserves_documents_and_validates_requests() {
+    let mut s = Session::new();
+    let old_bytes = s.create_blank(200.0, 300.0, 3).unwrap();
+    let new_bytes = s.create_blank(400.0, 200.0, 1).unwrap();
+    let old = s.open("old.pdf", None, old_bytes.clone(), None).unwrap();
+    let new = s.open("new.pdf", None, new_bytes.clone(), None).unwrap();
+    let [a, b] = s.compare_pages(old, new, 2, 0, 72.0).unwrap();
+    assert_eq!((a.width, a.height, a.request.page), (200, 300, 2));
+    assert_eq!((b.width, b.height, b.request.page), (400, 200, 0));
+    assert!(!a.rgba.is_empty() && !b.rgba.is_empty());
+    for (id, bytes) in [(old, old_bytes), (new, new_bytes)] {
+        let doc = s.get(id).unwrap();
+        assert_eq!(doc.bytes.as_slice(), bytes.as_slice());
+        assert!(!doc.dirty && doc.can_undo().is_none());
+    }
+    assert!(s.compare_pages(old, new, 3, 0, 72.0).is_err());
+    assert!(s.compare_pages(old, new, 0, 1, 72.0).is_err());
+    assert!(s.compare_pages(old, DocId(u64::MAX), 0, 0, 72.0).is_err());
+    for dpi in [0.0, -1.0, 601.0, f32::NAN, f32::INFINITY] {
+        assert!(s.compare_pages(old, new, 0, 0, dpi).is_err());
+    }
+}
+
+#[test]
 fn actions_run_their_steps_on_files() {
     let s = Session::new();
     let src = s.create_from_text("t", "Quarterly numbers").unwrap();

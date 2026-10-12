@@ -288,6 +288,17 @@ pub struct RasterMemory {
     pub pending_requests: usize,
 }
 
+/// A position relative to a page rather than a pixel scroll offset. Comparison panes can have
+/// different page sizes, so linked navigation maps the fractions into the other document.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct ViewNavigation {
+    pub page: usize,
+    pub x: f32,
+    pub y: f32,
+    pub zoom: f32,
+    pub fit: Fit,
+}
+
 pub struct DocView {
     pub id: DocId,
     pub zoom: f32,
@@ -548,6 +559,37 @@ impl DocView {
     /// The document area on screen.
     pub fn viewport_rect(&self) -> Rect {
         self.viewport_screen
+    }
+
+    pub(crate) fn navigation(&self) -> Option<ViewNavigation> {
+        let top_left = self.viewport_screen.min;
+        let (page, rect) = self.screen_rects.iter().find(|(_, rect)| rect.bottom() > top_left.y).or_else(|| self.screen_rects.last())?;
+        if !rect.is_positive() || !rect.is_finite() {
+            return None;
+        }
+        Some(ViewNavigation {
+            page: *page,
+            x: (top_left.x - rect.left()) / rect.width(),
+            y: (top_left.y - rect.top()) / rect.height(),
+            zoom: self.zoom,
+            fit: self.fit,
+        })
+    }
+
+    pub(crate) fn follow_navigation(&mut self, navigation: ViewNavigation) {
+        if self.page_count == 0 {
+            return;
+        }
+        let page = navigation.page.min(self.page_count.saturating_sub(1));
+        if navigation.fit == Fit::None {
+            self.zoom = navigation.zoom;
+        }
+        self.fit = navigation.fit;
+        self.current = page;
+        self.page_input = (page + 1).to_string();
+        self.goto = None;
+        self.goto_point = None;
+        self.zoom_anchor = Some((page, navigation.x, navigation.y, Vec2::ZERO));
     }
 
     /// Whether a middle-button scrolling gesture is active (tests and automation).
@@ -1998,7 +2040,24 @@ pub fn shortcuts(view: &mut DocView, ctx: &egui::Context) {
 const KEY_SCROLL_LINE: f32 = 40.0;
 
 pub fn document_area(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
+    let Some(view) = app.views.get(index) else { return };
+    // Global document scope keeps scroll/widget IDs stable when entering/leaving comparison,
+    // switching Read mode, or moving the Canvas panel in the docking workspace.
+    let id = egui::Id::new(("document-canvas", view.id));
+    ui.scope_builder(egui::UiBuilder::new().id(id), |ui| {
+        if app.active != Some(index) {
+            let opacity = ui.opacity();
+            ui.disable();
+            // The inactive document remains fully readable; only its input is disabled.
+            ui.set_opacity(opacity);
+        }
+        document_body(app, index, ui);
+    });
+}
+
+fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
     let t = Tokens::get(ui.ctx());
+    let active = app.active == Some(index);
     // Keyboard scrolling applies to this frame's page view only, never later.
     let key_scroll = std::mem::take(&mut app.views[index].key_scroll);
     // The Search panel closed: its search moves to the find bar.
@@ -2043,7 +2102,7 @@ pub fn document_area(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
         None => {}
     }
     // No dialog, close prompt or palette over the page: only then does page input count.
-    let unobstructed = !app.modal_open() && !app.palette_open;
+    let unobstructed = active && !app.modal_open() && !app.palette_open;
     let view = &mut app.views[index];
     if view.organize {
         organize_grid(view, info, doc.allows_assembly(), doc.dirty, unobstructed, ui, &t);
@@ -2120,7 +2179,7 @@ pub fn document_area(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
     // nothing to pan, touch users turn pages with the rail buttons, the page box and the arrow
     // keys. Runs before `visible_pages` so the frame that turns the page draws it.
     let mut single_paging = false;
-    if !view.continuous {
+    if !view.continuous && active {
         // The row's bounding box on screen (one page, or a two-page spread).
         let row_rect = row.iter().filter_map(|&i| rects.get(i)).copied().reduce(Rect::union);
         // Within a point, so layout rounding can't stop a fitting page from turning.
@@ -2152,7 +2211,7 @@ pub fn document_area(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
     // mouse wheel keeps egui's easing (pleasant for chunky notches).
     let now = ui.input(|i| i.time);
     let mut precise_scroll = Vec2::ZERO;
-    if ui.rect_contains_pointer(avail) {
+    if active && ui.rect_contains_pointer(avail) {
         let mut coarse_wheel = false;
         ui.input(|i| {
             for e in &i.events {
@@ -2179,7 +2238,7 @@ pub fn document_area(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
     if single_paging {
         precise_scroll.y = 0.0;
     }
-    if now < view.precise_scroll_until {
+    if active && now < view.precise_scroll_until {
         ui.input_mut(|i| i.smooth_scroll_delta = Vec2::ZERO);
     } else {
         precise_scroll = Vec2::ZERO;
@@ -3110,23 +3169,25 @@ pub fn document_area(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
             });
         });
     }
-    find_bar(view, info.pages.len(), avail, ui, &t);
-    if tool == QuickTool::EnhanceCamera {
+    if active {
+        find_bar(view, info.pages.len(), avail, ui, &t);
+    }
+    if active && tool == QuickTool::EnhanceCamera {
         crate::camera_ui::bar(ui.ctx(), view, avail, &t, can_modify);
     }
-    if let Some(e) = comments::composer(ui.ctx(), view, info, prefs) {
+    if let Some(e) = active.then(|| comments::composer(ui.ctx(), view, info, prefs)).flatten() {
         view.pending_edit = Some(e);
     }
-    if let Some(e) = crate::edit_text_ui::overlay(ui.ctx(), view, info) {
+    if let Some(e) = active.then(|| crate::edit_text_ui::overlay(ui.ctx(), view, info)).flatten() {
         view.pending_edit = Some(e);
     }
-    if let Some(e) = crate::forms_ui::overlay(ui.ctx(), view, info, &form, today) {
+    if let Some(e) = active.then(|| crate::forms_ui::overlay(ui.ctx(), view, info, &form, today)).flatten() {
         view.pending_edit = Some(e);
     }
-    if let Some(e) = crate::fill_sign::type_box(ui.ctx(), view, info, &author) {
+    if let Some(e) = active.then(|| crate::fill_sign::type_box(ui.ctx(), view, info, &author)).flatten() {
         view.pending_edit = Some(e);
     }
-    let (typed, text_done) = crate::content_ui::editor(ui.ctx(), view, info, &added);
+    let (typed, text_done) = if active { crate::content_ui::editor(ui.ctx(), view, info, &added) } else { (None, false) };
     if typed.is_some() {
         view.pending_edit = typed;
     }
@@ -3137,14 +3198,16 @@ pub fn document_area(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
     // One crop, then back to selecting (as Acrobat does).
     let cropped = view.pending_edit.as_ref().is_some_and(|e| matches!(e, pdfcraft_engine::Edit::SetPageBox { .. }));
     let mut tool = app.quick_tool;
-    comments::keys(ui.ctx(), view, &mut tool, allowed);
-    if preparing {
+    if active {
+        comments::keys(ui.ctx(), view, &mut tool, allowed);
+    }
+    if active && preparing {
         crate::prepare::keys(ui.ctx(), view);
     }
-    if editing_content {
+    if active && editing_content {
         crate::content_ui::keys(ui.ctx(), view);
     }
-    if tool == QuickTool::Link {
+    if active && tool == QuickTool::Link {
         crate::link_ui::keys(ui.ctx(), view);
     } else {
         view.links.selected = None;
@@ -3273,7 +3336,9 @@ pub fn document_area(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
     if let Some((name, action)) = app.views[index].forms.button.take() {
         run_button(app, index, &name, action);
     }
-    quick_bar(app, avail, ui);
+    if active {
+        quick_bar(app, avail, ui);
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -4407,6 +4472,14 @@ trailer << /Root 1 0 R >>
             ..Default::default()
         };
         DocView::new(DocId(1), &info, ViewDefaults { layout, continuous, ..Default::default() })
+    }
+
+    #[test]
+    fn linked_navigation_does_not_anchor_an_empty_view() {
+        let mut empty = view(0, PageLayout::Single, true);
+        empty.follow_navigation(ViewNavigation { page: 2, x: 0.0, y: 0.25, zoom: 1.25, fit: Fit::None });
+        assert!(empty.zoom_anchor.is_none());
+        assert!(empty.navigation().is_none());
     }
 
     #[test]

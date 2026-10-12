@@ -950,6 +950,10 @@ pub fn tools() -> Vec<ToolDef> {
             .ro()
             .cmd("doc.compare")
             .with(schema(json!({ "doc": doc(), "other": { "type": "integer", "description": "The older document (from doc_open)." }, "limit": { "type": "integer", "minimum": 1, "description": "List at most this many changes (default 500)." }, "visual": { "type": "boolean", "description": "Also compare how pages look (page n with page n): regions that differ visually." } }), &["doc", "other"])),
+        t("doc_compare_pages", "View comparison pages", "Render two open documents for side-by-side viewing without changing them. Returns JSON identifying both pages, followed by the older and newer page PNGs, in that order. page and other_page are independent, 1-based, default 1; dpi defaults to 96.")
+            .ro()
+            .cmd("doc.compare")
+            .with(schema(json!({ "doc": doc(), "other": { "type": "integer", "description": "The older open document." }, "page": { "type": "integer", "minimum": 1 }, "other_page": { "type": "integer", "minimum": 1 }, "dpi": { "type": "number", "minimum": 1, "maximum": 600 } }), &["doc", "other"])),
         t("doc_compare_report", "Compare report", "Write the compare summary report (a PDF listing every change) to path.")
             .cmd("doc.compare")
             .with(schema(json!({ "doc": doc(), "other": { "type": "integer" }, "path": { "type": "string" } }), &["doc", "other", "path"])),

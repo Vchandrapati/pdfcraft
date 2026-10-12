@@ -695,14 +695,30 @@ fn tools() -> Result<(), CliError> {
 }
 
 /// Print a tool's result: JSON as JSON; images go to `--out` (or are summarised). The image is
-/// written like a tool's own output, so `--root` confines it too.
+/// written like a tool's own output, so `--root` confines it too. Multiple images receive
+/// numbered names (`preview-1.png`, `preview-2.png`) rather than overwriting one another.
 fn print_output(auto: &pdfcraft_automation::Automation, content: Vec<pdfcraft_automation::Content>, out: Option<&str>) -> Result<(), CliError> {
+    let images = content.iter().filter(|c| matches!(c, pdfcraft_automation::Content::Png { .. })).count();
+    let mut image_index = 0;
     for c in content {
         match c {
             pdfcraft_automation::Content::Json(v) => stdout_line(format_args!("{}", serde_json::to_string_pretty(&v).unwrap_or_default()))?,
             pdfcraft_automation::Content::Png { data, width, height } => match out {
                 Some(path) => {
-                    let written = auto.write_output(path, &data).map_err(|e| e.to_string())?;
+                    image_index += 1;
+                    let output = if images > 1 {
+                        let path = std::path::Path::new(path);
+                        let mut name = path.file_stem().ok_or("--out must name an image file")?.to_os_string();
+                        name.push(format!("-{image_index}"));
+                        if let Some(extension) = path.extension() {
+                            name.push(".");
+                            name.push(extension);
+                        }
+                        path.with_file_name(name)
+                    } else {
+                        PathBuf::from(path)
+                    };
+                    let written = auto.write_output(&output.to_string_lossy(), &data).map_err(|e| e.to_string())?;
                     stdout_line(format_args!("{}", serde_json::json!({ "image": written.to_string_lossy(), "width": width, "height": height })))?;
                 }
                 None => stdout_line(format_args!(

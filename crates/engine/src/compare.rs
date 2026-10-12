@@ -43,6 +43,42 @@ impl crate::Document {
 }
 
 impl Session {
+    /// Render the two pages of a comparison without changing either document. Page indices
+    /// are zero-based; callers can choose separate pages after an insertion or deletion.
+    pub fn compare_pages(
+        &self,
+        old: DocId,
+        new: DocId,
+        old_page: usize,
+        new_page: usize,
+        dpi: f32,
+    ) -> Result<[pdfcraft_render::RenderedPage; 2], EditError> {
+        if !dpi.is_finite() || !(1.0..=600.0).contains(&dpi) {
+            return Err(EditError::Invalid("comparison dpi must be between 1 and 600".into()));
+        }
+        let render = |id: DocId, page: usize| {
+            let doc = self.get(id).ok_or(EditError::NoDocument)?;
+            if doc.info.pages.get(page).is_none() {
+                return Err(EditError::Invalid(format!(
+                    "page {} is out of range: {} has {} pages",
+                    page.saturating_add(1),
+                    doc.name,
+                    doc.info.pages.len()
+                )));
+            }
+            let mut renderer = pdfcraft_render::PageRenderer::new(
+                doc.bytes.clone(),
+                pdfcraft_render::RenderConfig { password: doc.password.as_deref().map(Arc::from), ..Default::default() },
+            );
+            let result = renderer.render(pdfcraft_render::RenderRequest { page, scale: dpi / 72.0, ..Default::default() });
+            if let Some(error) = &result.error {
+                return Err(EditError::Invalid(format!("{} page {} could not be rendered: {error}", doc.name, page.saturating_add(1))));
+            }
+            Ok(result)
+        };
+        Ok([render(old, old_page)?, render(new, new_page)?])
+    }
+
     /// Compare files: the text differences from document `old` to document `new`.
     pub fn compare(&self, old: DocId, new: DocId) -> Result<Comparison, EditError> {
         let a = self.get(old).ok_or(EditError::NoDocument)?;

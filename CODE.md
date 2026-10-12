@@ -34,6 +34,19 @@ PdfCraft is a clean-room, open-source, Rust-native PDF application targeting Ado
 - **Quality gates** before every commit: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `cargo test --workspace`, and the wasm check once `xtask ci` exists (M0).
 - **Commits:** one task id per commit (e.g. `M1.4: xref stream reader`). Commit only green states. End messages with the attribution line required by the environment.
 
+## Engineering Principles
+
+- **Prefer simplicity:** Implement the smallest clear solution that meets the requirements. Avoid speculative complexity, premature abstractions, and unnecessary dependencies.
+- **Proportional testing:** Test meaningful behaviour, edge cases, and regression risks. Do not generate excessive tests for trivial logic, implementation details, or obvious language behaviour.
+- **Avoid defensive overengineering:** Do not add redundant validation, checksums, hashing, integrity checks, fallback paths, or recovery mechanisms without a concrete requirement or realistic failure scenario.
+- **Trust internal contracts:** Assume validated internal data and established interfaces behave as specified. Validate at external or untrusted boundaries rather than repeatedly checking throughout the codebase.
+- **Fail clearly:** Prefer explicit errors over silent fallbacks, broad exception handling, excessive retries, or attempts to recover from unexpected states.
+- **Keep abstractions justified:** Introduce abstractions only when they meaningfully reduce duplication, complexity, or coupling. Avoid unnecessary wrappers, interfaces, factories, and helper functions.
+- **Minimise changes:** Make focused modifications without unrelated refactoring, formatting, compatibility layers, or additional features.
+- **Avoid speculative future-proofing:** Build for current requirements, not hypothetical future use cases. Do not introduce extensibility mechanisms without a demonstrated need.
+- **Use existing conventions:** Follow the project's established architecture, patterns, and dependencies rather than introducing new ones without clear benefit.
+- **Exercise judgement:** Not every potential edge case needs handling. Prioritise realistic risks and maintainability over theoretical completeness.
+
 ## Running and looking at the app
 - `cargo run -p pdfcraft -- <file.pdf>` opens the desktop app.
 - `cargo run -p pdfcraft-cli -- run --script steps.json --root DIR` drives the engine headlessly through the automation tools (`pdfcraft-cli tools` lists them). Use it, together with `page_render`, to check engine changes. `pdfcraft-cli mcp` is the opt-in MCP server (AGENTS.md §3).

@@ -1,6 +1,7 @@
 //! Compare files: choose the older version, then the Compare panel lists the differences
 //! (replaced blue, inserted green, deleted red), shades them on the newer document's pages, and
-//! offers a report or the differences as comments.
+//! offers a report or the differences as comments. Both versions share the existing document
+//! viewer, with optional linked navigation; the focused pane owns ordinary document commands.
 
 use egui::{Align, Color32, Layout};
 use pdfcraft_engine::DocId;
@@ -17,6 +18,13 @@ pub struct CompareState {
     /// Regions that look different (page, user-space box), page n against page n.
     pub visual: Vec<(usize, [f64; 4])>,
     pub selected: Option<usize>,
+    pub side_by_side: bool,
+    pub sync_navigation: bool,
+    last_navigation: Option<(DocId, crate::canvas::ViewNavigation)>,
+    /// Selecting a difference establishes corresponding pages, including after page insertion.
+    navigation_pages: (usize, usize),
+    /// On a layout transition, resolve pointer focus from this frame's panes before shortcuts.
+    pending_shortcuts: bool,
 }
 
 /// Visual differences are shaded orange.
@@ -28,11 +36,18 @@ pub enum PanelAction {
     Mark,
     Report,
     Clear,
+    SideBySide(bool),
+    SyncNavigation(bool),
 }
 
 pub fn colour(kind: Kind) -> Color32 {
     let [r, g, b] = pdfcraft_engine::compare::colour(kind);
     Color32::from_rgb((r * 255.0) as u8, (g * 255.0) as u8, (b * 255.0) as u8)
+}
+
+fn navigation_pointer(input: &egui::InputState) -> Option<egui::Pos2> {
+    let wheel = input.events.iter().any(|e| matches!(e, egui::Event::MouseWheel { delta, .. } if *delta != egui::Vec2::ZERO));
+    (input.pointer.any_pressed() || wheel || input.zoom_delta() != 1.0).then(|| input.pointer.interact_pos()).flatten()
 }
 
 /// The Compare Files dialog: pick the older document. Returns (compare, cancel).
@@ -61,7 +76,11 @@ pub(crate) fn body(ui: &mut egui::Ui, app: &mut PdfCraftApp, t: &Tokens) -> (boo
         ui.end_row();
     });
     ui.add_space(4.0);
-    ui.label(egui::RichText::new(tl!("Text is compared word by word; the differences are shown on the new file.")).small().color(t.text_muted));
+    ui.label(
+        egui::RichText::new(tl!("Text is compared word by word; both files open side by side with differences highlighted."))
+            .small()
+            .color(t.text_muted),
+    );
     ui.add_space(10.0);
     let (mut go, mut cancel) = (false, false);
     ui.horizontal(|ui| {
@@ -79,11 +98,19 @@ pub(crate) fn body(ui: &mut egui::Ui, app: &mut PdfCraftApp, t: &Tokens) -> (boo
 
 /// The Compare panel.
 pub(crate) fn panel(ui: &mut egui::Ui, t: &Tokens, state: &Option<CompareState>, id: DocId) -> Option<PanelAction> {
-    let Some(s) = state.as_ref().filter(|s| s.new == id) else {
+    let Some(s) = state.as_ref().filter(|s| s.new == id || s.old == id) else {
         ui.label(egui::RichText::new(tl!("Compare this file with an older version: Compare files… in All tools.")).color(t.text_muted));
         return None;
     };
     let mut action = None;
+    let mut side_by_side = s.side_by_side;
+    if ui.add(widgets::checkbox(&mut side_by_side, tl!("Side by side"))).changed() {
+        action = Some(PanelAction::SideBySide(side_by_side));
+    }
+    let mut sync_navigation = s.sync_navigation;
+    if ui.add_enabled(side_by_side, widgets::checkbox(&mut sync_navigation, tl!("Link scrolling and zoom"))).changed() {
+        action = Some(PanelAction::SyncNavigation(sync_navigation));
+    }
     let c = &s.result;
     if c.identical() {
         ui.label(tl!("No differences in the text."));
@@ -145,18 +172,104 @@ pub(crate) fn panel(ui: &mut egui::Ui, t: &Tokens, state: &Option<CompareState>,
 }
 
 impl PdfCraftApp {
+    /// The two documents currently visible in the comparison workspace. Other tabs, Organize
+    /// and full screen retain their ordinary single-document view.
+    pub(crate) fn compare_view_indices(&self) -> Option<[usize; 2]> {
+        let s = self.compare.as_ref().filter(|s| s.side_by_side)?;
+        let active = self.active_ids()?.1;
+        if self.full_screen || (active != s.old && active != s.new) {
+            return None;
+        }
+        let old = self.views.iter().position(|v| v.id == s.old)?;
+        let new = self.views.iter().position(|v| v.id == s.new)?;
+        if old == new || [old, new].iter().any(|i| self.views.get(*i).is_some_and(|v| v.organize)) {
+            return None;
+        }
+        Some([old, new])
+    }
+
+    pub(crate) fn clear_compare(&mut self) {
+        if let Some(s) = self.compare.take() {
+            for view in self.views.iter_mut().filter(|v| v.id == s.old || v.id == s.new) {
+                view.compare_marks.clear();
+            }
+            if self.right == Some(RightPanel::Compare) {
+                self.right = None;
+            }
+        }
+    }
+
+    pub(crate) fn sync_compare_navigation(&mut self, ctx: &egui::Context) {
+        let Some(pair) = self.compare_view_indices() else { return };
+        let Some(active) = self.active else { return };
+        let Some(source) = self.views.get(active) else { return };
+        let Some(mut navigation) = source.navigation() else { return };
+        let source_id = source.id;
+        let Some(s) = self.compare.as_mut().filter(|s| s.sync_navigation) else { return };
+        if s.last_navigation == Some((source_id, navigation)) {
+            return;
+        }
+        s.last_navigation = Some((source_id, navigation));
+        let (from, to) = if source_id == s.old { s.navigation_pages } else { (s.navigation_pages.1, s.navigation_pages.0) };
+        navigation.page = if navigation.page >= from { to.saturating_add(navigation.page - from) } else { to.saturating_sub(from - navigation.page) };
+        let other = if active == pair[0] { pair[1] } else { pair[0] };
+        if let Some(target) = self.views.get_mut(other) {
+            target.follow_navigation(navigation);
+            ctx.request_repaint();
+        }
+    }
+
+    /// Resolve pointer focus before shortcuts and object input gates run in `logic`.
+    pub(crate) fn focus_compare_pointer(&mut self, ctx: &egui::Context) -> bool {
+        let Some(pair) = self.compare_view_indices() else { return true };
+        if self.modal_open() || self.palette_open {
+            return true;
+        }
+        let pointer = ctx.input(navigation_pointer);
+        if let Some(pointer) = pointer {
+            let rects = pair.map(|i| self.views[i].viewport_rect());
+            if rects.iter().any(|r| !r.is_positive()) || rects[0].intersects(rects[1]) {
+                // Old single-document rectangles overlap when first entering the split. The
+                // Canvas wrapper knows the current layout; dispatch there instead of guessing.
+                if let Some(s) = self.compare.as_mut() {
+                    s.pending_shortcuts = true;
+                }
+                return false;
+            }
+            for pane in pair {
+                if self.views.get(pane).is_some_and(|v| v.viewport_rect().contains(pointer)) {
+                    self.active = Some(pane);
+                }
+            }
+        }
+        true
+    }
+
     /// Compare the chosen older document with the active one and show the differences.
     pub fn run_compare(&mut self) {
         let Some((i, new)) = self.active_ids() else { return };
         let Some(old) = self.compare_old else { return };
         match self.session.compare(old, new) {
             Ok(result) => {
-                let visual = self.session.compare_visual(old, new, 72.0).unwrap_or_default();
-                self.views[i].compare_marks = result
-                    .changes
-                    .iter()
-                    .flat_map(|ch| ch.new.rects.iter().map(move |r| (ch.new.page, r.map(|v| v as f32), colour(ch.kind))))
-                    .collect();
+                let visual = match self.session.compare_visual(old, new, 72.0) {
+                    Ok(visual) => visual,
+                    Err(e) => {
+                        self.notify_error(e);
+                        return;
+                    }
+                };
+                self.clear_compare();
+                for view in self.views.iter_mut().filter(|v| v.id == old || v.id == new) {
+                    view.organize = false;
+                    view.compare_marks = result
+                        .changes
+                        .iter()
+                        .flat_map(|ch| {
+                            let side = if view.id == old { &ch.old } else { &ch.new };
+                            side.rects.iter().map(move |r| (side.page, r.map(|v| v as f32), colour(ch.kind)))
+                        })
+                        .collect();
+                }
                 // Visual differences not already covered by a text change.
                 let text_marks = self.views[i].compare_marks.clone();
                 for (p, r) in &visual {
@@ -167,7 +280,18 @@ impl PdfCraftApp {
                     }
                 }
                 let n = result.changes.len();
-                self.compare = Some(crate::compare_ui::CompareState { old, new, result, visual, selected: None });
+                self.compare = Some(crate::compare_ui::CompareState {
+                    old,
+                    new,
+                    result,
+                    visual,
+                    selected: None,
+                    side_by_side: true,
+                    sync_navigation: true,
+                    last_navigation: None,
+                    navigation_pages: (0, 0),
+                    pending_shortcuts: false,
+                });
                 self.right = Some(RightPanel::Compare);
                 self.notify(if n == 0 {
                     tl!("The text is the same").to_string()
@@ -181,23 +305,30 @@ impl PdfCraftApp {
         }
     }
 
-    pub(crate) fn compare_action(&mut self, index: usize, a: PanelAction) {
+    pub(crate) fn compare_action(&mut self, _index: usize, a: PanelAction) {
         let Some(s) = self.compare.as_mut() else { return };
         let (old, new) = (s.old, s.new);
         match a {
             PanelAction::Select(i) => {
-                s.selected = Some(i);
                 let Some(ch) = s.result.changes.get(i) else { return };
-                let rect = ch.new.rects.first().copied().or(ch.new.near).unwrap_or_default();
-                let page = ch.new.page;
-                let v = &mut self.views[index];
-                v.go_to_page(page);
-                v.flash = Some((page, rect.map(|x| x as f32), 0.0));
+                s.selected = Some(i);
+                s.navigation_pages = (ch.old.page, ch.new.page);
+                for (id, side) in [(old, &ch.old), (new, &ch.new)] {
+                    if let Some(v) = self.views.iter_mut().find(|v| v.id == id) {
+                        v.go_to_page(side.page);
+                        v.flash = side.rects.first().copied().or(side.near).map(|rect| (side.page, rect.map(|x| x as f32), 0.0));
+                    }
+                }
+                // Differences may refer to different pages after an insertion. Do not replace
+                // this explicit two-sided navigation with the ordinary same-page scroll link.
+                s.last_navigation = None;
             }
             PanelAction::Mark => match self.session.mark_differences(old, new) {
                 Ok(n) => {
-                    if let Some(info) = self.session.get(new).map(|d| d.info.clone()) {
-                        self.views[index].document_changed(&info);
+                    if let Some(info) = self.session.get(new).map(|d| d.info.clone())
+                        && let Some(view) = self.views.iter_mut().find(|v| v.id == new)
+                    {
+                        view.document_changed(&info);
                     }
                     self.notify(if n == 1 {
                         tl!("Added 1 comment").to_string()
@@ -216,10 +347,75 @@ impl PdfCraftApp {
                 Err(e) => self.notify_error(e),
             },
             PanelAction::Clear => {
-                self.compare = None;
-                self.views[index].compare_marks.clear();
+                self.clear_compare();
                 self.right = None;
+            }
+            PanelAction::SideBySide(on) => {
+                s.side_by_side = on;
+                s.last_navigation = None;
+            }
+            PanelAction::SyncNavigation(on) => {
+                s.sync_navigation = on;
+                s.last_navigation = None;
             }
         }
     }
+}
+
+/// Render the comparison inside the ordinary Canvas panel, keeping its docking layout intact.
+pub(crate) fn document_area(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
+    let Some(pair) = app.compare_view_indices() else {
+        crate::canvas::document_area(app, index, ui);
+        return;
+    };
+    let t = Tokens::get(ui.ctx());
+    let available = ui.available_rect_before_wrap();
+    let gap = 6.0;
+    let width = ((available.width() - gap) / 2.0).max(1.0);
+    let left = egui::Rect::from_min_size(available.min, egui::vec2(width, available.height()));
+    let right = egui::Rect::from_min_max(egui::pos2(left.right() + gap, available.top()), available.max);
+    // Focus before either canvas processes this frame's input, including wheel and pinch.
+    if !app.modal_open() && !app.palette_open {
+        let pointer = ui.input(navigation_pointer);
+        if let Some(pointer) = pointer {
+            for (pane, rect) in pair.into_iter().zip([left, right]) {
+                if rect.contains(pointer) {
+                    app.active = Some(pane);
+                }
+            }
+        }
+    }
+    if app.compare.as_mut().is_some_and(|s| std::mem::take(&mut s.pending_shortcuts)) {
+        app.shortcuts(ui.ctx());
+    }
+    // A deferred shortcut can close a member or open a report: resolve the pair again.
+    let Some(pair) = app.compare_view_indices() else {
+        if let Some(active) = app.active {
+            crate::canvas::document_area(app, active, ui);
+        }
+        return;
+    };
+    let blocked = app.modal_open() || app.palette_open || !ui.input(|i| i.focused);
+    for pane in pair {
+        app.views[pane].objects.set_input_blocked(blocked || app.active != Some(pane));
+    }
+    for ((pane, rect), label) in pair.into_iter().zip([left, right]).zip([tl!("Old file:"), tl!("New file:")]) {
+        // The canvas supplies its own stable global document scope inside this pane.
+        ui.scope_builder(egui::UiBuilder::new().id_salt(("document-pane", app.views[pane].id)).max_rect(rect), |ui| {
+            ui.set_clip_rect(rect.intersect(ui.clip_rect()));
+            ui.horizontal(|ui| {
+                ui.label(label);
+                let name = app.session.get(app.views[pane].id).map(|d| d.name.as_str()).unwrap_or("");
+                if ui.selectable_label(app.active == Some(pane), name).clicked() {
+                    app.active = Some(pane);
+                }
+            });
+            ui.separator();
+            crate::canvas::document_area(app, pane, ui);
+            if app.active == Some(pane) {
+                ui.painter().rect_stroke(rect.shrink(1.0), 0.0, egui::Stroke::new(1.0, t.accent), egui::StrokeKind::Inside);
+            }
+        });
+    }
+    app.sync_compare_navigation(ui.ctx());
 }

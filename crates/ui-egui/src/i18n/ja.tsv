@@ -957,7 +957,9 @@
 	Old file:	旧ファイル:
 	Open the older version first	先に古いバージョンを開いてください
 	New file:	新ファイル:
-	Text is compared word by word; the differences are shown on the new file.	テキストを単語単位で比較し、新ファイル上に差分を表示します。
+	Side by side	左右に並べて表示
+	Link scrolling and zoom	スクロールとズームを連動
+	Text is compared word by word; both files open side by side with differences highlighted.	テキストを単語単位で比較し、両ファイルを並べて差分を強調表示します。
 	Compare this file with an older version: Compare files… in All tools.	古いバージョンと比較するには「すべてのツール」の「ファイルを比較…」を選択してください。
 	No differences in the text.	テキストに差分はありません。
 	{n} {kind}	{kind}: {n}

@@ -928,7 +928,9 @@ comment menu	Edit	సవరించు
 	Old file:	పాత ఫైల్:
 	Open the older version first	ముందుగా పాత వెర్షన్‌ను తెరవండి
 	New file:	కొత్త ఫైల్:
-	Text is compared word by word; the differences are shown on the new file.	టెక్స్ట్ పదం పదంగా పోల్చబడుతుంది; తేడాలు కొత్త ఫైల్‌పై చూపబడతాయి.
+	Side by side	పక్కపక్కన
+	Link scrolling and zoom	స్క్రోలింగ్ మరియు జూమ్‌ను అనుసంధానించు
+	Text is compared word by word; both files open side by side with differences highlighted.	టెక్స్ట్ పదం పదంగా పోల్చబడుతుంది; రెండు ఫైళ్లు తేడాలను హైలైట్ చేస్తూ పక్కపక్కన తెరుచుకుంటాయి.
 	Compare this file with an older version: Compare files… in All tools.	ఈ ఫైల్‌ను పాత వెర్షన్‌తో పోల్చడానికి: అన్ని సాధనాలలో "ఫైల్‌లను పోల్చు…" ఉపయోగించండి.
 	No differences in the text.	టెక్స్ట్‌లో తేడాలు ఏవీ లేవు.
 	{n} {kind}	{kind}: {n}

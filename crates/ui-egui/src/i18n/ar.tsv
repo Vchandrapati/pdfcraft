@@ -956,7 +956,9 @@
 	Old file:	الملف القديم:
 	Open the older version first	افتح النسخة الأقدم أولًا
 	New file:	الملف الجديد:
-	Text is compared word by word; the differences are shown on the new file.	يُقارَن النص كلمة بكلمة؛ وتُعرض الفروق على الملف الجديد.
+	Side by side	جنبًا إلى جنب
+	Link scrolling and zoom	ربط التمرير والتكبير
+	Text is compared word by word; both files open side by side with differences highlighted.	يُقارَن النص كلمة بكلمة؛ ويُفتح الملفان جنبًا إلى جنب مع تمييز الفروق.
 	Compare this file with an older version: Compare files… in All tools.	قارن هذا الملف بنسخة أقدم: «مقارنة الملفات…» في كل الأدوات.
 	No differences in the text.	لا فروق في النص.
 	{n} {kind}	{n} {kind}

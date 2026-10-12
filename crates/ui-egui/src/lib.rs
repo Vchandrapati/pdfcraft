@@ -1337,6 +1337,9 @@ impl PdfCraftApp {
             return;
         }
         let id = self.views.remove(index).id;
+        if self.compare.as_ref().is_some_and(|s| s.old == id || s.new == id) {
+            self.clear_compare();
+        }
         self.forget_recovery(id);
         self.session.close(id);
         self.active = match self.active {
@@ -1819,6 +1822,37 @@ impl PdfCraftApp {
     ///
     /// This is the seed of the UI control channel (M3.9): the same verbs become `ui.set` calls.
     pub fn set_option(&mut self, key: &str, value: &str) -> Result<(), String> {
+        if matches!(key, "compare-view" | "compare-sync" | "compare-focus") {
+            let state = self.compare.as_ref().ok_or("compare files first")?;
+            match key {
+                "compare-view" => self.compare_action(
+                    0,
+                    compare_ui::PanelAction::SideBySide(match value {
+                        "side-by-side" => true,
+                        "single" => false,
+                        _ => return Err("compare-view must be side-by-side or single".into()),
+                    }),
+                ),
+                "compare-sync" => self.compare_action(
+                    0,
+                    compare_ui::PanelAction::SyncNavigation(match value {
+                        "on" => true,
+                        "off" => false,
+                        _ => return Err("compare-sync must be on or off".into()),
+                    }),
+                ),
+                "compare-focus" => {
+                    let id = match value {
+                        "old" => state.old,
+                        "new" => state.new,
+                        _ => return Err("compare-focus must be old or new".into()),
+                    };
+                    self.active = self.views.iter().position(|v| v.id == id);
+                }
+                _ => {}
+            }
+            return Ok(());
+        }
         let view = self.active.and_then(|i| self.views.get_mut(i));
         match (key, view) {
             ("language", _) => {
@@ -2354,7 +2388,9 @@ impl eframe::App for PdfCraftApp {
         self.poll_print();
         // Shortcuts deferred last frame: the text field has taken that frame's typing since.
         let deferred = std::mem::take(&mut self.deferred_commands);
-        self.shortcuts(ctx);
+        if self.focus_compare_pointer(ctx) {
+            self.shortcuts(ctx);
+        }
         // Scrolling and group-drag previews are transient: never resume after changing tabs,
         // opening a modal/palette, or returning to a window that lost focus.
         let blocked = self.modal_open() || self.palette_open || !ctx.input(|i| i.focused);
@@ -2445,7 +2481,7 @@ impl eframe::App for PdfCraftApp {
                 match self.active {
                     None if self.combine_showing() => combine_ui::page(self, ui),
                     None => home::show(self, ui),
-                    Some(index) => canvas::document_area(self, index, ui),
+                    Some(index) => compare_ui::document_area(self, index, ui),
                 }
             } else {
                 docking::show(self, ui);
@@ -2464,19 +2500,23 @@ impl PdfCraftApp {
     fn finish_render_frame(&mut self, ctx: &egui::Context) {
         // The Combine grid's thumbnails, whichever tab shows (renders under way still finish).
         self.combine_thumbs_frame(ctx);
-        // Retire hidden documents before admitting the visible document's textures, so the
-        // three cache limits apply to the application, regardless of how many tabs are open.
+        let pair = self.compare_view_indices();
+        // Retire hidden documents before admitting results for the active view and its visible
+        // comparison partner. Each visible view retains its existing bounded caches.
         for (i, view) in self.views.iter_mut().enumerate() {
             if Some(i) != self.active
+                && !pair.is_some_and(|pair| pair.contains(&i))
                 && let Some(doc) = self.session.get(view.id)
             {
                 view.suspend_rendering(&doc.renderer);
             }
         }
-        if let Some(view) = self.active.and_then(|i| self.views.get_mut(i))
-            && let Some(doc) = self.session.get(view.id)
-        {
-            view.finish_render_frame(ctx, &doc.info, &doc.renderer);
+        for (i, view) in self.views.iter_mut().enumerate() {
+            if (Some(i) == self.active || pair.is_some_and(|pair| pair.contains(&i)))
+                && let Some(doc) = self.session.get(view.id)
+            {
+                view.finish_render_frame(ctx, &doc.info, &doc.renderer);
+            }
         }
     }
 }

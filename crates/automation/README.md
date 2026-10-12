@@ -117,6 +117,15 @@ reported as an internal tool error, and the server continues serving.
 Exports complete synchronously. `progressToken` and cancellation notifications are harmlessly
 ignored; no background-job or cancellation behavior is added.
 
+`doc_compare_pages {doc, other, page?, other_page?, dpi?}` exposes side-by-side viewing headlessly:
+it returns JSON metadata followed by the older (`other`) and newer (`doc`) page PNGs, in that
+order. Both page choices are independent and 1-based, defaulting to 1; DPI defaults to 96 and
+accepts 1–600. It does not edit either document. The GUI uses its existing document viewers; its
+pane focus/link switches are available through the opt-in UI channel, described in
+[development.md](../../docs/development.md#side-by-side-comparison-m12).
+For this two-image result, CLI `--out pair.png` (or a script step's `out`) writes `pair-1.png`
+(older) and `pair-2.png` (newer), preserving root confinement for each output.
+
 Session resources `pdfcraft://document` and `pdfcraft://commands`, and the refusal of unknown argument keys, are described in [docs/mcp.md](../../docs/mcp.md).
 
 For inline editor previews, `page_render` accepts `hide_text_block` (a 1-based index from

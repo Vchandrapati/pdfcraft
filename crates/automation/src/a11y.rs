@@ -537,6 +537,33 @@ impl Automation {
         Ok(json!({ "path": path.to_string_lossy(), "bytes": bytes.len() }))
     }
 
+    pub(crate) fn doc_compare_pages(&self, a: &Args) -> Result<Vec<crate::Content>> {
+        let (old, new) = self.compare_ids(a)?;
+        let page = |key| {
+            let value = a.opt_int(key)?.unwrap_or(1);
+            usize::try_from(value)
+                .ok()
+                .and_then(|n| n.checked_sub(1))
+                .ok_or_else(|| ToolError::InvalidArgs(format!("{key} must be a positive page number")))
+        };
+        let old_page = page("other_page")?;
+        let new_page = page("page")?;
+        let dpi = a.opt_num("dpi")?.unwrap_or(96.0);
+        if !(1.0..=600.0).contains(&dpi) {
+            return Err(ToolError::InvalidArgs("dpi must be between 1 and 600".into()));
+        }
+        let [left, right] = self.session.compare_pages(old, new, old_page, new_page, dpi as f32).map_err(failed)?;
+        let metadata = json!({
+            "old": {"doc": old.0, "page": old_page + 1, "width": left.width, "height": left.height, "warnings": left.warnings.iter().map(|w| format!("{w:?}")).collect::<Vec<_>>()},
+            "new": {"doc": new.0, "page": new_page + 1, "width": right.width, "height": right.height, "warnings": right.warnings.iter().map(|w| format!("{w:?}")).collect::<Vec<_>>()},
+        });
+        Ok(vec![
+            crate::Content::Json(metadata),
+            crate::Content::Png { data: crate::encode_png(left.width, left.height, &left.rgba)?, width: left.width, height: left.height },
+            crate::Content::Png { data: crate::encode_png(right.width, right.height, &right.rgba)?, width: right.width, height: right.height },
+        ])
+    }
+
     pub(crate) fn doc_compare_mark(&mut self, a: &Args) -> Result<Value> {
         let (old, new) = self.compare_ids(a)?;
         let n = self.session.mark_differences(old, new).map_err(failed)?;

@@ -641,6 +641,20 @@ impl Host for crate::PdfCraftApp {
             .collect();
         json!({
             "docking": self.docking,
+            "compare": self.compare.as_ref().map(|s| json!({
+                "old": s.old.0,
+                "new": s.new.0,
+                "side_by_side": s.side_by_side,
+                "sync_navigation": s.sync_navigation,
+                "visible": self.compare_view_indices().is_some(),
+                "panes": ([s.old, s.new].iter().filter_map(|id| self.views.iter().find(|v| v.id == *id)).map(|v| json!({
+                    "doc": v.id.0, "page": v.current + 1, "zoom_percent": (v.zoom * 100.0).round(),
+                    "fit": format!("{:?}", v.fit),
+                    "viewport": [v.viewport_rect().min.x, v.viewport_rect().min.y, v.viewport_rect().max.x, v.viewport_rect().max.y],
+                    "raster_memory": v.raster_memory(),
+                    "pages_on_screen": v.visible_page_rects().iter().map(|(p, r)| json!({"page": p + 1, "rect": [r.min.x, r.min.y, r.max.x, r.max.y]})).collect::<Vec<_>>(),
+                })).collect::<Vec<_>>()),
+            })),
             "documents": docs,
             "active": active.map(|v| json!({
                 "doc": v.id.0,

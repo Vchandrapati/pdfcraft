@@ -1,7 +1,72 @@
 # Developing PdfCraft
 
-Working instructions for agents and contributors are in `AGENTS.md` and `CLAUDE.md`. This page
+Working instructions for agents and contributors are in `AGENTS.md` and `../CODE.md`. This page
 collects what the desktop app reads from its environment and where it writes its diagnostics.
+
+## Side-by-side comparison (M12)
+
+Open both PDFs, activate the newer version, then use **All tools → Compare files…** and choose
+the older version. The existing Compare workflow opens older/newer panes in the Canvas panel,
+with text changes highlighted on both sides and visual-change regions on the newer side. Click
+a pane or scroll over it to focus it; the page box, zoom controls, editing, Save and Undo target
+that document. Report and Mark as comments continue to use the comparison pair; comments are
+added to the newer document regardless of pane focus.
+
+The Compare panel has **Side by side** and **Link scrolling and zoom** switches. Linked scrolling
+uses a page number and fractional position within the page, rather than raw pixel offsets.
+Fixed zoom percentages match; Fit width/page/height fits each pane's own page dimensions. Pages
+initially correspond by index. Selecting a text difference navigates both versions to their
+respective pages and uses those pages as the subsequent scroll correspondence. The shorter
+document stops at its last page. Turning linking off permits independent navigation.
+
+Read and the docked Canvas use the same two document views. Full screen, Organize, Home and
+unrelated document tabs retain their existing single-document workflows. Returning to a member
+of the comparison restores the pair. Closing either member or clearing the comparison removes
+the paired view and its highlights. Comparison results describe the last comparison; editing a
+document does not automatically recompute them. Automatic page matching, change filters and
+scanned-document OCR comparison remain separate work.
+
+Implementation follows `CODE.md`'s simplicity and minimal-change principles: no dependencies or
+second viewer are introduced. `compare_ui.rs` owns pair presentation and linking; `canvas.rs`
+exposes page-relative navigation, uses stable document-scoped widget IDs and gates inactive-pane
+input. Only the focused pane draws the shared floating quick-tools bar. `finish_render_frame`
+admits results for both visible documents and suspends hidden tabs.
+Each visible pane keeps the existing cache limits; this change does not add a global memory
+budget or move comparison computation into a background worker.
+The three new UI labels are included in all 20 existing language catalogs, with updated
+translation-asset hashes in `ATTRIBUTION.toml`.
+
+Headless `Session::compare_pages` and `doc_compare_pages` render independent old/new page choices
+without edits. The tool returns JSON metadata, then two PNGs in older/newer order:
+
+```json
+{"tool":"doc_compare_pages","args":{"doc":2,"other":1,"page":3,"other_page":2,"dpi":96}}
+```
+
+In a CLI script, adding `"out":"pair.png"` saves `pair-1.png` (older) and `pair-2.png`
+(newer), both subject to `--root`. Single-image tools retain their exact output filename.
+
+Through the opt-in UI control channel, `ui.set` accepts `compare-view=side-by-side|single`,
+`compare-sync=on|off` and `compare-focus=old|new` after comparison. `ui.state.compare` reports
+pair IDs, whether both are visible, linking, and each pane's page, zoom, viewport and raster
+memory. This also makes both page rectangles available for pointer-based UI tests.
+
+Regression coverage is in `crates/ui-egui/tests/compare.rs`,
+`crates/ui-egui/tests/control.rs::control_drives_comparison_panes_focus_and_view_options` and
+`crates/automation/tests/automation.rs::comparison_pages_render_both_sides_without_mutating_documents`.
+`apps/pdfcraft-cli/tests/run_root.rs::comparison_script_saves_both_pages_and_confines_both_outputs`
+checks the script's two saved images and root confinement.
+
+Validation on Windows (2026-10-12): `cargo test --locked --offline --workspace` passed
+2,654 tests, with 13 ignored. The native `pdfcraft`/`pdfcraft-cli` build, workspace Clippy with
+all targets and `-D warnings`, formatting, assets, dependency layers and parity checks passed.
+The nine comparison UI tests passed, including a rendered synthetic screenshot with system-font
+fallback disabled and a painted duplicate-widget-ID check. The opt-in UI control regression
+passed in the workspace suite.
+
+The WASM check remains unverified: its offline attempt failed fetching uncached
+`bumpalo v3.20.3`, and `wasm32-unknown-unknown` is not installed. Dependency-advisory validation
+was skipped by `xtask deny` because `cargo-deny` is not installed. No dependencies changed.
 
 ## Low-disk Cargo profile
 

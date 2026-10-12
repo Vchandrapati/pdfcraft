@@ -554,7 +554,9 @@
 	Old file:	Παλαιό αρχείο:
 	Open the older version first	Ανοίξτε πρώτα την παλαιότερη έκδοση
 	New file:	Νέο αρχείο:
-	Text is compared word by word; the differences are shown on the new file.	Το κείμενο συγκρίνεται λέξη προς λέξη και οι διαφορές εμφανίζονται στο νέο αρχείο.
+	Side by side	Δίπλα δίπλα
+	Link scrolling and zoom	Σύνδεση κύλισης και μεγέθυνσης
+	Text is compared word by word; both files open side by side with differences highlighted.	Το κείμενο συγκρίνεται λέξη προς λέξη· τα δύο αρχεία ανοίγουν δίπλα δίπλα με επισήμανση των διαφορών.
 	Compare this file with an older version: Compare files… in All tools.	Συγκρίνετε αυτό το αρχείο με παλαιότερη έκδοση: «Σύγκριση αρχείων…» στα «Όλα τα εργαλεία».
 	No differences in the text.	Δεν εντοπίστηκαν διαφορές στο κείμενο.
 	{n} {kind}	{n} {kind}
