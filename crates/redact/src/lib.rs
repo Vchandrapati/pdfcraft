@@ -333,7 +333,7 @@ pub fn apply(doc: &mut Document, pages: Option<&[usize]>) -> Result<Report, Reda
             changed = true;
         }
         if changed || !out.xobjects.is_empty() || !out.replaced.is_empty() {
-            let mut res = resources;
+            let mut res = resources.clone();
             if !out.xobjects.is_empty() || !out.replaced.is_empty() {
                 let mut xo = res.get(b"XObject").and_then(|x| doc.resolve(x).as_dict().cloned()).unwrap_or_default();
                 // A full save keeps whatever is still referenced: unlink the originals this page no
@@ -358,8 +358,12 @@ pub fn apply(doc: &mut Document, pages: Option<&[usize]>) -> Result<Report, Reda
             // Tags must not keep what the page no longer shows.
             let after = doc.get(page.obj).as_dict().cloned().unwrap_or_default();
             let (_, new_data) = page_streams(doc, &after, pi)?;
-            let (changed_ids, empty_ids) = tags::touched(&data.join(&b'\n'), &new_data.join(&b'\n'));
-            report.tags += tags::clean(doc, page.obj, &changed_ids, &empty_ids)?;
+            let (changed_ids, empty_ids) = tags::touched(doc, &resources, &data.join(&b'\n'), &new_data.join(&b'\n'));
+            report.tags += tags::clean(doc, page.obj, None, &changed_ids, &empty_ids)?;
+        }
+
+        for (old, new, changed, empty) in out.tag_changes {
+            report.tags += tags::clean(doc, page.obj, Some((old, new)), &changed, &empty)?;
         }
 
         // 2. Annotations: the marks, and whatever lies under them (with their pop-ups).
