@@ -48,14 +48,16 @@ impl PageRange {
     }
 
     pub(crate) fn ui(&mut self, ui: &mut egui::Ui, count: usize) {
+        // Only all-pages mode supplies defaults; 1..=1 is a valid custom range.
+        if self.all {
+            self.from = 1;
+            self.to = count.max(1);
+        }
         ui.horizontal(|ui| {
             widgets::radio_value(ui, &mut self.all, true, tl!("All pages"));
             widgets::radio_value(ui, &mut self.all, false, tl!("Pages from"));
             ui.add_enabled(!self.all, egui::DragValue::new(&mut self.from).range(1..=count.max(1)));
             ui.label(tl!("to"));
-            if self.to == 1 && self.from == 1 {
-                self.to = count.max(1);
-            }
             ui.add_enabled(!self.all, egui::DragValue::new(&mut self.to).range(1..=count.max(1)));
             ui.label(tl!("Subset"));
             let label = match self.subset {
