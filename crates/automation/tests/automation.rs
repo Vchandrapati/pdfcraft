@@ -36,13 +36,42 @@ fn fixture(n: usize) -> Vec<u8> {
 }
 
 /// A fresh directory with `a.pdf` (3 pages) and `b.pdf` (2 pages).
+#[track_caller]
 fn workdir(test: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("pdfcraft-automation-{test}-{}", std::process::id()));
+    let caller = std::panic::Location::caller();
+    let dir = std::env::temp_dir().join(format!("pdfcraft-automation-{test}-{}-{}-{}", std::process::id(), caller.line(), caller.column(),));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("a.pdf"), fixture(3)).unwrap();
     std::fs::write(dir.join("b.pdf"), fixture(2)).unwrap();
     dir
+}
+
+#[test]
+fn workdir_call_sites_do_not_delete_each_other() {
+    let first = workdir("same-tag");
+    let sentinel = first.join("sentinel");
+    std::fs::write(&sentinel, b"first call site").unwrap();
+
+    let second = workdir("same-tag");
+    let paths_differ = first != second;
+    let sentinel_bytes = std::fs::read(&sentinel).ok();
+    let first_a = std::fs::read(first.join("a.pdf")).ok();
+    let first_b = std::fs::read(first.join("b.pdf")).ok();
+    let second_a = std::fs::read(second.join("a.pdf")).ok();
+    let second_b = std::fs::read(second.join("b.pdf")).ok();
+
+    let _ = std::fs::remove_dir_all(&first);
+    if paths_differ {
+        let _ = std::fs::remove_dir_all(&second);
+    }
+
+    assert!(paths_differ, "distinct call sites shared {first:?}");
+    assert_eq!(sentinel_bytes.as_deref(), Some(&b"first call site"[..]));
+    assert_eq!(first_a, Some(fixture(3)));
+    assert_eq!(first_b, Some(fixture(2)));
+    assert_eq!(second_a, Some(fixture(3)));
+    assert_eq!(second_b, Some(fixture(2)));
 }
 
 fn auto(dir: &Path) -> Automation {
