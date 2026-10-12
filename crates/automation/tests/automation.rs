@@ -183,6 +183,60 @@ fn explicit_font_and_disjoint_ranges_save_reopen_through_tools() {
     std::fs::remove_dir_all(dir).unwrap();
 }
 
+#[test]
+fn added_arabic_text_keeps_copy_search_and_editor_order_after_retyping_and_reopen() {
+    if pdfcraft_fonts::document_arabic_font().is_none() {
+        eprintln!("set CRAFT_FONTS_DIR to exercise added Arabic text");
+        return;
+    }
+    let dir = workdir("arabic-copy-order");
+    let mut a = auto(&dir);
+    let id = ok(&mut a, "doc_create", json!({"from":"blank","width":600,"height":400}))["doc"].as_u64().unwrap();
+    let original = "سَلَام 123 (PDF) - اختبار الكتابة العربية";
+    ok(&mut a, "page_add_text", json!({"doc":id,"page":1,"text":original,"at":[40,50],"width":500,"size":16,"align":"right"}));
+    assert_eq!(page_text(&mut a, id), [original]);
+    assert_eq!(ok(&mut a, "text_lines", json!({"doc":id,"page":1}))["lines"][0]["text"], original);
+    let found = ok(&mut a, "text_find", json!({"doc":id,"query":original}));
+    assert_eq!(found["matches"].as_array().unwrap().len(), 1);
+    let retyped = "مُرَاجَعَة PDF رقم ١٢٣";
+    ok(&mut a, "content_update", json!({"doc":id,"page":1,"index":1,"text":retyped}));
+    ok(&mut a, "doc_save", json!({"doc":id,"path":"retyped.pdf"}));
+    let re = ok(&mut a, "doc_open", json!({"path":"retyped.pdf"}))["doc"].as_u64().unwrap();
+    assert_eq!(page_text(&mut a, re), [retyped]);
+    assert_eq!(ok(&mut a, "text_lines", json!({"doc":re,"page":1}))["lines"][0]["text"], retyped);
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn arabic_actual_text_stays_logical_through_editor_tools_and_save_reopen() {
+    use pdfcraft_cos::{Dict, Document, ObjRef, Object, SaveOptions, Stream, write_full};
+    use std::sync::Arc;
+
+    let dir = workdir("arabic-actual-text");
+    let logical = "سَلَام 123 (PDF)";
+    let hex: String = logical.encode_utf16().map(|u| format!("{u:04X}")).collect();
+    let content = format!("/Span <</ActualText <FEFF{hex}>>> BDC BT /F1 24 Tf 20 150 Td (abcd) Tj (efgh) Tj ET EMC");
+    let mut doc = Document::open(Arc::new(fixture(1))).unwrap();
+    doc.set(ObjRef::new(5, 0), Object::Stream(Stream::flate(Dict::new(), content.as_bytes())));
+    std::fs::write(dir.join("arabic.pdf"), write_full(&doc, &SaveOptions::default()).unwrap()).unwrap();
+
+    let mut a = auto(&dir);
+    let id = ok(&mut a, "doc_open", json!({"path":"arabic.pdf"}))["doc"].as_u64().unwrap();
+    let lines = ok(&mut a, "text_lines", json!({"doc":id,"page":1}));
+    assert_eq!(lines["lines"][0]["text"], logical);
+    let render = a.call("page_render", &json!({"doc":id,"page":1,"dpi":72})).unwrap();
+    ok(&mut a, "doc_save", json!({"doc":id,"path":"saved.pdf"}));
+    let re = ok(&mut a, "doc_open", json!({"path":"saved.pdf"}))["doc"].as_u64().unwrap();
+    assert_eq!(ok(&mut a, "text_lines", json!({"doc":re,"page":1})), lines);
+    assert_eq!(a.call("page_render", &json!({"doc":re,"page":1,"dpi":72})).unwrap(), render);
+    ok(&mut a, "text_edit", json!({"doc":re,"page":1,"paragraph":1,"text":"Replacement"}));
+    ok(&mut a, "doc_save", json!({"doc":re,"path":"edited.pdf"}));
+    let edited = ok(&mut a, "doc_open", json!({"path":"edited.pdf"}))["doc"].as_u64().unwrap();
+    assert_eq!(ok(&mut a, "text_lines", json!({"doc":edited,"page":1}))["lines"][0]["text"], "Replacement");
+    assert_eq!(page_text(&mut a, edited), ["Replacement"]);
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
 /// Each of these writes to its required `path` and replaces an existing file there, so the MCP
 /// annotations must not tell clients the call is read-only or harmless (#130).
 #[test]

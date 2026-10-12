@@ -52,6 +52,9 @@ pub struct TextLine {
     origin: Origin,
     /// Explicit marked-content scope (when present); distinct scopes must not be guessed into one paragraph.
     scope: Option<usize>,
+    /// Right-to-left `/ActualText` already supplies typing order; glyph text still needs bidi
+    /// recovery. Left-to-right ActualText (e.g. a Latin ligature) joins its line as usual.
+    logical_order: bool,
 }
 
 impl TextLine {
@@ -466,6 +469,7 @@ struct Shown {
     italic: bool,
     decodable: bool,
     scope: Option<usize>,
+    logical_order: bool,
 }
 
 /// The graphics state carried from one of a page's content streams to the next: the streams
@@ -518,18 +522,16 @@ fn interpret(
     let mut actual: Vec<Option<(usize, usize, String)>> = Vec::new();
     for (i, op) in ops.iter().enumerate() {
         match op.op.as_slice() {
-            b"BMC" | b"BDC" => {
-                if marked.len() < 256 {
-                    // Marked text paragraphs/headings are authoritative boundaries. Ignore
-                    // artifacts and inner spans, which inherit their enclosing region.
-                    let region = matches!(op.name(0), Some(b"P" | b"H" | b"H1" | b"H2" | b"H3" | b"H4" | b"H5" | b"H6" | b"LI" | b"TD" | b"TH"));
-                    marked.push(if region { Some(i) } else { marked.last().copied().flatten() });
-                    let logical = op.operands.get(1).and_then(Object::as_dict).and_then(|d| d.get(b"ActualText")).and_then(|s| match s {
-                        Object::String(s) if s.bytes.len() <= 4_000_000 => Some(s.to_text()),
-                        _ => None,
-                    });
-                    actual.push(if logical_text { logical.map(|s| (out.len(), i, s)) } else { None });
-                }
+            b"BMC" | b"BDC" if marked.len() < 256 => {
+                // Marked text paragraphs/headings are authoritative boundaries. Ignore
+                // artifacts and inner spans, which inherit their enclosing region.
+                let region = matches!(op.name(0), Some(b"P" | b"H" | b"H1" | b"H2" | b"H3" | b"H4" | b"H5" | b"H6" | b"LI" | b"TD" | b"TH"));
+                marked.push(if region { Some(i) } else { marked.last().copied().flatten() });
+                let logical = op.operands.get(1).and_then(Object::as_dict).and_then(|d| d.get(b"ActualText")).and_then(|s| match s {
+                    Object::String(s) if s.bytes.len() <= 4_000_000 => Some(s.to_text()),
+                    _ => None,
+                });
+                actual.push(if logical_text { logical.map(|s| (out.len(), i, s)) } else { None });
             }
             b"EMC" => {
                 marked.pop();
@@ -548,6 +550,10 @@ fn interpret(
                             ];
                         }
                         first.extra_ops.extend([open, i]);
+                        // Only right-to-left ActualText is already in typing order and must stay
+                        // out of the line's bidi recovery. Word and Chrome wrap Latin ligatures
+                        // (`fi`, `fl`) in ActualText spans mid-word; those keep joining their line.
+                        first.logical_order = logical.chars().any(crate::bidi::is_rtl);
                         first.text = logical;
                         first.start_x = first.rect[0];
                         first.end_x = first.rect[2];
@@ -706,6 +712,7 @@ fn interpret(
                     italic: m.italic,
                     decodable,
                     scope: marked.last().copied().flatten(),
+                    logical_order: false,
                 });
             }
             _ => {}
@@ -737,7 +744,7 @@ pub fn text_lines(doc: &Document, page: usize) -> Result<Vec<TextLine>, EditErro
         let si = ops.get(s.op).map_or(0, |op| pieces.pieces_of(op).0);
         let joins = last.is_some_and(|(piece, bt, base, end, size)| {
             piece == si
-                && lines.last().is_some_and(|l| l.scope == s.scope)
+                && lines.last().is_some_and(|l| l.scope == s.scope && l.logical_order == s.logical_order)
                 && (bt == s.bt || lines.last().is_some_and(|l| compatible_word(l, &s)))
                 && (s.text.trim().is_empty() || lines.last().is_some_and(|l| same_font(l, &s.font, s.face.as_deref())))
                 && (s.text.trim().is_empty()
@@ -773,6 +780,7 @@ pub fn text_lines(doc: &Document, page: usize) -> Result<Vec<TextLine>, EditErro
                 face: s.face.clone(),
                 stream: si,
                 scope: s.scope,
+                logical_order: s.logical_order,
                 ops: std::iter::once(s.op).chain(s.extra_ops.iter().copied()).collect(),
                 origin: Origin {
                     tm: s.tm.0,
@@ -790,7 +798,7 @@ pub fn text_lines(doc: &Document, page: usize) -> Result<Vec<TextLine>, EditErro
         last = Some((si, s.bt, s.baseline, s.end_x, s.size.max(1.0)));
     }
     // Content streams draw right-to-left lines in visual order; the editor works in typing order.
-    for l in &mut lines {
+    for l in lines.iter_mut().filter(|l| !l.logical_order) {
         l.text = crate::bidi::to_logical(&l.text);
     }
     // Lines of only spaces aren't editable text.
@@ -815,7 +823,7 @@ fn compatible_word(line: &TextLine, shown: &Shown) -> bool {
 /// (`bt`, baseline, end x, size).
 fn add_shown(lines: &mut Vec<TextLine>, last: &mut Option<(usize, f64, f64, f64)>, s: Shown, stream: usize) {
     let joins = last.is_some_and(|(bt, base, end, size)| {
-        lines.last().is_some_and(|l| l.scope == s.scope)
+        lines.last().is_some_and(|l| l.scope == s.scope && l.logical_order == s.logical_order)
             && (bt == s.bt || lines.last().is_some_and(|l| compatible_word(l, &s)))
             && (s.text.trim().is_empty() || lines.last().is_some_and(|l| same_font(l, &s.font, s.face.as_deref())))
             && (s.text.trim().is_empty()
@@ -850,6 +858,7 @@ fn add_shown(lines: &mut Vec<TextLine>, last: &mut Option<(usize, f64, f64, f64)
             face: s.face.clone(),
             stream,
             scope: s.scope,
+            logical_order: s.logical_order,
             ops: std::iter::once(s.op).chain(s.extra_ops.iter().copied()).collect(),
             origin: Origin {
                 tm: s.tm.0,
