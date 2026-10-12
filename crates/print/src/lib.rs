@@ -467,7 +467,8 @@ pub fn layout(sizes: &[(f64, f64)], settings: &Settings) -> Result<Vec<Sheet>, P
                 let (stepx, stepy) = (tw - overlap, th - overlap);
                 let nx = (((sw - overlap) / stepx).ceil() as usize).max(1);
                 let ny = (((sh - overlap) / stepy).ceil() as usize).max(1);
-                if nx * ny > 1024 {
+                // The counts saturate at usize::MAX for a huge scale, so their product can overflow.
+                if nx.checked_mul(ny).is_none_or(|n| n > 1024) {
                     return Err(PrintError::Invalid("the poster would need more than 1024 sheets".into()));
                 }
                 // Tiles from the top-left, row by row.
