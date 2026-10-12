@@ -740,6 +740,10 @@ impl Metrics {
             let cid = self.cid(code);
             return self.cid_widths.contains_key(&cid) || self.cid_ranges.iter().any(|(a, b, _)| cid >= *a && cid <= *b) || !self.subset;
         }
+        // Simple fonts show one-byte codes; a larger one (from /Differences) would be written as its last byte.
+        if code > 0xFF {
+            return false;
+        }
         match code.checked_sub(self.first).and_then(|i| self.widths.get(i as usize)) {
             Some(w) => *w > 0.0 || code == 32,
             None => self.widths.is_empty() && !self.subset,
@@ -1196,6 +1200,22 @@ mod tests {
         let m = Metrics::from_dict(&doc, &f);
         assert_eq!(m.decode(b"AB"), "éΩ");
         assert_eq!(m.encode("Ω").as_deref(), Some(&b"B"[..]));
+    }
+
+    /// A `/Differences` code past 255 can't be written in one byte, so it encodes nothing
+    /// instead of its last byte (300 would come out as 44, a comma).
+    #[test]
+    fn differences_codes_past_one_byte_are_not_encoded() {
+        let euro_at = |code: i64| {
+            let mut doc = Document::new_empty();
+            let mut enc = Dict::new();
+            enc.set(b"Differences".to_vec(), Object::Array(vec![Object::Int(code), Object::name("Euro")]));
+            let f = font(&mut doc, vec![("Subtype", Object::name("Type1")), ("BaseFont", Object::name("Custom")), ("Encoding", Object::Dict(enc))]);
+            Metrics::from_dict(&doc, &f)
+        };
+        let m = euro_at(200);
+        assert_eq!((m.encode("€").as_deref(), m.decode(b"\xc8").as_str()), (Some(&b"\xc8"[..]), "€"));
+        assert_eq!(euro_at(300).encode("€"), None);
     }
 
     #[test]
