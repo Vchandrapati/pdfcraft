@@ -39,7 +39,8 @@ fn harness() -> Harness<'static, PdfCraftApp> {
         app.open_bytes("b.pdf", None, fixture(2)).unwrap();
         app
     });
-    for _ in 0..40 {
+    // Background rendering and text extraction can take seconds on a loaded CI runner (FreeBSD VM).
+    for _ in 0..3000 {
         h.run_steps(2);
         if !h.state().render_pending() {
             break;
@@ -91,7 +92,8 @@ fn view_history_select_all_and_find_options() {
     assert!(h.state_mut().views[0].view_history(true));
     assert_eq!(h.state().views[0].current, 3, "next view");
     // Select all on the current page (once its text is known).
-    for _ in 0..40 {
+    // Background rendering and text extraction can take seconds on a loaded CI runner (FreeBSD VM).
+    for _ in 0..3000 {
         h.run_steps(2);
         if h.state_mut().views[0].select_all() {
             break;
@@ -476,7 +478,8 @@ fn advanced_search_lists_results_with_context() {
     h.run_steps(2);
     h.get_by_label("What word or phrase would you like to search for?");
     h.state_mut().views[i].find.as_mut().unwrap().query = "pages".into();
-    for _ in 0..40 {
+    // Background rendering and text extraction can take seconds on a loaded CI runner (FreeBSD VM).
+    for _ in 0..3000 {
         h.run_steps(2);
         if h.state().views[i].find.as_ref().is_some_and(|f| f.matches.len() == 2) {
             break;
