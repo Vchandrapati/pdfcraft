@@ -823,7 +823,8 @@ pub fn format_value(f: &Format, value: &str) -> String {
 /// (numbers are normalised), or Acrobat's message.
 pub fn keystroke(f: &Format, field: &str, value: &str) -> Result<String, String> {
     let bad = || format!("The value entered does not match the format of the field [ {field} ]");
-    if value.trim().is_empty() {
+    // Blank input clears a formatted field; without a format, whitespace is text like any other.
+    if *f != Format::None && value.trim().is_empty() {
         return Ok(String::new());
     }
     match f {
@@ -1045,6 +1046,9 @@ mod tests {
             keystroke(&n(2, 0, 0, "$", true), "Total", "ten"),
             Err("The value entered does not match the format of the field [ Total ]".into())
         );
+        // Blank input clears a formatted field (#1323); without a format it is text like any other.
+        assert_eq!(keystroke(&n(2, 0, 0, "$", true), "Total", " \t"), Ok(String::new()));
+        assert_eq!(keystroke(&Format::None, "Name", " \t"), Ok(" \t".into()));
     }
 
     #[test]
