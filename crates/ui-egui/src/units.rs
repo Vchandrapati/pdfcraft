@@ -99,27 +99,35 @@ fn detect() -> Option<Unit> {
     {
         return Some(unit);
     }
+    // Region ▸ Measurement system, read in-process: a child `reg.exe` is a process-creation event
+    // that endpoint protection watches on managed PCs, and a preference doesn't warrant one.
     #[cfg(target_os = "windows")]
-    {
-        use std::os::windows::process::CommandExt;
-        // Region ▸ Measurement system: 0 metric, 1 U.S. The absolute path keeps a `reg` earlier on
-        // PATH from running; CREATE_NO_WINDOW keeps a console from flashing up.
-        let windir = std::env::var_os("SystemRoot").unwrap_or_else(|| "C:\\Windows".into());
-        let reg = std::path::Path::new(&windir).join("System32").join("reg.exe");
-        if let Ok(out) = std::process::Command::new(reg)
-            .args(["query", "HKCU\\Control Panel\\International", "/v", "iMeasure"])
-            .creation_flags(0x0800_0000)
-            .output()
-            && out.status.success()
-        {
-            match String::from_utf8_lossy(&out.stdout).split_whitespace().last() {
-                Some("1") => return Some(Unit::Inches),
-                Some("0") => return Some(Unit::Millimetres),
-                _ => {}
-            }
-        }
+    if let Some(unit) = windows_measure().and_then(|v| unit_for_imeasure(&v)) {
+        return Some(unit);
     }
     ["LC_ALL", "LC_MEASUREMENT", "LANG"].iter().find_map(|var| std::env::var(var).ok().filter(|v| !v.is_empty()).and_then(|v| unit_for_tag(&v)))
+}
+
+/// The unit for the Windows `iMeasure` value (Region ▸ Measurement system): "0" metric, "1" U.S.
+/// `None` for anything else, so a missing or odd value falls through to the locale check.
+#[cfg(any(test, target_os = "windows"))]
+pub(crate) fn unit_for_imeasure(value: &str) -> Option<Unit> {
+    match value.trim() {
+        "1" => Some(Unit::Inches),
+        "0" => Some(Unit::Millimetres),
+        _ => None,
+    }
+}
+
+/// `HKCU\Control Panel\International\iMeasure` as text; `None` when it is missing, unreadable or
+/// not a string.
+#[cfg(target_os = "windows")]
+fn windows_measure() -> Option<String> {
+    use winsafe::{HKEY, RegistryValue, co::RRF};
+    match HKEY::CURRENT_USER.RegGetValue(Some("Control Panel\\International"), Some("iMeasure"), RRF::RT_REG_SZ).ok()? {
+        RegistryValue::Sz(v) => Some(v),
+        _ => None,
+    }
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -129,7 +137,7 @@ fn detect() -> Option<Unit> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Unit, unit_for_tag};
+    use super::{Unit, unit_for_imeasure, unit_for_tag};
 
     #[test]
     fn region_decides_the_unit() {
@@ -144,6 +152,28 @@ mod tests {
         assert_eq!(unit_for_tag("POSIX"), None);
         assert_eq!(unit_for_tag("en"), None);
         assert_eq!(unit_for_tag(""), None);
+    }
+
+    #[test]
+    fn windows_measurement_system_decides_the_unit() {
+        assert_eq!(unit_for_imeasure("1"), Some(Unit::Inches));
+        assert_eq!(unit_for_imeasure("0"), Some(Unit::Millimetres));
+        assert_eq!(unit_for_imeasure(" 1\r\n"), Some(Unit::Inches));
+        assert_eq!(unit_for_imeasure(""), None);
+        assert_eq!(unit_for_imeasure("2"), None);
+        assert_eq!(unit_for_imeasure("metric"), None);
+    }
+
+    /// The registry read works in-process (no `reg.exe`) and gives a value the mapping understands.
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn windows_reads_imeasure_in_process() {
+        let value = super::windows_measure();
+        // Every Windows user profile has Region settings; if a sandbox ever lacks them, the read must
+        // simply be None rather than failing.
+        if let Some(v) = value {
+            assert!(unit_for_imeasure(&v).is_some(), "unexpected iMeasure {v:?}");
+        }
     }
 
     #[test]
