@@ -113,8 +113,10 @@ fn outline_len(doc: &Document, first: Option<&Object>, depth: usize) -> usize {
     n
 }
 
+/// A comment as the comments list sees it, less file attachments (removed with Attachments) and
+/// redaction marks.
 fn is_comment(subtype: &[u8]) -> bool {
-    !matches!(subtype, b"Link" | b"Widget" | b"Popup" | b"FileAttachment" | b"Redact")
+    !matches!(subtype, b"FileAttachment" | b"Redact") && pdfcraft_annot::is_comment_subtype(&String::from_utf8_lossy(subtype))
 }
 
 /// The layers that are off in the default configuration.

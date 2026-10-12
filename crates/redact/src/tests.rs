@@ -533,6 +533,33 @@ fn hidden_information_is_counted_and_removed() {
     assert!(shown, "the field's value stays visible as page content");
 }
 
+/// Issue #1325: removing comments keeps the annotations that are not comments: the multimedia
+/// and print-production ones (Watermark, PrinterMark, TrapNet, Screen, Movie, RichMedia, 3D).
+#[test]
+fn removing_comments_keeps_annotations_that_are_not_comments() {
+    use crate::sanitize::{Hidden, remove_hidden, scan};
+    let kept = ["Link", "Watermark", "PrinterMark", "TrapNet", "Screen", "Movie", "RichMedia", "3D"];
+    let annots: Vec<String> = (0..=kept.len()).map(|i| format!("{} 0 R", i + 4)).collect();
+    let mut objs = vec![
+        b"<< /Type /Catalog /Pages 2 0 R >>".to_vec(),
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>".to_vec(),
+        format!("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 300] /Resources << >> /Annots [{}] >>", annots.join(" ")).into_bytes(),
+        b"<< /Type /Annot /Subtype /Square /Rect [10 10 50 50] >>".to_vec(),
+    ];
+    objs.extend(kept.iter().map(|s| format!("<< /Type /Annot /Subtype /{s} /Rect [60 60 90 90] >>").into_bytes()));
+    let mut doc = pdf(objs);
+    let counts: std::collections::HashMap<Hidden, usize> = scan(&doc).into_iter().collect();
+    assert_eq!(counts[&Hidden::Comments], 1, "only the Square");
+    assert_eq!(remove_hidden(&mut doc, &[Hidden::Comments]).unwrap(), [(Hidden::Comments, 1)]);
+    let doc = reopen(&doc);
+    let p = pdfcraft_model::pages(&doc).swap_remove(0);
+    let left: Vec<String> = annots_of(&doc, &p.dict)
+        .iter()
+        .filter_map(|a| doc.resolve(a).as_dict().and_then(|d| d.name(b"Subtype")).map(|s| String::from_utf8_lossy(s).into_owned()))
+        .collect();
+    assert_eq!(left, kept);
+}
+
 #[test]
 fn overlay_text_takes_its_font_size_colour_alignment_and_repeats() {
     let mut doc = one_page(b"BT /F1 12 Tf 20 250 Td (Secret salary figures) Tj ET", "", Vec::new());
