@@ -148,6 +148,7 @@ fn version() -> Result<(), CliError> {
 /// Audit a document for faux redactions. Prints the findings as JSON; fails when any are
 /// found so scripts and CI can gate on it, and when the audit itself cannot run.
 fn audit(args: &[String]) -> Result<(), CliError> {
+    validate_options("audit", args, AUDIT_OPTIONS)?;
     let path = *positional(args).first().ok_or("audit: missing file")?;
     let bytes = read(path)?;
     let doc = pdfcraft_cos::Document::open_with_password(bytes, flag(args, "--password")).map_err(|e| format!("{path}: {e}"))?;
@@ -210,6 +211,7 @@ fn validate_options(command: &str, args: &[String], specs: &[OptionSpec]) -> Res
 }
 
 const INFO_OPTIONS: &[OptionSpec] = &[OptionSpec { name: "--password", takes_value: true }];
+const AUDIT_OPTIONS: &[OptionSpec] = &[OptionSpec { name: "--password", takes_value: true }];
 const TEXT_OPTIONS: &[OptionSpec] = &[OptionSpec { name: "--page", takes_value: true }, OptionSpec { name: "--password", takes_value: true }];
 const COMBINE_OPTIONS: &[OptionSpec] = &[OptionSpec { name: "--out", takes_value: true }];
 const EXTRACT_OPTIONS: &[OptionSpec] = &[
