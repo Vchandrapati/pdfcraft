@@ -3068,6 +3068,63 @@ fn xfa_data_import_adds_and_removes_rows_of_a_dynamic_form() {
 }
 
 #[test]
+fn hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget() {
+    let (sections, rows) = (10, 20);
+    let bytes = Arc::new(pdfcraft_xfa::fixtures::shell(&pdfcraft_xfa::fixtures::many_calculations_template(sections, rows)));
+    let mut s = Session::new().with_clock(|| 1_700_000_000);
+    let started = std::time::Instant::now();
+    let id = s.open("many.pdf", None, bytes, None).expect("opens");
+    let elapsed = started.elapsed();
+    let out = s.take_js_output(id);
+    assert!(!out.errors.iter().any(|e| e.contains("were skipped") || e.contains("stopped")), "{:?}", out.errors);
+    let form = &s.get(id).unwrap().form;
+    let totals: Vec<&pdfcraft_forms::Field> = form.iter().filter(|f| f.name.starts_with("total")).collect();
+    assert_eq!(totals.len(), sections * rows);
+    assert!(totals.iter().all(|f| !f.value.is_empty()), "every row's total was calculated");
+    let sums: Vec<&pdfcraft_forms::Field> = form.iter().filter(|f| f.name.starts_with("sum")).collect();
+    assert_eq!(sums.len(), sections);
+    // 2 × (1 + 2 + … + rows)
+    let expect = (rows * (rows + 1)).to_string();
+    assert!(sums.iter().all(|f| f.value == vec![expect.clone()]), "{:?}", sums.iter().map(|f| f.value.clone()).collect::<Vec<_>>());
+    eprintln!("{} calculate scripts on open in {elapsed:?}", sections * rows + sections);
+    // A change recalculates them all again, well within the event budget.
+    let started = std::time::Instant::now();
+    s.apply(id, Edit::SetFieldValue { name: "qty".into(), value: FieldValue::Text("100".into()) }).unwrap();
+    let out = s.take_js_output(id);
+    assert!(!out.errors.iter().any(|e| e.contains("were skipped")), "{:?}", out.errors);
+    assert_eq!(s.get(id).unwrap().form.iter().find(|f| f.name == "total").unwrap().value, vec!["200".to_string()]);
+    assert_eq!(s.get(id).unwrap().form.iter().find(|f| f.name == "sum").unwrap().value, vec![(rows * (rows + 1) - 2 + 200).to_string()]);
+    eprintln!("recalculated after a change in {:?}", started.elapsed());
+}
+
+#[test]
+fn xfa_scripts_of_one_event_see_the_form_as_the_engine_holds_it() {
+    // In document order: `a` holds 1; `b`'s calculate writes `a` then fails; `c`'s calculate
+    // reads `a`. A failed script's half-done changes reach nobody. And `d` sets a choice list
+    // by its shown text: the next script reads the saved value the engine kept.
+    let tpl = pdfcraft_xfa::fixtures::fields_template("<form><page1><country>JP</country></page1></form>").replace(
+        r#"<field name="summary" w="3in" h="0.3in" access="readOnly"><ui><textEdit/></ui>"#,
+        r#"<field name="a" w="1in" h="0.3in"><ui><numericEdit/></ui><value><integer>1</integer></value></field>
+  <field name="b" w="1in" h="0.3in"><ui><numericEdit/></ui><calculate><script contentType="application/x-javascript">a.rawValue = 99; throw new Error("boom");</script></calculate></field>
+  <field name="c" w="1in" h="0.3in"><ui><numericEdit/></ui><calculate><script contentType="application/x-javascript">a.rawValue + 1</script></calculate></field>
+  <field name="d" w="1in" h="0.3in"><ui><textEdit/></ui><calculate><script contentType="application/x-javascript">country.rawValue = "Canada"; "set"</script></calculate></field>
+  <field name="e" w="1in" h="0.3in"><ui><textEdit/></ui><calculate><script>country</script></calculate></field>
+  <field name="summary" w="3in" h="0.3in" access="readOnly"><ui><textEdit/></ui>"#,
+    );
+    let bytes = Arc::new(pdfcraft_xfa::fixtures::shell(&tpl));
+    let mut s = Session::new().with_clock(|| 1_700_000_000);
+    let id = s.open("iso.pdf", None, bytes, None).expect("opens");
+    let value = |s: &Session, n: &str| s.get(id).unwrap().form.iter().find(|f| f.name == n).map(|f| f.value.clone()).unwrap_or_default();
+    let out = s.take_js_output(id);
+    assert!(out.errors.iter().any(|e| e.contains("boom")), "{out:?}");
+    assert_eq!(value(&s, "a"), vec!["1".to_string()], "the failed script's write reached nothing");
+    assert_eq!(value(&s, "c"), vec!["2".to_string()]);
+    assert_eq!(value(&s, "country"), vec!["CA".to_string()], "shown text mapped to the saved value");
+    assert_eq!(value(&s, "e"), vec!["CA".to_string()], "the next script reads the saved value");
+    assert_eq!(value(&s, "summary"), vec!["Country: CA".to_string()]);
+}
+
+#[test]
 fn xfa_scripts_initialize_calculate_validate_toggle_and_add_rows() {
     let bytes = Arc::new(pdfcraft_xfa::fixtures::shell(&pdfcraft_xfa::fixtures::scripted_template()));
     let mut s = Session::new().with_clock(|| 1_700_000_000);
