@@ -14,7 +14,7 @@
 
 use egui::{Color32, CornerRadius, Pos2, Rect, Sense, Stroke, pos2, vec2};
 use pdfcraft_engine::{Edit, LineEnding, Markup, NewAnnotation, NoteIcon, ReviewState, Rgb, Shape, Style};
-use pdfcraft_render::{Annotation, DocInfo};
+use pdfcraft_render::{Annotation, DocInfo, PageInfo, PageText};
 
 use crate::canvas::{DocView, PageXform};
 use crate::theme::{self, Tokens};
@@ -363,8 +363,11 @@ pub enum ComposerKind {
     Callout {
         point: [f64; 2],
     },
-    /// Insert text at the anchor (the caret's tip).
-    Caret,
+    /// Insert text at the anchor (the caret's tip); `size` is the side of the caret's square box,
+    /// in user space units.
+    Caret {
+        size: f64,
+    },
     /// Replace the selected text (`CommentView::replace` holds the quads).
     Replace,
     /// Edit the text of the comment at this index on the composer's page.
@@ -589,6 +592,7 @@ pub(crate) fn page_input(ui: &egui::Ui, resp: &egui::Response, cx: &PageCx<'_>, 
     let pressed_here = origin.is_some_and(|o| page_rect.contains(o));
     let over_page = pointer.is_some_and(|p| page_rect.contains(p));
     let fill_grab = fill_grabs(ui, cx, view);
+    let caret_text = if cx.tool == QuickTool::Comment(CommentTool::Caret) { view.page_text(cx.page) } else { None };
     let cv = &mut view.comments;
     if cv.gesture.is_some() && ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape)) {
         cv.gesture = None;
@@ -758,7 +762,10 @@ pub(crate) fn page_input(ui: &egui::Ui, resp: &egui::Response, cx: &PageCx<'_>, 
                 && over_page
                 && let Some(p) = pointer
             {
-                cv.composer = Some(Composer { page: cx.page, at: cx.to_user(p), kind: ComposerKind::Caret, text: String::new(), focus: true });
+                let (vx, vy) = cx.xf.screen_to_view(p);
+                let snapped = cx.info.pages.get(cx.page).zip(caret_text.as_deref()).and_then(|(page, t)| snapped_caret(page, t, vx, vy));
+                let (at, size) = snapped.unwrap_or_else(|| (cx.to_user(p), CARET_SIZE));
+                cv.composer = Some(Composer { page: cx.page, at, kind: ComposerKind::Caret { size }, text: String::new(), focus: true });
                 cv.selected = None;
             }
             true
@@ -1131,7 +1138,7 @@ pub(crate) fn composer(ctx: &egui::Context, view: &mut DocView, info: &DocInfo, 
         ComposerKind::Note => "Sticky note",
         ComposerKind::TextBox => "Text box",
         ComposerKind::Callout { .. } => "Callout",
-        ComposerKind::Caret => "Inserted text",
+        ComposerKind::Caret { .. } => "Inserted text",
         ComposerKind::Replace => "Replacement text",
         ComposerKind::Edit(_) => "Edit comment",
     };
@@ -1146,7 +1153,7 @@ pub(crate) fn composer(ctx: &egui::Context, view: &mut DocView, info: &DocInfo, 
             ui.add_space(6.0);
             let hint = match c.kind {
                 ComposerKind::TextBox | ComposerKind::Callout { .. } => tl!("Type text"),
-                ComposerKind::Caret => tl!("Text to insert"),
+                ComposerKind::Caret { .. } => tl!("Text to insert"),
                 ComposerKind::Replace => tl!("Replacement text"),
                 _ => tl!("Add a comment"),
             };
@@ -1225,12 +1232,64 @@ pub(crate) fn composer(ctx: &egui::Context, view: &mut DocView, info: &DocInfo, 
                 caret: prefs.style(CommentTool::Caret),
             })
         }
-        ComposerKind::Caret => {
+        ComposerKind::Caret { size } => {
             view.comments.tool_done = true;
             let [x, y] = c.at;
-            Some(new_comment(&cx, CommentTool::Caret, Shape::Caret { rect: [x - 4.0, y - 8.0, x + 4.0, y] }, text))
+            let half = size / 2.0;
+            Some(new_comment(&cx, CommentTool::Caret, Shape::Caret { rect: [x - half, y - size, x + half, y] }, text))
         }
     }
+}
+
+/// The side of the caret's box, in user space units, away from text.
+const CARET_SIZE: f64 = 8.0;
+
+/// [`caret_snap`] in the page's user space: the caret's tip and the side of its box.
+///
+/// The caret is drawn upright in user space, so it only snaps on an unrotated page, where up on
+/// the page is up on screen; its size goes through the same mapping as the tip, so a page with
+/// `/UserUnit` gets a caret of the same size relative to its text.
+pub(crate) fn snapped_caret(page: &PageInfo, text: &PageText, vx: f32, vy: f32) -> Option<([f64; 2], f64)> {
+    if !page.rotation.is_multiple_of(360) {
+        return None;
+    }
+    let ([x, y], size) = caret_snap(text, vx, vy)?;
+    let tip = page.view_to_user(x, y);
+    let foot = page.view_to_user(x, y + size);
+    let side = f64::from(tip[1] - foot[1]);
+    (side.is_finite() && side > 0.0).then(|| ([f64::from(tip[0]), f64::from(tip[1])], side))
+}
+
+/// Insert text: where a click puts the caret's tip (view space) and how tall the caret is.
+///
+/// On upright, horizontal text the tip snaps to the nearer edge of the character under (or
+/// next to) the click, on the line's baseline, and the caret's side is half the text's em size
+/// (clamped to 4–36 view-space points; [`snapped_caret`] maps it to user space): the
+/// proposal marks an insertion point in the text, as a proofreader's caret does. Elsewhere
+/// (away from text, or on turned, sloped or vertical text) it returns `None` and the caret stays
+/// at the click. A ligature is one glyph, so the caret goes before or after it, never inside.
+pub(crate) fn caret_snap(text: &PageText, vx: f32, vy: f32) -> Option<([f32; 2], f32)> {
+    let g = text.glyphs.get(text.nearest(vx, vy)?)?;
+    if !(g.direction[0] > 0.0 && g.direction[1].abs() <= 0.02) {
+        return None;
+    }
+    // Close enough to belong to this glyph: within half an em of its box.
+    let [x0, y0, x1, y1] = g.rect;
+    let slack = (y1 - y0) / 2.0;
+    if !(slack.is_finite() && slack > 0.0) || vx < x0 - slack || vx > x1 + slack || vy < y0 - slack || vy > y1 + slack {
+        return None;
+    }
+    // The em box runs from 0.2 em below the baseline to 0.8 em above it (`pdfcraft_render`'s
+    // text extraction); `quad` is its bottom edge in the writing direction, then its top edge
+    // backwards. Take the side of the box the click is nearer to: its foot and head.
+    let [q0, q1, q2, q3] = g.quad;
+    let (foot, head) = if vx < (q0[0] + q1[0]) / 2.0 { (q0, q3) } else { (q1, q2) };
+    let em = (head[0] - foot[0]).hypot(head[1] - foot[1]);
+    if !(em.is_finite() && em > 0.0) {
+        return None;
+    }
+    let baseline = [foot[0] + 0.2 * (head[0] - foot[0]), foot[1] + 0.2 * (head[1] - foot[1])];
+    Some((baseline, (em / 2.0).clamp(4.0, 36.0)))
 }
 
 /// A text box sized to its text (at most 300 pt wide), hanging from its top-left corner.
@@ -1492,6 +1551,85 @@ pub fn status_badge(state: &str) -> Option<(&'static str, &'static str, Color32)
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pdfcraft_render::TextGlyph;
+
+    /// One glyph per character, `w` points wide, on a line of `em`-point text whose baseline is at `y`, drawn
+    /// along `direction` (a unit vector in view space, y down).
+    fn line(chars: &str, x: f32, y: f32, w: f32, em: f32, direction: [f32; 2]) -> PageText {
+        let [dx, dy] = direction;
+        // "Up" for the glyph: its writing direction turned a quarter counterclockwise (y down).
+        let [ux, uy] = [dy, -dx];
+        let glyphs = chars
+            .chars()
+            .enumerate()
+            .map(|(i, c)| {
+                let start = [x + dx * w * i as f32, y + dy * w * i as f32];
+                let at = |along: f32, up: f32| [start[0] + dx * along + ux * up, start[1] + dy * along + uy * up];
+                let quad = [at(0.0, -0.2 * em), at(w, -0.2 * em), at(w, 0.8 * em), at(0.0, 0.8 * em)];
+                let xs = quad.map(|p| p[0]);
+                let ys = quad.map(|p| p[1]);
+                let rect = [
+                    xs.into_iter().fold(f32::INFINITY, f32::min),
+                    ys.into_iter().fold(f32::INFINITY, f32::min),
+                    xs.into_iter().fold(f32::NEG_INFINITY, f32::max),
+                    ys.into_iter().fold(f32::NEG_INFINITY, f32::max),
+                ];
+                TextGlyph { text: c.to_string(), rect, quad, direction }
+            })
+            .collect::<Vec<_>>();
+        let n = glyphs.len();
+        PageText { glyphs, line_of: vec![0; n], space_before: vec![false; n] }
+    }
+
+    fn near(a: Option<([f32; 2], f32)>, b: ([f32; 2], f32)) -> bool {
+        a.is_some_and(|([x, y], s)| (x - b.0[0]).abs() < 1e-3 && (y - b.0[1]).abs() < 1e-3 && (s - b.1).abs() < 1e-3)
+    }
+
+    #[test]
+    fn the_caret_snaps_to_the_nearer_edge_on_the_baseline() {
+        let text = line("abcd", 20.0, 100.0, 10.0, 14.0, [1.0, 0.0]);
+        // "c" spans 40..50: its left half snaps before it, its right half after it.
+        assert!(near(caret_snap(&text, 43.0, 95.0), ([40.0, 100.0], 7.0)));
+        assert!(near(caret_snap(&text, 47.0, 92.0), ([50.0, 100.0], 7.0)));
+        // Just past the last character, on the line: after it.
+        assert!(near(caret_snap(&text, 63.0, 99.0), ([60.0, 100.0], 7.0)));
+    }
+
+    #[test]
+    fn the_snapped_caret_follows_the_page_into_user_space() {
+        let text = line("abcd", 20.0, 100.0, 10.0, 14.0, [1.0, 0.0]);
+        let page = |rotation, user_unit: f32| PageInfo {
+            width: 300.0 * user_unit,
+            height: 200.0 * user_unit,
+            label: "1".into(),
+            crop: [0.0, 0.0, 300.0, 200.0],
+            rotation,
+        };
+        // An unrotated page: view y = 100 is user y = 100 (y up from the bottom of a 200 pt page).
+        let (tip, side) = snapped_caret(&page(0, 1.0), &text, 43.0, 95.0).expect("snaps");
+        assert!((tip[0] - 40.0).abs() < 1e-3 && (tip[1] - 100.0).abs() < 1e-3 && (side - 7.0).abs() < 1e-3);
+        // /UserUnit 2: the view is twice as large, so the same text is half as many user units.
+        let doubled = line("abcd", 40.0, 200.0, 20.0, 28.0, [1.0, 0.0]);
+        let (tip, side) = snapped_caret(&page(0, 2.0), &doubled, 86.0, 190.0).expect("snaps");
+        assert!((tip[0] - 40.0).abs() < 1e-3 && (tip[1] - 100.0).abs() < 1e-3 && (side - 7.0).abs() < 1e-3, "{tip:?} {side}");
+        // A rotated page: the caret would lie on its side, so it stays at the click.
+        for rotation in [90, 180, 270] {
+            assert_eq!(snapped_caret(&page(rotation, 1.0), &text, 43.0, 95.0), None, "/Rotate {rotation}");
+        }
+    }
+
+    #[test]
+    fn away_from_upright_horizontal_text_the_caret_stays_at_the_click() {
+        let text = line("abcd", 20.0, 100.0, 10.0, 14.0, [1.0, 0.0]);
+        assert_eq!(caret_snap(&text, 200.0, 100.0), None, "far to the right");
+        assert_eq!(caret_snap(&text, 40.0, 40.0), None, "far above the line");
+        assert_eq!(caret_snap(&PageText::default(), 40.0, 100.0), None, "no text");
+        for (direction, what) in [([0.0, 1.0], "vertical"), ([-1.0, 0.0], "upside down"), ([0.995, 0.0998], "sloped")] {
+            let turned = line("abcd", 20.0, 100.0, 10.0, 14.0, direction);
+            let [x0, y0, x1, y1] = turned.glyphs[2].rect;
+            assert_eq!(caret_snap(&turned, (x0 + x1) / 2.0, (y0 + y1) / 2.0), None, "{what}");
+        }
+    }
 
     #[test]
     fn proportional_corners_keep_the_opposite_anchor_and_edges_stretch_one_axis() {

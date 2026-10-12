@@ -604,6 +604,35 @@ fn polygons_clouds_connected_lines_callouts_and_inserted_text() {
 }
 
 #[test]
+fn inserted_text_snaps_to_the_gap_between_characters_on_the_baseline() {
+    let mut h = harness(|app| app.set_option("quick", "caret").unwrap());
+    // "The quick brown fox", Helvetica 14 pt from x = 20 on the baseline y = 150. With the
+    // standard-14 widths "The quick b" ends at 92.366 and "r" (333/1000 em) at 97.028, so a click
+    // in the right half of "r", above the baseline, puts the tip between "r" and "o".
+    click_pt(&mut h, (95.5, 155.0));
+    field(&h, "Text to insert").type_text("x");
+    h.run_steps(2);
+    h.get_by_label("Post").click();
+    h.run_steps(3);
+    let caret = comments(&h).into_iter().find(|a| a.subtype == "Caret").expect("a caret");
+    let [x0, y0, x1, y1] = caret.rect;
+    assert!(((x0 + x1) / 2.0 - 97.03).abs() < 0.3, "tip at the r|o gap: {:?}", caret.rect);
+    assert!((y1 - 150.0).abs() < 0.3, "tip on the baseline: {:?}", caret.rect);
+    assert!((y1 - y0 - 7.0).abs() < 0.3, "half the 14 pt em: {:?}", caret.rect);
+
+    // Away from the text the caret stays where the click was, at its default size.
+    h.state_mut().set_option("quick", "caret").unwrap();
+    click_pt(&mut h, (200.0, 60.0));
+    field(&h, "Text to insert").type_text("y");
+    h.run_steps(2);
+    h.get_by_label("Post").click();
+    h.run_steps(3);
+    let away = comments(&h).into_iter().find(|a| a.subtype == "Caret" && a.contents.as_deref() == Some("y")).expect("a second caret");
+    let [x0, y0, x1, y1] = away.rect;
+    assert!(((x0 + x1) / 2.0 - 200.0).abs() < 1.0 && (y1 - 60.0).abs() < 1.0 && (y1 - y0 - 8.0).abs() < 0.3, "{:?}", away.rect);
+}
+
+#[test]
 fn the_panel_filters_by_colour_and_checkmark() {
     let mut h = harness(|app| {
         app.set_option("panel", "comments").unwrap();
