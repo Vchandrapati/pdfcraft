@@ -1284,7 +1284,6 @@
 	Select all pages (Organize)	Selecionar todas as páginas (Organizar)
 	Version {v}	Versão {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Um aplicativo PDF de código aberto e clean-room escrito em Rust. MIT OU Apache-2.0.
-	Part of	Parte de
 	Summarize Options	Opções de resumo
 	Choose a layout:	Escolha um layout:
 	Comments only	Somente comentários
@@ -1641,12 +1640,8 @@
 	Read	Ler
 	Convert	Converter
 	E-Sign	Assinatura eletrônica
-	Welcome to PdfCraft	Bem-vindo ao PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	Uma bancada de trabalho de PDF de código aberto — local, privada e programável.
-	Recommended tools	Ferramentas recomendadas
 	Use now	Usar agora
 	Recent	Recentes
-	Privacy	Privacidade
 	Export to image…	Exportar para imagem…
 	Reduce file size…	Reduzir tamanho do arquivo…
 	Optimize PDF…	Otimizar PDF…
@@ -1676,13 +1671,6 @@
 	Split document…	Dividir documento…
 	Number pages…	Numerar páginas…
 	Keyboard shortcuts	Atalhos de teclado
-	Join the ArtCraft Discord	Entrar no Discord do ArtCraft
-	Join the ArtCraft community	Entrar na comunidade ArtCraft
-	Get help, share feedback and follow development on Discord.	Obtenha ajuda, compartilhe comentários e acompanhe o desenvolvimento no Discord.
-	Join our Discord	Entrar em nosso Discord
-	PdfCraft web page	Página da Web do PdfCraft
-	PdfCraft on GitHub	PdfCraft no GitHub
-	ArtCraft website	Site do ArtCraft
 	Check for updates…	Verificar atualizações…
 	About PdfCraft	Sobre o PdfCraft
 	JavaScript console…	Console JavaScript…
@@ -1695,7 +1683,6 @@
 	Prepare a form	Preparar um formulário
 	Digitally sign	Assinar digitalmente
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Os arquivos abertos no PdfCraft aparecem aqui. Solte um PDF em qualquer lugar para abri-lo.
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	O PdfCraft funciona offline. Sem telemetria, sem conta e sem processamento em nuvem, a menos que você adicione um provedor.
 	Measure distance	Medir distância
 	Measure perimeter	Medir perímetro
 	Measure area	Medir área
@@ -2328,3 +2315,6 @@ scroll speed	Fast	Rápida
 	Couldn't download {name}: {error}	Não foi possível baixar {name}: {error}
 	Extract tables…	Extrair tabelas…
 	Tables (CSV / Excel)	Tabelas (CSV / Excel)
+	Quick tools	Ferramentas rápidas
+	Merge	Mesclar
+	Reorder	Reordenar

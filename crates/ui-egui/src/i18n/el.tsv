@@ -78,7 +78,6 @@
 	Side panels	Πλευρικοί πίνακες
 	Enable Acrobat JavaScript	Ενεργοποίηση Acrobat JavaScript
 	OK	Εντάξει
-	Join our Discord	Ελάτε στο Discord μας
 	Close	Κλείσιμο
 	Next / previous match	Επόμενο / προηγούμενο αποτέλεσμα
 	Copy selected text	Αντιγραφή επιλεγμένου κειμένου
@@ -137,16 +136,9 @@
 	Toggle fit page / fit width	Εναλλαγή προσαρμογής στη σελίδα / στο πλάτος
 	Next page	Επόμενη σελίδα
 	Previous page	Προηγούμενη σελίδα
-	Welcome to PdfCraft	Καλώς ορίσατε στο PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	Ένα εργαλείο PDF ανοιχτού κώδικα — τοπικό, ιδιωτικό και αυτοματοποιήσιμο.
-	Join the ArtCraft community	Γίνετε μέλος της κοινότητας ArtCraft
-	Get help, share feedback and follow development on Discord.	Βρείτε βοήθεια, μοιραστείτε σχόλια και παρακολουθήστε την ανάπτυξη στο Discord.
-	Recommended tools	Προτεινόμενα εργαλεία
 	Use now	Χρήση τώρα
 	Open file	Άνοιγμα αρχείου
 	Recent	Πρόσφατα
-	Privacy	Απόρρητο
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	Το PdfCraft λειτουργεί χωρίς σύνδεση στο διαδίκτυο. Χωρίς τηλεμετρία, λογαριασμό ή επεξεργασία στο νέφος, εκτός αν προσθέσετε εσείς υπηρεσία.
 	Date	Ημερομηνία
 	Rotate	Περιστροφή
 	Delete	Διαγραφή
@@ -935,7 +927,6 @@
 	Recover	Ανάκτηση
 	Version {v}	Έκδοση {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Μια εφαρμογή PDF ανοικτού κώδικα, αναπτυγμένη ανεξάρτητα σε Rust. Άδεια MIT ή Apache-2.0.
-	Part of	Μέρος του
 	Summarize Options	Επιλογές σύνοψης
 	Choose a layout:	Επιλέξτε διάταξη:
 	Comments only	Μόνο σχόλια
@@ -1663,10 +1654,6 @@
 	Extract pages…	Εξαγωγή σελίδων…
 	Split document…	Διαχωρισμός εγγράφου…
 	Number pages…	Αρίθμηση σελίδων…
-	Join the ArtCraft Discord	Συμμετοχή στο Discord του ArtCraft
-	PdfCraft web page	Ιστότοπος του PdfCraft
-	PdfCraft on GitHub	PdfCraft στο GitHub
-	ArtCraft website	Ιστότοπος ArtCraft
 	Check for updates…	Έλεγχος για ενημερώσεις…
 	Export a PDF	Εξαγωγή PDF
 	Export to	Εξαγωγή σε
@@ -2330,3 +2317,6 @@ scroll speed	Fast	Γρήγορη
 	Couldn't download {name}: {error}	Δεν ήταν δυνατή η λήψη του {name}: {error}
 	Extract tables…	Εξαγωγή πινάκων…
 	Tables (CSV / Excel)	Πίνακες (CSV / Excel)
+	Quick tools	Γρήγορα εργαλεία
+	Merge	Συγχώνευση
+	Reorder	Αναδιάταξη

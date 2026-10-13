@@ -1293,7 +1293,6 @@
 	Select all pages (Organize)	選取所有頁面（整理頁面）
 	Version {v}	版本{v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	用 Rust 從零編寫的開源 PDF 應用。MIT OR Apache-2.0 許可。
-	Part of	隸屬於
 	Summarize Options	彙總選項
 	Choose a layout:	選擇佈局：
 	Comments only	僅註解
@@ -1720,12 +1719,8 @@
 	Read	閱讀
 	Convert	轉換
 	E-Sign	電子簽署
-	Welcome to PdfCraft	歡迎使用 PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	開源 PDF 工作台，在本機處理、保護隱私，並支援指令碼。
-	Recommended tools	推薦工具
 	Use now	立即使用
 	Recent	最近使用
-	Privacy	隱私
 	Export to image…	匯出為圖片…
 	Reduce file size…	縮小檔案大小…
 	Optimize PDF…	最佳化 PDF…
@@ -1755,13 +1750,6 @@
 	Split document…	分割文件…
 	Number pages…	編訂頁碼…
 	Keyboard shortcuts	鍵盤快速鍵
-	Join the ArtCraft Discord	加入 ArtCraft Discord
-	Join the ArtCraft community	加入 ArtCraft 社群
-	Get help, share feedback and follow development on Discord.	在 Discord 取得協助、提供意見並追蹤開發進度。
-	Join our Discord	加入 Discord 社群
-	PdfCraft web page	PdfCraft 網頁
-	PdfCraft on GitHub	GitHub 上的 PdfCraft
-	ArtCraft website	ArtCraft 網站
 	Check for updates…	尋找更新…
 	About PdfCraft	關於 PdfCraft
 	JavaScript console…	JavaScript 主控台…
@@ -1774,7 +1762,6 @@
 	Prepare a form	準備表單
 	Digitally sign	數位簽署
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	在 PdfCraft 開啟過的檔案會顯示在這裡。將 PDF 拖曳至視窗即可開啟。
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft 可離線使用，不收集遙測資料，也不需要帳號。只有在您新增服務供應商後，才會使用雲端處理。
 	Double-click	滑鼠按兩下
 	PDF/A…	PDF/A…
 	Microsoft Word (.docx)	Microsoft Word（.docx）
@@ -2188,3 +2175,6 @@ scroll speed	Fast	快
 	Extract tables…	擷取表格…
 	Tables (CSV / Excel)	表格 (CSV / Excel)
 	of {n}	 / {n}
+	Quick tools	快速工具
+	Merge	合併
+	Reorder	重新排序

@@ -1341,7 +1341,6 @@
 	Select all pages (Organize)	Избери всички страници (Организиране)
 	Version {v}	Версия {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Независимо разработено PDF приложение с отворен код, написано на Rust. MIT OR Apache-2.0.
-	Part of	Част от
 	Summarize Options	Опции за обобщение
 	Choose a layout:	Изберете оформление:
 	Comments only	Само коментари
@@ -1769,12 +1768,8 @@
 	Read	Четене
 	Convert	Конвертиране
 	E-Sign	Е-подпис
-	Welcome to PdfCraft	Добре дошли в PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	PDF работна среда с отворен код — локална, поверителна и програмируема.
-	Recommended tools	Препоръчани инструменти
 	Use now	Използвай сега
 	Recent	Последни
-	Privacy	Поверителност
 	Export to image…	Експортирай като изображение…
 	Reduce file size…	Намали размера на файла…
 	Optimize PDF…	Оптимизирай PDF…
@@ -1804,13 +1799,6 @@
 	Split document…	Раздели документа…
 	Number pages…	Номерирай страниците…
 	Keyboard shortcuts	Клавишни комбинации
-	Join the ArtCraft Discord	Присъедини се към ArtCraft в Discord
-	Join the ArtCraft community	Присъедини се към общността на ArtCraft
-	Get help, share feedback and follow development on Discord.	Получете помощ, споделете мнение и следете разработката в Discord.
-	Join our Discord	Присъедини се към нашия Discord
-	PdfCraft web page	Уебстраница на PdfCraft
-	PdfCraft on GitHub	PdfCraft в GitHub
-	ArtCraft website	Уебсайт на ArtCraft
 	Check for updates…	Провери за актуализации…
 	About PdfCraft	За PdfCraft
 	JavaScript console…	JavaScript конзола…
@@ -1823,7 +1811,6 @@
 	Prepare a form	Подготви формуляр
 	Digitally sign	Подпиши цифрово
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Файловете, които отваряте в PdfCraft, се показват тук. Пуснете PDF файл където и да е, за да го отворите.
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft работи офлайн. Без телеметрия, без акаунт и без обработка в облака, освен ако не добавите доставчик.
 	Measure distance	Измери разстояние
 	Measure perimeter	Измери периметър
 	Measure area	Измери площ
@@ -2277,3 +2264,6 @@ scroll speed	Fast	Висока
 	Couldn't download {name}: {error}	{name} не може да бъде изтеглен: {error}
 	Extract tables…	Извличане на таблици…
 	Tables (CSV / Excel)	Таблици (CSV / Excel)
+	Quick tools	Бързи инструменти
+	Merge	Обединяване
+	Reorder	Пренареждане

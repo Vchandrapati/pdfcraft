@@ -93,7 +93,6 @@
 	Side panels	サイドパネル
 	Enable Acrobat JavaScript	Acrobat JavaScript を有効にする
 	OK	OK
-	Join our Discord	Discord に参加
 	Close	閉じる
 	Next / previous match	次／前の検索結果
 	Copy selected text	選択したテキストをコピー
@@ -159,17 +158,10 @@
 	Next page	次のページ
 	Previous page	前のページ
 	Current page — type a page number or label (such as iv) and press Enter	現在のページ：ページ番号またはラベル（例：iv）を入力して Enter
-	Welcome to PdfCraft	PdfCraft へようこそ
-	An open-source PDF workbench — local, private, and scriptable.	ローカルで処理し、プライバシーを守る、スクリプト対応のオープンソース PDF ツール。
-	Join the ArtCraft community	ArtCraft コミュニティに参加
-	Get help, share feedback and follow development on Discord.	Discord で質問やフィードバックを共有し、開発の進捗を確認できます。
-	Recommended tools	おすすめのツール
 	Use now	使用する
 	Open file	ファイルを開く
 	Recent	最近使ったファイル
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	PdfCraft で開いたファイルがここに表示されます。PDF をウィンドウにドロップして開くこともできます。
-	Privacy	プライバシー
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft はオフラインで動作します。使用状況の送信やアカウント登録はありません。サービス提供元を追加しない限り、クラウド処理も行いません。
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	スクリプトはファイルやネットワークにアクセスできないサンドボックスで実行されます。JavaScript を無効にしても、Acrobat の標準の書式設定・検証・計算関数は使用できます。
 	Back to all tools	すべてのツールに戻る
 	Close panel	パネルを閉じる
@@ -304,10 +296,6 @@
 	Split document…	文書を分割…
 	Number pages…	ページ番号を設定…
 	Keyboard shortcuts	キーボードショートカット
-	Join the ArtCraft Discord	ArtCraft の Discord に参加
-	PdfCraft web page	PdfCraft の Web 版
-	PdfCraft on GitHub	GitHub の PdfCraft
-	ArtCraft website	ArtCraft のウェブサイト
 	Check for updates…	更新を確認…
 	About PdfCraft	PdfCraft について
 	Export a PDF	PDF を書き出す
@@ -1390,7 +1378,6 @@
 	Discard	破棄
 	Version {v}	バージョン {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Rust で記述したクリーンルーム方式のオープンソース PDF アプリケーション。MIT OR Apache-2.0。
-	Part of	関連プロジェクト
 	Summarize Options	一覧のオプション
 	Choose a layout:	レイアウトを選択:
 	Comments only	注釈のみ
@@ -2314,3 +2301,6 @@ scroll speed	Fast	速い
 	Extract tables…	表を抽出…
 	Tables (CSV / Excel)	表 (CSV / Excel)
 	of {n}	 / {n}
+	Quick tools	クイックツール
+	Merge	結合
+	Reorder	並べ替え

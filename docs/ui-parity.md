@@ -1,5 +1,6 @@
 # UI and interaction parity
 
+> **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (M3: personal-fork Home Quick tools and removal of upstream community branding/actions; estimates unchanged) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (column select #740, multi-object move #844, Shift-⌘-G #810 fixed) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 
 How PdfCraft's tools, panels, shortcuts and feel compare with Acrobat Pro's current interface (the
@@ -11,7 +12,7 @@ interface is copied. Gaps ranked in [gaps.md](gaps.md).
 
 ## Measured
 
-- **184 registered commands** (`crates/engine/src/commands.rs`), every one in the menus, the
+- **185 registered commands** (`crates/engine/src/commands.rs`), every one in the menus, the
   command palette and the automation `command_run` tool; menus are generated from the registry
   (`view.menus-from-registry`).
 - **141 automation tools** (`crates/automation/src/tools.rs`), so every UI action can be checked
@@ -24,7 +25,7 @@ No dump of Acrobat's menu tree has been diffed against the registry yet (gap 24)
 
 | Element | Acrobat | PdfCraft | Status |
 |---|---|---|---|
-| Home view (recent files, recommended tools) | yes | yes | shipped |
+| Home view (recent files, quick tools (Rotate, Merge, Split, Reorder)) | yes | yes | shipped |
 | All tools pane, tool sets | yes | yes, with milestone badges | shipped |
 | Quick-action toolbar, customisable | yes | fixed | partial (`view.customize-quick-tools` planned) |
 | Command search | "Search tools" | command palette (⌘K), matches translated and English labels | shipped |

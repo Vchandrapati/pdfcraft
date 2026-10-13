@@ -212,7 +212,7 @@ fn chinese_ui_uses_an_installed_chinese_face() {
             }
         }
         let han = catalog_han(catalog);
-        assert!(han.contains('欢') || han.contains('說'), "{cjk:?}");
+        assert!(han.contains('快') && han.contains('工'), "{cjk:?}");
         let mut fonts = Fonts::new(TextOptions::default(), defs);
         for id in families() {
             let missing: String = han.chars().filter(|c| !fonts.has_glyphs(&id, &c.to_string())).collect();

@@ -57,7 +57,6 @@
 	Flatten Fill & Sign when saving	Kaydederken Doldur ve İmzala'yı düzleştir
 	Text, marks and signatures become part of the page. Other comments stay editable.	Metin, işaretler ve imzalar sayfanın bir parçası olur. Diğer yorumlar düzenlenebilir kalır.
 	OK	Tamam
-	Join our Discord	Discord'umuza katılın
 	Close	Kapat
 	Next / previous match	Sonraki / önceki eşleşme
 	Copy selected text	Seçilen metni kopyala
@@ -117,17 +116,10 @@
 	Next page	Sonraki sayfa
 	Previous page	Önceki sayfa
 	Current page — type a page number or label (such as iv) and press Enter	Geçerli sayfa — bir sayfa numarası veya etiketi (örneğin iv) yazıp Enter'a basın
-	Welcome to PdfCraft	PdfCraft'a Hoş Geldiniz
-	An open-source PDF workbench — local, private, and scriptable.	Açık kaynaklı bir PDF çalışma alanı — yerel, gizli ve komut dosyalarıyla yönetilebilir.
-	Join the ArtCraft community	ArtCraft topluluğuna katılın
-	Get help, share feedback and follow development on Discord.	Discord'da yardım alın, geri bildirim paylaşın ve geliştirmeyi takip edin.
-	Recommended tools	Önerilen araçlar
 	Use now	Şimdi kullan
 	Open file	Dosya aç
 	Recent	Son kullanılanlar
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	PdfCraft'ta açtığınız dosyalar burada görünür. Açmak için bir PDF'i herhangi bir yere bırakın.
-	Privacy	Gizlilik
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft çevrimdışı çalışır. Bir sağlayıcı eklemediğiniz sürece telemetri yok, hesap yok ve bulut işleme yok.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Komut dosyaları dosya veya ağ erişimi olmadan yalıtılmış alanda (sandbox) çalışır. JavaScript kapalıyken bile Acrobat'ın standart biçimlendirme, doğrulama ve hesaplama işlevleri çalışmaya devam eder.
 	Back to all tools	Tüm araçlara geri dön
 	Close panel	Paneli kapat
@@ -262,10 +254,6 @@
 	Split document…	Belgeyi böl…
 	Number pages…	Sayfaları numaralandır…
 	Keyboard shortcuts	Klavye kısayolları
-	Join the ArtCraft Discord	ArtCraft Discord'una katıl
-	PdfCraft web page	PdfCraft web sayfası
-	PdfCraft on GitHub	GitHub'da PdfCraft
-	ArtCraft website	ArtCraft web sitesi
 	Check for updates…	Güncellemeleri denetle…
 	About PdfCraft	PdfCraft hakkında
 	Export a PDF	PDF'i dışa aktar
@@ -1346,7 +1334,6 @@
 	Discard	Yoksay
 	Version {v}	Sürüm {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Rust ile yazılmış, temiz oda tekniğiyle geliştirilmiş açık kaynaklı bir PDF uygulaması. MIT VEYA Apache-2.0.
-	Part of	Şunun parçası:
 	Summarize Options	Özetleme Seçenekleri
 	Choose a layout:	Bir düzen seçin:
 	Comments only	Yalnızca yorumlar
@@ -2310,3 +2297,6 @@ scroll speed	Fast	Hızlı
 	Extract tables…	Tabloları Çıkar…
 	Tables (CSV / Excel)	Tablolar (CSV / Excel)
 	of {n}	/ {n}
+	Quick tools	Hızlı araçlar
+	Merge	Birleştir
+	Reorder	Yeniden sırala

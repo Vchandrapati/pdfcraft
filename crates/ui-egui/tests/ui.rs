@@ -30,11 +30,40 @@ fn harness(setup: impl FnOnce(&mut PdfCraftApp) + 'static) -> Harness<'static, P
 }
 
 #[test]
-fn home_shows_welcome_and_tools() {
+fn home_shows_quick_tools() {
     let h = harness(|_| {});
-    h.get_by_label_contains("Welcome to PdfCraft");
-    assert!(h.query_all_by_label("Organize pages").count() >= 2, "tool list + home card");
-    h.get_by_label("Open file");
+    h.get_by_label("Quick tools");
+    for label in ["Rotate", "Merge", "Split", "Reorder"] {
+        h.get_by_label(label);
+    }
+    for label in ["Welcome to PdfCraft", "Recommended tools", "Join the ArtCraft community", "Privacy", "Open file"] {
+        assert!(h.query_by_label(label).is_none(), "{label} was removed from Home");
+    }
+    let mut h = harness(|_| {});
+    h.get_by_label("Merge").click();
+    h.run_steps(3);
+    assert!(h.state().combine_showing());
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        use pdfcraft_ui_egui::Dialog;
+        let dir = std::env::temp_dir().join(format!("pdfcraft-home-quick-tools-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let file = dir.join("pages.pdf");
+        std::fs::write(&file, FIXTURE).unwrap();
+        for (label, dialog) in [("Rotate", Some(Dialog::RotatePages)), ("Split", Some(Dialog::Split)), ("Reorder", None)] {
+            let mut h = harness(|_| {});
+            h.state_mut().pick_override = Some(vec![file.to_string_lossy().into_owned()]);
+            h.get_by_label(label).click();
+            h.run_steps(4);
+            assert_eq!(h.state().views.len(), 1, "{label} opens the chosen PDF");
+            assert_eq!(h.state().dialog, dialog, "{label} opens its workflow");
+            if label == "Reorder" {
+                assert!(h.state().views[0].organize);
+            }
+        }
+        let _ = std::fs::remove_dir_all(dir);
+    }
 }
 
 #[test]
@@ -950,7 +979,7 @@ fn closing_the_last_active_tab_selects_the_previous_one_then_home() {
         assert!(app.session.get(ids[removed]).is_none());
     }
     assert_eq!(h.state().active, None);
-    h.get_by_label_contains("Welcome to PdfCraft");
+    h.get_by_label("Quick tools");
 }
 
 #[test]

@@ -66,7 +66,6 @@
 	Flatten Fill & Sign when saving	Aplatir Remplir et signer à l'enregistrement
 	Text, marks and signatures become part of the page. Other comments stay editable.	Le texte, les marques et les signatures deviennent partie de la page. Les autres commentaires restent modifiables.
 	OK	OK
-	Join our Discord	Rejoindre notre Discord
 	Close	Fermer
 	Next / previous match	Correspondance suivante / précédente
 	Copy selected text	Copier le texte sélectionné
@@ -132,17 +131,10 @@
 	Next page	Page suivante
 	Previous page	Page précédente
 	Current page — type a page number or label (such as iv) and press Enter	Page actuelle — saisissez un numéro ou une étiquette de page (comme iv) et appuyez sur Entrée
-	Welcome to PdfCraft	Bienvenue dans PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	Un atelier PDF open source — local, privé et automatisable.
-	Join the ArtCraft community	Rejoindre la communauté ArtCraft
-	Get help, share feedback and follow development on Discord.	Obtenez de l'aide, partagez vos retours et suivez le développement sur Discord.
-	Recommended tools	Outils recommandés
 	Use now	Utiliser
 	Open file	Ouvrir un fichier
 	Recent	Récents
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Les fichiers que vous ouvrez dans PdfCraft apparaissent ici. Déposez un PDF n'importe où pour l'ouvrir.
-	Privacy	Confidentialité
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft fonctionne hors ligne. Pas de télémétrie, pas de compte, et aucun traitement dans le cloud sauf si vous ajoutez un fournisseur.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Les scripts s'exécutent dans un bac à sable, sans accès aux fichiers ni au réseau. Si JavaScript est désactivé, les fonctions standard de format, de validation et de calcul d'Acrobat continuent de fonctionner.
 	Back to all tools	Retour à tous les outils
 	Close panel	Fermer le panneau
@@ -277,10 +269,6 @@
 	Split document…	Fractionner le document…
 	Number pages…	Numéroter les pages…
 	Keyboard shortcuts	Raccourcis clavier
-	Join the ArtCraft Discord	Rejoindre le Discord ArtCraft
-	PdfCraft web page	Page web de PdfCraft
-	PdfCraft on GitHub	PdfCraft sur GitHub
-	ArtCraft website	Site web d'ArtCraft
 	Check for updates…	Rechercher des mises à jour…
 	About PdfCraft	À propos de PdfCraft
 	Export a PDF	Exporter un PDF
@@ -1369,7 +1357,6 @@
 	Discard	Abandonner
 	Version {v}	Version {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Une application PDF open source, en salle blanche, écrite en Rust. MIT OR Apache-2.0.
-	Part of	Partie de
 	Summarize Options	Options du résumé
 	Choose a layout:	Choisissez une disposition :
 	Comments only	Commentaires seulement
@@ -2314,3 +2301,6 @@ scroll speed	Fast	Rapide
 	Couldn't download {name}: {error}	Impossible de télécharger {name} : {error}
 	Extract tables…	Extraire les tableaux…
 	Tables (CSV / Excel)	Tableaux (CSV / Excel)
+	Quick tools	Outils rapides
+	Merge	Fusionner
+	Reorder	Réorganiser

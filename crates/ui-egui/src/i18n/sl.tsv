@@ -202,7 +202,6 @@
 	An embedded file has no AFRelationship	Vdelana datoteka nima AFRelationship
 	An image asks to be interpolated	Slika zahteva interpolacijo
 	An image has alternates or OPI information	Slika ima nadomestke ali podatke OPI
-	An open-source PDF workbench — local, private, and scriptable.	Odprtokodno delovno okolje za PDF — lokalno, zasebno in skriptabilno.
 	Angle	Kot
 	Animation that flashes can cause seizures. Check scripts and media for flicker.	Animacije, ki utripajo, lahko sprožijo napade. Preverite skripte in predstavnostne vsebine glede utripanja.
 	Annotations, form fill-in, and digital signatures	Opombe, izpolnjevanje obrazcev in digitalni podpisi
@@ -229,7 +228,6 @@
 	Archive documents	Arhiviraj dokumente
 	Area	Ploščina
 	Arrow	Puščica
-	ArtCraft website	Spletna stran ArtCraft
 	Ask about this document	Vprašaj o tem dokumentu
 	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	Vpraša GitHub za najnovejšo izdajo. Ničesar se ne prenese ali namesti samodejno.
 	Associated with content	Povezano z vsebino
@@ -864,7 +862,6 @@
 	Full screen mode	Celozaslonski način
 	General	Splošno
 	Geospatial location	Geoprostorska lokacija
-	Get help, share feedback and follow development on Discord.	Poiščite pomoč, delite povratne informacije in spremljajte razvoj na Discordu.
 	Go to a page view	Pojdi na pogled strani
 	Go to page {p}	Pojdi na stran {p}
 	Go to page…	Pojdi na stran…
@@ -970,9 +967,6 @@
 	JavaScript console…	Konzola JavaScript…
 	JavaScript is turned off (Preferences ▸ JavaScript).	JavaScript je izklopljen (Nastavitve > JavaScript).
 	JavaScript, e.g. getField("total").value	JavaScript, npr. getField("total").value
-	Join our Discord	Discord kanal
-	Join the ArtCraft Discord	Pridružite se Discordu ArtCraft
-	Join the ArtCraft community	Pridružite se skupnosti ArtCraft
 	July	Julij
 	June	Junij
 	Justify	Obojestransko poravnano
@@ -1290,7 +1284,6 @@
 	Pages with links, comments or fields should tab in structure order. The fix sets each page's tab order to Use Document Structure.	Strani s povezavami, komentarji ali polji naj se pomikajo s tabulatorjem po vrstnem redu strukture. Popravek nastavi vrstni red tabulatorja vsake strani na Uporabi strukturo dokumenta.
 	Pages:	Strani:
 	Paper:	Papir:
-	Part of	Del
 	Passed	Uspešno
 	Password	Geslo
 	Password protection will be applied when you save	Zaščita z geslom bo uporabljena ob shranjevanju
@@ -1304,9 +1297,6 @@
 	Patterns	Vzorci
 	Patterns (graphics objects)	Vzorci (grafični objekti)
 	PdfCraft didn't shut down normally. These documents had changes that were autosaved:	PdfCraft se ni zaprl običajno. Ti dokumenti so imeli samodejno shranjene spremembe:
-	PdfCraft on GitHub	PdfCraft na GitHubu
-	PdfCraft web page	Spletna stran PdfCraft
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft deluje brez povezave. Brez telemetrije, brez računa in brez obdelave v oblaku, razen če dodate ponudnika.
 	PdfCraft {c} is up to date.	PdfCraft {c} je posodobljen.
 	PdfCraft {v} is available.	Na voljo je PdfCraft {v}.
 	People may need more time to respond. Check that nothing has a time limit.	Ljudje bodo morda potrebovali več časa za odziv. Preverite, da nič nima časovne omejitve.
@@ -1371,7 +1361,6 @@
 	Printing	Tiskanje
 	Printing allowed	Tiskanje dovoljeno
 	Print…	Natisni…
-	Privacy	Zasebnost
 	Private data of other applications	Zasebni podatki drugih programov
 	Properties…	Lastnosti…
 	Protect	Zaščiti
@@ -1405,7 +1394,6 @@
 	Recognized {w} words in {n} files	Prepoznanih besed: {w}, v datotekah: {n}
 	Recognizing text… file {d} of {t}	Prepoznavanje besedila… datoteka {d} od {t}
 	Recognizing text… page {d} of {t}	Prepoznavanje besedila… stran {d} od {t}
-	Recommended tools	Priporočena orodja
 	Recover	Obnovi
 	Recover unsaved documents?	Obnoviti neshranjene dokumente?
 	Rectangle	Pravokotnik
@@ -1948,7 +1936,6 @@
 	Warnings	Opozorila
 	Watermark	Vodni žig
 	Weak	Šibko
-	Welcome to PdfCraft	Dobrodošli v PdfCraftu
 	What word or phrase would you like to search for?	Katero besedo ali besedno zvezo želite poiskati?
 	Whole words only	Samo cele besede
 	Width	Širina
@@ -2319,3 +2306,6 @@ scroll speed	Fast	Hitro
 	Extract tables…	Izvleci tabele…
 	Tables (CSV / Excel)	Tabele (CSV / Excel)
 	of {n}	od {n}
+	Quick tools	Hitra orodja
+	Merge	Združi
+	Reorder	Preuredi
