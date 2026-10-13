@@ -2189,6 +2189,11 @@ impl PdfCraftApp {
                 }
             }
             self.tool_keys(i, ctx);
+            if self.quick_tool == QuickTool::EditText
+                && let Some(doc) = self.session.get(self.views[i].id).filter(|d| d.allows_modification())
+            {
+                object_ui::nudge_keys(ctx, &mut self.views[i], doc);
+            }
             canvas::shortcuts(&mut self.views[i], ctx);
             self.copy_key(i, ctx);
         }
