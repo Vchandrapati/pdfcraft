@@ -1125,7 +1125,8 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
         }
         ui.add_space(16.0);
         let changed = draft_changes(app).is_some_and(|c| !c.is_empty());
-        ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+        // The modal can retain a taller previous body. Anchor actions to its bottom edge.
+        ui.with_layout(Layout::right_to_left(Align::Max), |ui| {
             if dialog == Dialog::Recovery {
                 if widgets::pill_button(ui, tl!("Recover"), true).clicked() {
                     recover = Some(true);

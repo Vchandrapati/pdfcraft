@@ -1,5 +1,7 @@
 # UI and interaction parity
 
+> **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (Document Properties and redaction dialog footer alignment; estimates unchanged) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
+
 > **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (M3: personal-fork Home Quick tools and removal of upstream community branding/actions; estimates unchanged) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (column select #740, multi-object move #844, Shift-⌘-G #810 fixed) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 
@@ -11,6 +13,8 @@ interface is copied. Gaps ranked in [gaps.md](gaps.md).
 **UI/UX fidelity ≈ 55% ready** (estimated), **30–60 h** additional to the features total.
 
 ## Measured
+
+- Document Properties and redaction/hidden-information confirmations anchor their action buttons to the bottom right of the modal, including when a shorter tab or dialog follows a taller body. `crates/ui-egui/tests/dialog_footer.rs` covers all five Properties tabs and Properties → Sanitize, plus Close/Cancel behaviour.
 
 - **185 registered commands** (`crates/engine/src/commands.rs`), every one in the menus, the
   command palette and the automation `command_run` tool; menus are generated from the registry

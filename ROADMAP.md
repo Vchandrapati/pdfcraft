@@ -1,5 +1,7 @@
 # PdfCraft roadmap
 
+> **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (M3: Document Properties and redaction dialog actions anchored to the bottom right; estimates unchanged) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
+
 **Stage: alpha** · next: beta, ~26% (ready for real work 49% → 75%) and ~400–700 h away
 
 > **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (M3: personal-fork Home Quick tools and removal of upstream community branding/actions; estimates unchanged) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
@@ -138,6 +140,8 @@ Ranked; detail and the full milestone table in [docs/roadmap.md](docs/roadmap.md
 | 8 | 1.0 polish: performance, right-to-left, missing languages, keyboard-only (M14) | 55–95 |
 
 ## Progress log
+
+- **2026-10-13 (M3, dialog footers):** Document Properties and redaction/hidden-information confirmations keep their actions at the bottom right when a shorter body reuses a taller modal. The previous centre alignment left Close 193 points above the bottom and Sanitize 144.5 points above it in synthetic UI regressions. `crates/ui-egui/tests/dialog_footer.rs` covers every Properties tab, Properties → Sanitize, and closing/cancelling. Eight focused UI tests, formatting and focused Clippy passed; the rebuilt native app was checked through its opt-in control channel with a synthetic PDF. Milestone and effort estimates unchanged.
 
 - **2026-10-13 (M3, personal fork):** Home now offers exactly Rotate, Merge, Split and Reorder quick actions, using the catalogue's icon colours and the All tools heading's font size; document tools use the existing async picker and password flow. Removed welcome/description, Home privacy copy, upstream community links/commands/metadata and trademark logos. Recent files and pinned folders remain.
 
