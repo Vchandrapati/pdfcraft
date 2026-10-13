@@ -1442,7 +1442,7 @@ pub(crate) fn replace_line_with_limit(doc: &mut Document, page: usize, line: usi
         }
     }
     // Rebuild: the line's first operator becomes the replacement, its others go. Copies of the
-    // line drawn in the same area go too, so the replacement is all that shows.
+    // line drawn on the same baseline go too, so the replacement is all that shows.
     let drops = coincident_ops(&lines, &[&target]);
     let new_data = splice(&pieces, &ops, |i| if i == first { (std::mem::take(&mut replacement), false) } else { (Vec::new(), !drops.contains(&i)) });
     let contents = rewritten_contents(doc, &streams, new_data);
@@ -1464,27 +1464,42 @@ fn font_size_before(ops: &[Op], at: usize) -> Option<f64> {
     ops[..at].iter().rev().find(|o| o.is("Tf")).and_then(|o| o.num(1))
 }
 
-/// The operators of every copy of one of `members`. Documents sometimes
-/// draw a line more than once (fake bold, an invisible text layer), and a surviving copy would
-/// show the old text under the replaced line. Copies show the same text and overlap a member's
-/// rect by more than half of the smaller rect; neighbouring lines share no area, and other text
-/// that merely overlaps (a paragraph dragged across another, #1368) is not a copy.
-fn coincident_ops(lines: &[TextLine], members: &[&TextLine]) -> std::collections::HashSet<usize> {
+/// Operators of every line that is another drawing of one of `targets` (fake bold, an invisible
+/// text layer). A surviving copy would show the old text under the replacement.
+///
+/// A copy overlaps a target by more than half the smaller box and sits on the same baseline
+/// (within the tolerance that joins showing operators onto one line). A neighbouring line can
+/// share box area when the leading is tighter than the font's ascent plus descent; its baseline
+/// is farther away, so it stays.
+fn coincident_ops(lines: &[TextLine], targets: &[&TextLine]) -> std::collections::HashSet<usize> {
     let area = |r: [f64; 4]| ((r[2] - r[0]) * (r[3] - r[1])).max(0.0);
     let mut drop = std::collections::HashSet::new();
-    for l in lines {
-        let covered = members.iter().any(|m| {
-            let r = m.rect;
-            let ix = (r[2].min(l.rect[2]) - r[0].max(l.rect[0])).max(0.0);
-            let iy = (r[3].min(l.rect[3]) - r[1].max(l.rect[1])).max(0.0);
-            let small = area(r).min(area(l.rect));
-            small > 0.0 && ix * iy / small > 0.5 && l.text.trim() == m.text.trim()
-        });
-        if covered {
-            drop.extend(l.ops.iter().copied());
+    for line in lines {
+        let copy = targets.iter().any(|target| overlaps_half(line.rect, target.rect, area) && on_same_baseline(line, target));
+        if copy {
+            drop.extend(line.ops.iter().copied());
         }
     }
     drop
+}
+
+fn overlaps_half(a: [f64; 4], b: [f64; 4], area: impl Fn([f64; 4]) -> f64) -> bool {
+    let ix = (b[2].min(a[2]) - b[0].max(a[0])).max(0.0);
+    let iy = (b[3].min(a[3]) - b[1].max(a[1])).max(0.0);
+    let small = area(b).min(area(a));
+    small > 0.0 && ix * iy / small > 0.5
+}
+
+/// Perpendicular distance between baselines, in user space. Horizontal text compares height;
+/// turned text compares the distance across the writing direction.
+fn on_same_baseline(line: &TextLine, target: &TextLine) -> bool {
+    let angle = target.rotation().to_radians();
+    let (sin, cos) = if angle.is_finite() { angle.sin_cos() } else { (0.0, 1.0) };
+    let dx = line.origin.x - target.origin.x;
+    let dy = line.origin.baseline - target.origin.baseline;
+    let offset = dx.mul_add(-sin, dy * cos).abs();
+    let size = line.size.min(target.size).max(1.0);
+    offset.is_finite() && offset < size * 0.3
 }
 
 /// The paragraphs on a page (0-based).
@@ -1500,9 +1515,9 @@ pub fn clear_block(doc: &mut Document, page: usize, block: usize) -> Result<(), 
     let lines = text_lines(doc, page)?;
     let blocks = group_blocks(&lines);
     let target = blocks.get(block).ok_or_else(|| EditError::Invalid("the paragraph no longer exists".into()))?;
-    let members: Vec<_> = target.lines.iter().filter_map(|i| lines.get(*i)).collect();
-    let mut drops = coincident_ops(&lines, &members);
-    drops.extend(members.iter().flat_map(|l| l.ops.iter().copied()));
+    let targets: Vec<&TextLine> = target.lines.iter().filter_map(|i| lines.get(*i)).collect();
+    let mut drops = coincident_ops(&lines, &targets);
+    drops.extend(target.lines.iter().filter_map(|i| lines.get(*i)).flat_map(|l| l.ops.iter().copied()));
     let p = page_dict(doc, page)?;
     let res = p.dict.get(b"Resources").and_then(|r| doc.resolve(r).as_dict().cloned()).unwrap_or_default();
     let fonts = res.get(b"Font").and_then(|r| doc.resolve(r).as_dict().cloned()).unwrap_or_default();
@@ -1886,7 +1901,7 @@ pub(crate) fn rewrite_block_with_limit(
         block_ops.push(Op::new("Q", vec![]));
     }
     block_ops.push(Op::new("Q", vec![]));
-    // The paragraph's operators go, and so does anything drawn in the same area (a fake-bold
+    // The paragraph's operators go, and so does another drawing on the same baseline (a fake-bold
     // second copy, an invisible text layer): the new text is all that may show.
     let mut drop = coincident_ops(&lines, &members);
     drop.extend(members.iter().flat_map(|l| l.ops.iter().copied()));
