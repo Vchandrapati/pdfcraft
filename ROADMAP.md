@@ -2,6 +2,7 @@
 
 **Stage: alpha** · next: beta, ~26% (ready for real work 49% → 75%) and ~400–700 h away
 
+> **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (M3: title-bar Discord button removed in the personal fork; estimates unchanged) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 > **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (dedicated native/OCR table preview and CSV/XLSX export; reconstruction limits documented) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (M10, #1028: OCR reads pictures on pages that have text, on request); earlier: M14 #307 Plan 3 uses one marker traversal on open and full refresh, and the combined scanner borrows metadata instead of cloning scan-only containers; includes a behavior-preserving `organize` binding for the workspace Clippy gate · earlier: minor (localized shortcut labels, #496; readiness table with hours per audience; full number as weighted sum 49%; second look: ready 40% → 47%, mainstream 55% added; core-workflow gate applied → alpha) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (#594 paragraph drags validated in the Linux test environment; localized shortcut labels, #496; readiness table with hours per audience; full number as weighted sum 49%; earlier: second look: ready 40% → 47%, mainstream 55% added; core-workflow gate applied → alpha) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
@@ -136,6 +137,8 @@ Ranked; detail and the full milestone table in [docs/roadmap.md](docs/roadmap.md
 | 8 | 1.0 polish: performance, right-to-left, missing languages, keyboard-only (M14) | 55–95 |
 
 ## Progress log
+
+- **2026-10-13 (M3, personal fork):** Removed the title-bar Discord button and reclaimed its space for document tabs. Home, About and Help community links remain available; existing tab-layout checks now use the shortcut button as the right-hand boundary.
 
 - **2026-10-13 (table extraction):** Add a read-only table preview and CSV/Excel export from native or existing OCR text, with region selection and manual separators. Geometry inference needs review; merged/multiline cells and cross-page reconstruction remain incomplete. See [table extraction](docs/table-extraction.md).
 

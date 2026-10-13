@@ -1,5 +1,4 @@
-//! Community links: the Discord button is one click away everywhere; Help menu, About dialog and
-//! home screen open the ArtCraft and PdfCraft pages.
+//! Community links: Help menu, About dialog and home screen open the ArtCraft and PdfCraft pages.
 
 use egui_kittest::Harness;
 use egui_kittest::kittest::Queryable;
@@ -15,15 +14,6 @@ fn harness(setup: impl FnOnce(&mut PdfCraftApp) + 'static) -> Harness<'static, P
     });
     h.run_steps(4);
     h
-}
-
-#[test]
-fn discord_button_in_the_top_bar_opens_discord() {
-    let mut h = harness(|_| {});
-    h.get_by_label("Discord").click();
-    h.run_steps(2);
-    assert_eq!(h.state().last_opened_url.as_deref(), Some(links::DISCORD));
-    assert_eq!(links::DISCORD, "https://discord.gg/artcraft");
 }
 
 #[test]
