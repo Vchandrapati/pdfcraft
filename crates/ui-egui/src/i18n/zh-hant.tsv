@@ -2159,3 +2159,32 @@ scroll speed	Fast	快
 	Ink sensitivity	墨跡靈敏度
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	框內找不到簽名。請將框移到簽名上，或提高墨跡靈敏度。
 	Couldn't use the photo: {e}	無法使用此相片：{e}
+	The document or extraction settings changed. Run extraction again.	文件或擷取設定已變更。請重新擷取。
+	Extract Tables	擷取表格
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	匯出前請檢查擷取的儲存格。自動偵測會使用文字間距，可能與文件預期的表格版面不符。
+	Region	區域
+	Use the selected rectangle	使用所選矩形
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	開啟此對話框前，請使用「欄選取」選取矩形，以限制頁面範圍。
+	Column separators	欄分隔符
+	Automatic, or e.g. 180, 340	自動，或例如 180、340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	分隔符留白時會自動偵測。位置以顯示頁面的左上角為起點，單位為點。
+	Run extraction	執行擷取
+	Detect tables	偵測表格
+	Extracting…	正在擷取…
+	Settings changed. Run extraction again to refresh this preview.	設定已變更。請重新擷取以更新此預覽。
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	此區域沒有文字。若是掃描頁面，請先執行「辨識文字」；否則請選取包含文字的區域。
+	No tables detected. Adjust the region or add separator positions and run again.	未偵測到表格。請調整區域或新增分隔位置後再執行。
+	Table {n} · {rows} rows × {columns} columns	表格 {n} · {rows} 列 × {columns} 欄
+	Table {n}	表格 {n}
+	Use selected table's separators for correction	使用所選表格的分隔位置進行修正
+	Export Excel	匯出 Excel
+	Export CSV	匯出 CSV
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	預覽省略 {rows} 列和 {cells} 個儲存格，並縮短 {shortened} 個較長儲存格。匯出會包含完整表格。
+	Run table extraction again before exporting this preview	匯出此預覽前，請重新擷取表格
+	Table export stopped: {error}	表格匯出已停止：{error}
+	Exported {name}	已匯出 {name}
+	Couldn't save {name}: {error}	無法儲存 {name}：{error}
+	Couldn't download {name}: {error}	無法下載 {name}：{error}
+	Extract tables…	擷取表格…
+	Tables (CSV / Excel)	表格 (CSV / Excel)
+	of {n}	 / {n}

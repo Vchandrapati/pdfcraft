@@ -217,6 +217,10 @@ For local Windows development, an unpacked Tesseract runtime can be staged under
 `target/tesseract/` directory; source launches can find it there. This is a developer convenience,
 not a packaged or attributed asset. Do not commit the executable or its runtime files.
 
+Table extraction now reads that text layer through the dedicated [table extraction workflow](table-extraction.md),
+which also works on native PDFs without Tesseract. Extraction and CSV/XLSX export are read-only;
+the engine, desktop preview and shared CLI/MCP tools are documented there.
+
 Migration validation (2026-10-13, Windows, Tesseract 5.5.3): `cargo test --offline --workspace`
 passed 2,660 tests, with 13 ignored. Real OCR tests exercised searchable text, numeric values,
 hybrid pages, batch processing, repeat-run suppression, undo/redo and save/reopen. Six additional

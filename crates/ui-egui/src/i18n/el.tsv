@@ -2301,3 +2301,32 @@ scroll speed	Fast	Γρήγορη
 	Ink sensitivity	Ευαισθησία μελανιού
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	Δεν βρέθηκε υπογραφή στο πλαίσιο. Μετακινήστε το πλαίσιο πάνω από την υπογραφή ή αυξήστε την ευαισθησία μελανιού.
 	Couldn't use the photo: {e}	Δεν ήταν δυνατή η χρήση της φωτογραφίας: {e}
+	The document or extraction settings changed. Run extraction again.	Το έγγραφο ή οι ρυθμίσεις εξαγωγής έχουν αλλάξει. Εκτελέστε ξανά την εξαγωγή.
+	Extract Tables	Εξαγωγή πινάκων
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Ελέγξτε τα κελιά που εντοπίστηκαν πριν από την εξαγωγή. Η αυτόματη ανίχνευση βασίζεται στα κενά του κειμένου και ενδέχεται να μη συμφωνεί με την προβλεπόμενη διάταξη του πίνακα στο έγγραφο.
+	of {n}	από {n}
+	Region	Περιοχή
+	Use the selected rectangle	Χρήση επιλεγμένου ορθογωνίου
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Επιλέξτε ένα ορθογώνιο με την Επιλογή στήλης πριν ανοίξετε αυτό το παράθυρο διαλόγου, για να περιορίσετε την περιοχή της σελίδας.
+	Column separators	Διαχωριστικά στηλών
+	Automatic, or e.g. 180, 340	Αυτόματα ή π.χ. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Αφήστε κενά τα διαχωριστικά για αυτόματη ανίχνευση. Οι θέσεις μετρώνται σε σημεία από την πάνω αριστερή γωνία της εμφανιζόμενης σελίδας.
+	Run extraction	Εκτέλεση εξαγωγής
+	Detect tables	Εντοπισμός πινάκων
+	Extracting…	Εξαγωγή σε εξέλιξη…
+	Settings changed. Run extraction again to refresh this preview.	Οι ρυθμίσεις άλλαξαν. Εκτελέστε ξανά την εξαγωγή για ανανέωση της προεπισκόπησης.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Δεν υπάρχει κείμενο σε αυτή την περιοχή. Για σαρωμένα έγγραφα, εκτελέστε πρώτα την Αναγνώριση κειμένου· διαφορετικά, επιλέξτε μια περιοχή που περιέχει κείμενο.
+	No tables detected. Adjust the region or add separator positions and run again.	Δεν εντοπίστηκαν πίνακες. Προσαρμόστε την περιοχή ή προσθέστε θέσεις διαχωριστικών και εκτελέστε ξανά.
+	Use selected table's separators for correction	Χρήση των διαχωριστικών του επιλεγμένου πίνακα για διόρθωση
+	Export Excel	Εξαγωγή στο Excel
+	Export CSV	Εξαγωγή σε CSV
+	Table {n} · {rows} rows × {columns} columns	Πίνακας {n} · {rows} γραμμές × {columns} στήλες
+	Table {n}	Πίνακας {n}
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Η προεπισκόπηση παραλείπει {rows} γραμμές και {cells} κελιά· συντομεύει {shortened} μεγάλα κελιά. Η εξαγωγή περιλαμβάνει ολόκληρο τον πίνακα.
+	Run table extraction again before exporting this preview	Εκτελέστε ξανά την εξαγωγή πινάκων πριν εξαγάγετε αυτή την προεπισκόπηση
+	Table export stopped: {error}	Η εξαγωγή του πίνακα διακόπηκε: {error}
+	Exported {name}	Έγινε εξαγωγή: {name}
+	Couldn't save {name}: {error}	Δεν ήταν δυνατή η αποθήκευση του {name}: {error}
+	Couldn't download {name}: {error}	Δεν ήταν δυνατή η λήψη του {name}: {error}
+	Extract tables…	Εξαγωγή πινάκων…
+	Tables (CSV / Excel)	Πίνακες (CSV / Excel)

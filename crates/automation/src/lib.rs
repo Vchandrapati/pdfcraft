@@ -655,6 +655,7 @@ impl Automation {
                 summary(self.session.get(new).ok_or_else(|| failed("the document vanished"))?)
             }
             "doc_export_images" | "doc_export_text" | "doc_export_all_images" => self.export(name, &a)?,
+            "table_extract" | "table_export" => self.tables(name, &a)?,
             "doc_header_footer" | "doc_watermark" | "doc_background" | "doc_remove_marks" => self.marks(name, &a)?,
             "doc_unprotect" => {
                 let mut out = self.apply(&a, Edit::RemoveProtection)?;
@@ -1151,6 +1152,59 @@ impl Automation {
             }
         };
         self.apply(a, edit)
+    }
+
+    fn tables(&mut self, tool: &str, a: &Args) -> Result<Value> {
+        let doc = self.doc_to_copy(a)?;
+        let page = self.page(a)?;
+        let numbers = |key: &str| -> Result<Option<Vec<f32>>> {
+            a.get(key)
+                .map(|v| {
+                    let values = v.as_array().ok_or_else(|| Args::wrong(key, "an array of numbers"))?;
+                    if values.len() > 127 {
+                        return Err(Args::wrong(key, "at most 127 numbers"));
+                    }
+                    values
+                        .iter()
+                        .map(|n| {
+                            n.as_f64()
+                                .filter(|n| n.is_finite() && n.abs() <= f64::from(f32::MAX))
+                                .map(|n| n as f32)
+                                .ok_or_else(|| Args::wrong(key, "finite coordinates"))
+                        })
+                        .collect()
+                })
+                .transpose()
+        };
+        let rect =
+            numbers("rect")?.map(|r| <[f32; 4]>::try_from(r).map_err(|_| Args::wrong("rect", "four coordinates [x0,y0,x1,y1]"))).transpose()?;
+        let options = pdfcraft_engine::tables::TableOptions { rect, columns: numbers("columns")?.unwrap_or_default() };
+        let result = pdfcraft_engine::export::Exporter::new(doc).tables(page, &options).map_err(failed)?;
+        if tool == "table_extract" {
+            let tables: Vec<Value> = result
+                .tables
+                .iter()
+                .enumerate()
+                .map(|(i, t)| json!({ "table": i + 1, "rect": t.rect, "columns": t.columns, "rows": t.rows }))
+                .collect();
+            return Ok(json!({ "page": page + 1, "has_text": result.has_text, "tables": tables,
+                "note": "Review inferred cells before exporting. Image-only pages require OCR first. Merged cells, multiline cells and cross-page joins are not inferred." }));
+        }
+        let index = a.opt_int("table")?.unwrap_or(1);
+        let selected = usize::try_from(index).ok().and_then(|i| i.checked_sub(1)).and_then(|i| result.tables.get(i)).ok_or_else(|| {
+            failed(format!("table {index} does not exist; use table_extract to inspect the {} detected tables", result.tables.len()))
+        })?;
+        let path = self.resolve(a.str("path")?, true)?;
+        let format = a.opt_str("format")?.unwrap_or("csv");
+        let bytes = match format {
+            "csv" => selected.csv().into_bytes(),
+            "xlsx" => selected.xlsx().map_err(failed)?,
+            _ => return Err(Args::wrong("format", "csv or xlsx")),
+        };
+        write_atomic(&path, &bytes)?;
+        Ok(
+            json!({ "path": path.to_string_lossy(), "page": page + 1, "table": index, "rows": selected.rows.len(), "columns": selected.columns.len() + 1, "bytes": bytes.len(), "format": format }),
+        )
     }
 
     fn export(&mut self, tool: &str, a: &Args) -> Result<Value> {

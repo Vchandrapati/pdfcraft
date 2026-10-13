@@ -27,6 +27,7 @@ pub mod ocr;
 pub mod optimizer;
 pub mod signature_image;
 pub mod signature_scan;
+pub mod tables;
 pub mod text_fonts;
 mod text_preview;
 mod upright_image;

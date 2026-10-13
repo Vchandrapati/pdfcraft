@@ -2359,3 +2359,32 @@ scroll speed	Fast	Rychlá
 	Ink sensitivity	Citlivost na inkoust
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	V rámečku nebyl nalezen žádný podpis. Přesuňte rámeček na podpis nebo zvyšte citlivost na inkoust.
 	Couldn't use the photo: {e}	Fotografii nelze použít: {e}
+	The document or extraction settings changed. Run extraction again.	Dokument nebo nastavení extrakce se změnilo. Spusťte extrakci znovu.
+	Extract Tables	Extrakce tabulek
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Před exportem zkontrolujte extrahované buňky. Automatická detekce vychází z mezer mezi textem a nemusí odpovídat zamýšlenému rozložení tabulky v dokumentu.
+	of {n}	z {n}
+	Region	Oblast
+	Use the selected rectangle	Použít vybraný obdélník
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Před otevřením tohoto dialogu vyberte pomocí nástroje Výběr sloupce obdélník, kterým omezíte oblast stránky.
+	Column separators	Oddělovače sloupců
+	Automatic, or e.g. 180, 340	Automaticky, nebo např. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Pokud chcete automatickou detekci, ponechte oddělovače prázdné. Polohy se měří v bodech od levého horního rohu zobrazené stránky.
+	Run extraction	Spustit extrakci
+	Detect tables	Rozpoznat tabulky
+	Extracting…	Probíhá extrakce…
+	Settings changed. Run extraction again to refresh this preview.	Nastavení se změnilo. Spusťte extrakci znovu a obnovte náhled.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	V této oblasti není žádný text. U skenů nejprve spusťte Rozpoznat text, jinak vyberte oblast obsahující text.
+	No tables detected. Adjust the region or add separator positions and run again.	Nebyly rozpoznány žádné tabulky. Upravte oblast nebo přidejte polohy oddělovačů a spusťte akci znovu.
+	Use selected table's separators for correction	Použít oddělovače vybrané tabulky k opravě
+	Export Excel	Exportovat do Excelu
+	Export CSV	Exportovat do CSV
+	Table {n} · {rows} rows × {columns} columns	Tabulka {n} · {rows} řádků × {columns} sloupců
+	Table {n}	Tabulka {n}
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Náhled vynechává {rows} řádků a {cells} buněk a zkracuje {shortened} dlouhých buněk. Export zahrnuje celou tabulku.
+	Run table extraction again before exporting this preview	Před exportem tohoto náhledu spusťte extrakci tabulek znovu
+	Table export stopped: {error}	Export tabulky byl zastaven: {error}
+	Exported {name}	Exportováno: {name}
+	Couldn't save {name}: {error}	{name} nelze uložit: {error}
+	Couldn't download {name}: {error}	{name} nelze stáhnout: {error}
+	Extract tables…	Extrahovat tabulky…
+	Tables (CSV / Excel)	Tabulky (CSV / Excel)

@@ -2307,3 +2307,32 @@ scroll speed	Fast	Швидка
 	Ink sensitivity	Чутливість до чорнила
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	У рамці не знайдено підпису. Наведіть рамку на підпис або збільште чутливість до чорнила.
 	Couldn't use the photo: {e}	Не вдалося використати фото: {e}
+	The document or extraction settings changed. Run extraction again.	Документ або налаштування видобування змінилися. Запустіть видобування ще раз.
+	Extract Tables	Видобути таблиці
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Перевірте видобуті клітинки перед експортом. Автоматичне визначення використовує інтервали між текстом і може не відповідати передбаченому макету таблиці в документі.
+	Region	Область
+	Use the selected rectangle	Використати вибраний прямокутник
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Щоб обмежити область сторінки, виберіть прямокутник інструментом «Вибір стовпця» перед відкриттям цього діалогу.
+	Column separators	Розділювачі стовпців
+	Automatic, or e.g. 180, 340	Автоматично або, наприклад, 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Залиште розділювачі порожніми для автоматичного визначення. Позиції вимірюються в пунктах від верхнього лівого кута відображеної сторінки.
+	Run extraction	Запустити видобування
+	Detect tables	Знайти таблиці
+	Extracting…	Видобування…
+	Settings changed. Run extraction again to refresh this preview.	Налаштування змінено. Запустіть видобування ще раз, щоб оновити попередній перегляд.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	У цій області немає тексту. Для сканів спочатку запустіть розпізнавання тексту, інакше виберіть область із текстом.
+	No tables detected. Adjust the region or add separator positions and run again.	Таблиць не знайдено. Змініть область або додайте позиції розділювачів і запустіть знову.
+	Table {n} · {rows} rows × {columns} columns	Таблиця {n} · {rows} рядків × {columns} стовпців
+	Table {n}	Таблиця {n}
+	Use selected table's separators for correction	Використати розділювачі вибраної таблиці для виправлення
+	Export Excel	Експортувати в Excel
+	Export CSV	Експортувати в CSV
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Попередній перегляд не показує {rows} рядків і {cells} клітинок; довгі клітинки скорочено: {shortened}. Під час експорту буде включено повну таблицю.
+	Run table extraction again before exporting this preview	Перед експортом цього попереднього перегляду запустіть видобування таблиць ще раз
+	Table export stopped: {error}	Експорт таблиці зупинено: {error}
+	Exported {name}	Експортовано {name}
+	Couldn't save {name}: {error}	Не вдалося зберегти {name}: {error}
+	Couldn't download {name}: {error}	Не вдалося завантажити {name}: {error}
+	Extract tables…	Видобути таблиці…
+	Tables (CSV / Excel)	Таблиці (CSV / Excel)
+	of {n}	із {n}

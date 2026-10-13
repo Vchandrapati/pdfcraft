@@ -1,6 +1,6 @@
 # File format parity
 
-> **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (OCR migrated to the pinned English Tesseract BEST model; Tesseract runtime prerequisites recorded) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
+> **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (dedicated native/OCR table preview and CSV/XLSX export; reconstruction limits documented) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 
 Every format Acrobat Pro reads or writes, and PdfCraft's support for it. Acrobat's list comes from
 its bundle's `Info.plist` `CFBundleDocumentTypes` (what it opens) and its public documentation
@@ -81,7 +81,7 @@ features total).
 |---|---|---|---|---|
 | Word (`.docx`) | yes, layout-preserving | flowing paragraphs and borderless inferred tables; positioned text/artwork only for pages with rotated text or text overlapping an image/watermark, with per-page sizes | **basic** (#773 synthetic invoice regression covered; exact fonts, vector rules and general layout fidelity remain incomplete) | `create.export-docx` partial |
 | Word 97–2003 (`.doc`) | yes | no | none | |
-| Excel (`.xlsx`), XML Spreadsheet 2003 | yes | no | none | `create.export-xlsx` planned |
+| Excel (`.xlsx`), XML Spreadsheet 2003 | yes | selected text/OCR table as literal cells in `.xlsx`; table CSV also available; no XML Spreadsheet 2003 | **basic** (preview/manual separators; no merged/multiline cells or cross-page joins) | `create.export-xlsx` partial; [table extraction](table-extraction.md) |
 | PowerPoint (`.pptx`) | yes | slides per page: title from largest text, body text, images, tables (no slide overflow reflow / normAutofit; first page sets presentation dimensions) | basic | `create.export-pptx` partial |
 | RTF | yes | yes | basic | `create.export-rtf` |
 | HTML (single page, multiple pages) | yes | single file with headings, paragraphs, images, tables | basic | `create.export-html` partial |
@@ -115,6 +115,7 @@ are in [development.md](development.md#ocr-runtime).
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-13 | minor | Table extraction preview and CSV/XLSX export; merged/multiline cells and cross-page reconstruction remain incomplete. Estimates unchanged. |
 | 2026-10-13 | minor | English OCR migrated to Tesseract BEST; runtime and package prerequisites recorded. |
 | 2026-10-11 | minor | #773: inferred tables have no invented borders; rotated or overlapping invoice pages use floating shapes and page sections. Full Office layout fidelity remains partial. |
 | 2026-10-11 | minor | Encrypted PDF row: written files open in Acrobat DC (#774, fixed by #836). FDF row: #807, #809 and #819 fixed |

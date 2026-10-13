@@ -2248,3 +2248,32 @@ scroll speed	Fast	Висока
 	Ink sensitivity	Чувствителност към мастило
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	В рамката не е открит подпис. Преместете рамката върху подписа или увеличете чувствителността към мастило.
 	Couldn't use the photo: {e}	Снимката не може да се използва: {e}
+	The document or extraction settings changed. Run extraction again.	Документът или настройките за извличане са променени. Стартирайте извличането отново.
+	Extract Tables	Извличане на таблици
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Проверете извлечените клетки преди експортиране. Автоматичното откриване използва разстоянията между текста и може да не съвпада с предвиденото оформление на таблицата в документа.
+	of {n}	от {n}
+	Region	Област
+	Use the selected rectangle	Използване на избрания правоъгълник
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Преди да отворите този прозорец, изберете правоъгълник с инструмента „Избор на колона“, за да ограничите областта на страницата.
+	Column separators	Разделители на колони
+	Automatic, or e.g. 180, 340	Автоматично или напр. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Оставете разделителите празни за автоматично откриване. Позициите се измерват в точки от горния ляв ъгъл на показаната страница.
+	Run extraction	Стартиране на извличането
+	Detect tables	Откриване на таблици
+	Extracting…	Извличане…
+	Settings changed. Run extraction again to refresh this preview.	Настройките са променени. Стартирайте извличането отново, за да обновите този преглед.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Няма текст в тази област. При сканирани документи първо използвайте Разпознаване на текст; в противен случай изберете област, съдържаща текст.
+	No tables detected. Adjust the region or add separator positions and run again.	Не са открити таблици. Променете областта или добавете позиции на разделителите и опитайте отново.
+	Use selected table's separators for correction	Използване на разделителите на избраната таблица за корекция
+	Export Excel	Експортиране в Excel
+	Export CSV	Експортиране в CSV
+	Table {n} · {rows} rows × {columns} columns	Таблица {n} · {rows} реда × {columns} колони
+	Table {n}	Таблица {n}
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Прегледът пропуска {rows} реда и {cells} клетки и съкращава {shortened} дълги клетки. Експортът включва цялата таблица.
+	Run table extraction again before exporting this preview	Стартирайте извличането на таблици отново, преди да експортирате този преглед
+	Table export stopped: {error}	Експортирането на таблицата е спряно: {error}
+	Exported {name}	Експортирано: {name}
+	Couldn't save {name}: {error}	{name} не може да бъде записан: {error}
+	Couldn't download {name}: {error}	{name} не може да бъде изтеглен: {error}
+	Extract tables…	Извличане на таблици…
+	Tables (CSV / Excel)	Таблици (CSV / Excel)

@@ -2283,3 +2283,32 @@ scroll speed	Fast	Жылдам
 	Ink sensitivity	Сия сезімталдығы
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	Жақтауда қолтаңба табылмады. Жақтауды қолтаңбаның үстіне жылжытыңыз немесе сия сезімталдығын арттырыңыз.
 	Couldn't use the photo: {e}	Суретті пайдалану мүмкін болмады: {e}
+	The document or extraction settings changed. Run extraction again.	Құжат немесе шығарып алу параметрлері өзгерді. Шығарып алуды қайта іске қосыңыз.
+	Extract Tables	Кестелерді шығарып алу
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Экспорттау алдында шығарылған ұяшықтарды қарап шығыңыз. Автоматты анықтау мәтін аралықтарын пайдаланады және құжаттағы кестенің көзделген орналасуына сәйкес келмеуі мүмкін.
+	Region	Аймақ
+	Use the selected rectangle	Таңдалған тік төртбұрышты пайдалану
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Бет аймағын шектеу үшін осы диалогты ашпас бұрын «Бағанды таңдау» құралымен тік төртбұрышты таңдаңыз.
+	Column separators	Баған бөлгіштері
+	Automatic, or e.g. 180, 340	Автоматты немесе мысалы, 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Автоматты анықтау үшін бөлгіштерді бос қалдырыңыз. Орындар көрсетілген беттің жоғарғы сол жақ бұрышынан бастап пунктпен өлшенеді.
+	Run extraction	Шығарып алуды іске қосу
+	Detect tables	Кестелерді анықтау
+	Extracting…	Шығарылуда…
+	Settings changed. Run extraction again to refresh this preview.	Параметрлер өзгерді. Алдын ала қарауды жаңарту үшін шығарып алуды қайта іске қосыңыз.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Бұл аймақта мәтін жоқ. Сканерленген құжаттар үшін алдымен мәтінді тануды іске қосыңыз; әйтпесе мәтіні бар аймақты таңдаңыз.
+	No tables detected. Adjust the region or add separator positions and run again.	Кестелер анықталмады. Аймақты өзгертіңіз немесе бөлгіш орындарын қосып, қайта іске қосыңыз.
+	Table {n} · {rows} rows × {columns} columns	Кесте {n} · {rows} жол × {columns} баған
+	Table {n}	Кесте {n}
+	Use selected table's separators for correction	Таңдалған кестенің бөлгіштерін түзету үшін пайдалану
+	Export Excel	Excel форматына экспорттау
+	Export CSV	CSV форматына экспорттау
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Алдын ала қарауда {rows} жол және {cells} ұяшық көрсетілмейді; ұзын ұяшықтардың {shortened} данасы қысқартылады. Экспортта толық кесте болады.
+	Run table extraction again before exporting this preview	Осы алдын ала қарауды экспорттамас бұрын кестені қайта шығарып алыңыз
+	Table export stopped: {error}	Кестені экспорттау тоқтатылды: {error}
+	Exported {name}	Экспортталды: {name}
+	Couldn't save {name}: {error}	{name} сақтау мүмкін болмады: {error}
+	Couldn't download {name}: {error}	{name} жүктеп алу мүмкін болмады: {error}
+	Extract tables…	Кестелерді шығарып алу…
+	Tables (CSV / Excel)	Кестелер (CSV / Excel)
+	of {n}	 / {n}

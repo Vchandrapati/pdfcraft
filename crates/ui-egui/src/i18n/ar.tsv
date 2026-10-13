@@ -2306,3 +2306,32 @@ scroll speed	Fast	سريعة
 	Ink sensitivity	حساسية الحبر
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	لم يُعثر على توقيع داخل الإطار. حرّك الإطار فوق التوقيع أو ارفع حساسية الحبر.
 	Couldn't use the photo: {e}	تعذّر استخدام الصورة: {e}
+	The document or extraction settings changed. Run extraction again.	تغيّر المستند أو إعدادات الاستخراج. شغّل الاستخراج مرة أخرى.
+	Extract Tables	استخراج الجداول
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	راجع الخلايا المستخرجة قبل التصدير. يستخدم الاكتشاف التلقائي تباعد النص وقد لا يطابق تخطيط الجدول المقصود في المستند.
+	Region	المنطقة
+	Use the selected rectangle	استخدام المستطيل المحدد
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	حدد مستطيلاً باستخدام أداة «تحديد العمود» قبل فتح مربع الحوار هذا لتقييد منطقة الصفحة.
+	Column separators	فواصل الأعمدة
+	Automatic, or e.g. 180, 340	تلقائي، أو مثلاً 180، 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	اترك الفواصل فارغة للاكتشاف التلقائي. تُقاس المواضع بالنقاط بدءًا من أعلى يسار الصفحة المعروضة.
+	Run extraction	تشغيل الاستخراج
+	Detect tables	اكتشاف الجداول
+	Extracting…	جارٍ الاستخراج…
+	Settings changed. Run extraction again to refresh this preview.	تغيّرت الإعدادات. شغّل الاستخراج مرة أخرى لتحديث المعاينة.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	لا يوجد نص في هذه المنطقة. في الصفحات الممسوحة ضوئيًا، شغّل التعرّف على النص أولاً؛ وإلا فحدد منطقة تحتوي على نص.
+	No tables detected. Adjust the region or add separator positions and run again.	لم يتم اكتشاف جداول. عدّل المنطقة أو أضف مواضع الفواصل ثم شغّل الاستخراج مرة أخرى.
+	Table {n} · {rows} rows × {columns} columns	جدول {n} · {rows} صفوف × {columns} أعمدة
+	Table {n}	جدول {n}
+	Use selected table's separators for correction	استخدام فواصل الجدول المحدد للتصحيح
+	Export Excel	تصدير Excel
+	Export CSV	تصدير CSV
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	لا تعرض المعاينة {rows} صفوف و{cells} خلية؛ وتم تقصير {shortened} خلية طويلة. يتضمن التصدير الجدول كاملاً.
+	Run table extraction again before exporting this preview	شغّل استخراج الجداول مرة أخرى قبل تصدير هذه المعاينة
+	Table export stopped: {error}	توقف تصدير الجدول: {error}
+	Exported {name}	تم تصدير {name}
+	Couldn't save {name}: {error}	تعذّر حفظ {name}: {error}
+	Couldn't download {name}: {error}	تعذّر تنزيل {name}: {error}
+	Extract tables…	استخراج الجداول…
+	Tables (CSV / Excel)	الجداول (CSV / Excel)
+	of {n}	من {n}

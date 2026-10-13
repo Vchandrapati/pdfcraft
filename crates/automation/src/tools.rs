@@ -38,6 +38,20 @@ fn path_arg() -> Value {
     json!({ "type": "string", "description": "A file path (relative to --root when set)." })
 }
 
+fn table_schema(export: bool) -> Value {
+    let mut properties = json!({
+        "doc": doc(), "page": { "type": "integer", "minimum": 1 },
+        "rect": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4, "description": "Optional region [x0,y0,x1,y1] in displayed points, top-left origin." },
+        "columns": { "type": "array", "items": { "type": "number" }, "maxItems": 127, "description": "Ordered internal x separators in displayed points; omit/empty for inference." },
+    });
+    if export {
+        properties["path"] = path_arg();
+        properties["table"] = json!({ "type": "integer", "minimum": 1 });
+        properties["format"] = json!({ "type": "string", "enum": ["csv", "xlsx"], "default": "csv" });
+    }
+    schema(properties, if export { &["doc", "page", "path"] } else { &["doc", "page"] })
+}
+
 fn point() -> Value {
     json!({ "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2, "description": "[x, y] in points from the top-left of the displayed page." })
 }
@@ -1021,6 +1035,10 @@ pub fn tools() -> Vec<ToolDef> {
         t("doc_export_text", "Export text", "Write the reading-order text of pages to a .txt file (pages separated by form feeds).")
             .cmd("export.text")
             .with(schema(json!({ "doc": doc(), "path": { "type": "string" }, "pages": pages("to export (default: all)") }), &["doc", "path"])),
+        t("table_extract", "Extract tables", "Read-only table candidates from the current displayed text layer, including OCR text. Returns rect, internal column separator positions and rectangular rows for each table. Review results: text geometry can mistake columns of prose for tables; merged/multiline cells and cross-page joins are not inferred. Recognize image-only pages first. Supply rect to restrict the region, and columns to override automatic separators.")
+            .ro().cmd("export.tables").with(table_schema(false)),
+        t("table_export", "Export a table", "Re-extract and atomically write one selected table to CSV or XLSX within --root. Does not modify the PDF. table is a 1-based index from table_extract (default 1); use the same rect/columns. CSV quotes cells and prefixes spreadsheet formula triggers with an apostrophe. XLSX stores all cells as literal strings, preserving leading zeros and formula-like text.")
+            .with(table_schema(true)),
         t(
             "fill_sign_add",
             "Fill & Sign: type text or place a mark",

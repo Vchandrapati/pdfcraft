@@ -51,6 +51,8 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
     let mut boxes_now = false;
     let mut marks_now = false;
     let mut export_now = false;
+    let mut tables_now = false;
+    let mut table_export_now = None;
     let mut props_now = false;
     let mut field_props_now = false;
     let mut bulk_field_props_now = false;
@@ -76,6 +78,7 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
         ui.set_width(match dialog {
             Dialog::Properties(_) => 640.0,
             Dialog::Print => 820.0,
+            Dialog::ExtractTables => 720.0,
             Dialog::FieldProps | Dialog::BulkFieldProps => 600.0,
             Dialog::About => 780.0,
             _ => 520.0,
@@ -926,6 +929,13 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                 close = apply || cancel;
                 return;
             }
+            Dialog::ExtractTables => {
+                let (run, export, cancel) = crate::table_ui::body(ui, app, &t);
+                tables_now = run;
+                table_export_now = export;
+                close = cancel;
+                return;
+            }
             Dialog::Marks(kind) => {
                 ui.set_width(720.0);
                 let (apply, cancel) = crate::marks_ui::body(ui, app, &t, kind);
@@ -1274,6 +1284,12 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
     }
     if export_now && let Dialog::Export(kind) = dialog {
         app.start_export(kind);
+    }
+    if tables_now {
+        app.start_table_extraction();
+    }
+    if let Some(format) = table_export_now {
+        app.export_selected_table(format);
     }
     if marks_now && let (Dialog::Marks(kind), Some((_, id))) = (dialog, app.active_ids()) {
         let count = app.session.get(id).map(|d| d.info.pages.len()).unwrap_or(0);

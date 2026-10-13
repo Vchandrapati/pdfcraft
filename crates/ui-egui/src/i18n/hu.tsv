@@ -2284,3 +2284,32 @@ scroll speed	Fast	Gyors
 	Ink sensitivity	Tintaérzékenység
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	A keretben nem található aláírás. Húzza a keretet az aláírásra, vagy növelje a tintaérzékenységet.
 	Couldn't use the photo: {e}	A fénykép nem használható: {e}
+	The document or extraction settings changed. Run extraction again.	A dokumentum vagy a kinyerési beállítások megváltoztak. Futtassa újra a kinyerést.
+	Extract Tables	Táblázatok kinyerése
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Exportálás előtt ellenőrizze a kinyert cellákat. Az automatikus felismerés a szöveg térközeit használja, ezért előfordulhat, hogy nem felel meg a dokumentumban szándékolt táblázatelrendezésnek.
+	of {n}	/ {n}
+	Region	Terület
+	Use the selected rectangle	Kijelölt téglalap használata
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Az oldal területének korlátozásához a párbeszédpanel megnyitása előtt jelöljön ki egy téglalapot az Oszlopkijelölés eszközzel.
+	Column separators	Oszlopelválasztók
+	Automatic, or e.g. 180, 340	Automatikus vagy pl. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Hagyja üresen az elválasztókat az automatikus felismeréshez. A pozíciók a megjelenített oldal bal felső sarkától, pontban értendők.
+	Run extraction	Kinyerés futtatása
+	Detect tables	Táblázatok felismerése
+	Extracting…	Kinyerés folyamatban…
+	Settings changed. Run extraction again to refresh this preview.	A beállítások megváltoztak. Az előnézet frissítéséhez futtassa újra a kinyerést.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Nincs szöveg ezen a területen. Szkennelt oldalakon először futtassa a szövegfelismerést; egyébként jelöljön ki szöveget tartalmazó területet.
+	No tables detected. Adjust the region or add separator positions and run again.	Nem található táblázat. Módosítsa a területet, vagy adjon hozzá elválasztópozíciókat, majd futtassa újra.
+	Use selected table's separators for correction	Kijelölt táblázat elválasztóinak használata javításhoz
+	Export Excel	Exportálás Excelbe
+	Export CSV	Exportálás CSV-be
+	Table {n} · {rows} rows × {columns} columns	Táblázat {n} · {rows} sor × {columns} oszlop
+	Table {n}	Táblázat {n}
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Az előnézet kihagy {rows} sort és {cells} cellát, és lerövidít {shortened} hosszú cellát. Az export a teljes táblázatot tartalmazza.
+	Run table extraction again before exporting this preview	Az előnézet exportálása előtt futtassa újra a táblázatok kinyerését
+	Table export stopped: {error}	Táblázatexportálás leállítva: {error}
+	Exported {name}	Exportálva: {name}
+	Couldn't save {name}: {error}	Nem sikerült menteni a következőt: {name}: {error}
+	Couldn't download {name}: {error}	Nem sikerült letölteni a következőt: {name}: {error}
+	Extract tables…	Táblázatok kinyerése…
+	Tables (CSV / Excel)	Táblázatok (CSV / Excel)

@@ -1629,6 +1629,50 @@ fn exporting_images_and_text_through_tools() {
 }
 
 #[test]
+fn table_extraction_preview_exports_current_text_without_editing() {
+    let dir = workdir("tables");
+    let mut a = auto(&dir);
+    let doc = ok(&mut a, "doc_create", json!({ "from": "blank", "width": 300, "height": 200 }))["doc"].as_u64().unwrap();
+    assert_eq!(ok(&mut a, "table_extract", json!({"doc": doc, "page": 1}))["has_text"], false);
+    for (x, y, text) in [(20, 40, "Name"), (150, 40, "Qty"), (20, 64, "Apple juice"), (150, 64, "12"), (20, 88, "Pear"), (150, 88, "7")] {
+        ok(&mut a, "page_add_text", json!({"doc": doc, "page": 1, "text": text, "at": [x,y], "size": 14}));
+    }
+    let before = ok(&mut a, "doc_info", json!({"doc":doc}));
+    let pixels = a.call("page_render", &json!({"doc":doc, "page":1})).unwrap();
+    let found = ok(&mut a, "table_extract", json!({"doc":doc, "page":1}));
+    assert_eq!(found["tables"][0]["rows"], json!([["Name", "Qty"], ["Apple juice", "12"], ["Pear", "7"]]));
+    assert_eq!(found["tables"].as_array().unwrap().len(), 1);
+    let csv = ok(&mut a, "table_export", json!({"doc":doc, "page":1, "path":"table.csv"}));
+    assert_eq!((csv["rows"].as_u64(), csv["columns"].as_u64()), (Some(3), Some(2)));
+    assert_eq!(std::fs::read_to_string(dir.join("table.csv")).unwrap(), "\"Name\",\"Qty\"\r\n\"Apple juice\",\"12\"\r\n\"Pear\",\"7\"\r\n");
+    ok(&mut a, "table_export", json!({"doc":doc, "page":1, "path":"table.xlsx", "format":"xlsx"}));
+    assert!(std::fs::read(dir.join("table.xlsx")).unwrap().starts_with(b"PK"));
+    let manual = ok(&mut a, "table_extract", json!({"doc":doc, "page":1, "rect":[10,60,220,110], "columns":[120]}));
+    assert_eq!(manual["tables"][0]["rows"], json!([["Apple juice", "12"], ["Pear", "7"]]));
+    assert_eq!(ok(&mut a, "doc_info", json!({"doc":doc})), before);
+    let after_pixels = a.call("page_render", &json!({"doc":doc, "page":1})).unwrap();
+    match (&pixels[0], &after_pixels[0]) {
+        (Content::Png { data: a, .. }, Content::Png { data: b, .. }) => assert_eq!(a, b),
+        _ => panic!("page render did not return PNG"),
+    }
+    for args in [
+        json!({"doc":doc,"page":2}),
+        json!({"doc":doc,"page":1,"columns":[130,90]}),
+        json!({"doc":doc,"page":1,"rect":[0,0,301,200]}),
+        json!({"doc":doc,"page":1,"typo":true}),
+    ] {
+        assert!(a.call("table_extract", &args).is_err());
+    }
+    assert!(a.call("table_export", &json!({"doc":doc,"page":1,"path":"../escape.csv"})).is_err());
+    assert!(a.call("table_export", &json!({"doc":doc,"page":1,"path":"table.csv","table":99})).is_err());
+    assert!(a.call("table_export", &json!({"doc":doc,"page":1,"path":"bad.xls","format":"xls"})).is_err());
+    assert!(!dir.join("bad.xls").exists());
+    ok(&mut a, "doc_save", json!({"doc":doc,"path":"current.pdf"}));
+    let re = ok(&mut a, "doc_open", json!({"path":"current.pdf"}))["doc"].as_u64().unwrap();
+    assert_eq!(ok(&mut a, "table_extract", json!({"doc":re,"page":1}))["tables"][0]["rows"], found["tables"][0]["rows"]);
+}
+
+#[test]
 fn accessibility_check_report_and_fixes_through_tools() {
     let dir = workdir("a11y");
     let mut a = auto(&dir);

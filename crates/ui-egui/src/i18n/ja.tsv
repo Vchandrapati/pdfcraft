@@ -2285,3 +2285,32 @@ scroll speed	Fast	速い
 	Ink sensitivity	インクの感度
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	枠内に署名が見つかりません。枠を署名に合わせるか、インクの感度を上げてください。
 	Couldn't use the photo: {e}	写真を使用できません: {e}
+	The document or extraction settings changed. Run extraction again.	文書または抽出設定が変更されました。もう一度抽出してください。
+	Extract Tables	表を抽出
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	エクスポートする前に抽出したセルを確認してください。自動検出ではテキストの間隔を使うため、文書の意図した表レイアウトと一致しない場合があります。
+	Region	範囲
+	Use the selected rectangle	選択した矩形を使用
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	このダイアログを開く前に「列選択」で矩形を選択すると、ページ範囲を限定できます。
+	Column separators	列の区切り位置
+	Automatic, or e.g. 180, 340	自動、または例: 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	区切り位置を空にすると自動検出します。位置は表示ページの左上からのポイント単位です。
+	Run extraction	抽出を実行
+	Detect tables	表を検出
+	Extracting…	抽出中…
+	Settings changed. Run extraction again to refresh this preview.	設定が変更されました。プレビューを更新するには、もう一度抽出してください。
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	この範囲にテキストがありません。スキャンの場合は先にテキスト認識を実行し、それ以外の場合はテキストを含む領域を選択してください。
+	No tables detected. Adjust the region or add separator positions and run again.	表が検出されませんでした。範囲を調整するか、区切り位置を追加して再実行してください。
+	Table {n} · {rows} rows × {columns} columns	表 {n} · {rows} 行 × {columns} 列
+	Table {n}	表{n}
+	Use selected table's separators for correction	選択した表の区切り位置を修正に使用
+	Export Excel	Excel にエクスポート
+	Export CSV	CSV にエクスポート
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	プレビューでは {rows} 行と {cells} 個のセルが省略され、長いセルは {shortened} 個が短縮されます。エクスポートには表全体が含まれます。
+	Run table extraction again before exporting this preview	プレビューをエクスポートする前に、表をもう一度抽出してください
+	Table export stopped: {error}	表のエクスポートを中止しました: {error}
+	Exported {name}	{name} をエクスポートしました
+	Couldn't save {name}: {error}	{name} を保存できませんでした: {error}
+	Couldn't download {name}: {error}	{name} をダウンロードできませんでした: {error}
+	Extract tables…	表を抽出…
+	Tables (CSV / Excel)	表 (CSV / Excel)
+	of {n}	 / {n}

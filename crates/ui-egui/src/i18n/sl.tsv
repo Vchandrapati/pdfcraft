@@ -2290,3 +2290,32 @@ scroll speed	Fast	Hitro
 	Ink sensitivity	Občutljivost za črnilo
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	V okvirju ni bilo najdenega podpisa. Premaknite okvir nad podpis ali povečajte občutljivost za črnilo.
 	Couldn't use the photo: {e}	Fotografije ni bilo mogoče uporabiti: {e}
+	The document or extraction settings changed. Run extraction again.	Dokument ali nastavitve pridobivanja so se spremenili. Znova zaženite pridobivanje.
+	Extract Tables	Izvleci tabele
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Pred izvozom preglejte izluščene celice. Samodejno zaznavanje uporablja razmike med besedilom in se morda ne ujema s predvideno postavitvijo tabele v dokumentu.
+	Region	Območje
+	Use the selected rectangle	Uporabi izbrani pravokotnik
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Če želite omejiti območje strani, pred odprtjem tega pogovornega okna z orodjem »Izbira stolpca« izberite pravokotnik.
+	Column separators	Ločila stolpcev
+	Automatic, or e.g. 180, 340	Samodejno ali npr. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Za samodejno zaznavanje pustite ločila prazna. Položaji so izmerjeni v točkah od zgornjega levega kota prikazane strani.
+	Run extraction	Zaženi pridobivanje
+	Detect tables	Zaznaj tabele
+	Extracting…	Pridobivanje…
+	Settings changed. Run extraction again to refresh this preview.	Nastavitve so se spremenile. Za osvežitev predogleda znova zaženite pridobivanje.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	V tem območju ni besedila. Pri skenih najprej zaženite prepoznavanje besedila, sicer izberite območje z besedilom.
+	No tables detected. Adjust the region or add separator positions and run again.	Tabel ni mogoče zaznati. Prilagodite območje ali dodajte položaje ločil in poskusite znova.
+	Table {n} · {rows} rows × {columns} columns	Tabela {n} · {rows} vrstic × {columns} stolpcev
+	Table {n}	Tabela {n}
+	Use selected table's separators for correction	Za popravek uporabi ločila izbrane tabele
+	Export Excel	Izvozi v Excel
+	Export CSV	Izvozi v CSV
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Predogled izpusti {rows} vrstic in {cells} celic; skrajša {shortened} dolgih celic. Izvoz vključuje celotno tabelo.
+	Run table extraction again before exporting this preview	Pred izvozom tega predogleda znova zaženite pridobivanje tabele
+	Table export stopped: {error}	Izvoz tabele je ustavljen: {error}
+	Exported {name}	Izvoženo: {name}
+	Couldn't save {name}: {error}	Datoteke {name} ni bilo mogoče shraniti: {error}
+	Couldn't download {name}: {error}	Datoteke {name} ni bilo mogoče prenesti: {error}
+	Extract tables…	Izvleci tabele…
+	Tables (CSV / Excel)	Tabele (CSV / Excel)
+	of {n}	od {n}

@@ -107,6 +107,24 @@ impl Exporter {
         }
     }
 
+    /// Infer tables in the current displayed text layer. Does not perform OCR or modify the PDF.
+    pub fn tables(&mut self, page: usize, options: &crate::tables::TableOptions) -> Result<crate::tables::PageTables, String> {
+        self.check(page)?;
+        let &(width, height) = self.sizes.get(page).ok_or_else(|| "page size is unavailable".to_string())?;
+        let region = options.validate(width, height)?;
+        crate::guard(|| {
+            let result = self.renderer.render(RenderRequest { page, kind: RequestKind::Text, scale: 1.0, ..Default::default() });
+            if let Some(error) = result.error {
+                return Err(format!("page {}: {error}", page.saturating_add(1)));
+            }
+            if result.warnings.contains(&pdfcraft_render::RenderWarning::ContentTruncated) {
+                return Err("page text was truncated by the renderer's decode limit; table extraction would be incomplete".into());
+            }
+            let text = result.text.ok_or_else(|| format!("page {}: text extraction failed", page.saturating_add(1)))?;
+            crate::tables::extract(&text, page, region, options)
+        })?
+    }
+
     /// The text of several pages, separated by form feeds (as `pdftotext` does).
     pub fn text_of(&mut self, pages: &[usize]) -> Result<String, String> {
         let mut out = String::new();

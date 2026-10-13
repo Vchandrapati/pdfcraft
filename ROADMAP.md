@@ -2,7 +2,7 @@
 
 **Stage: alpha** · next: beta, ~26% (ready for real work 49% → 75%) and ~400–700 h away
 
-> **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (OCR migrated to a pinned English-only Tesseract BEST model; runtime prerequisite documented) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
+> **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (dedicated native/OCR table preview and CSV/XLSX export; reconstruction limits documented) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (M10, #1028: OCR reads pictures on pages that have text, on request); earlier: M14 #307 Plan 3 uses one marker traversal on open and full refresh, and the combined scanner borrows metadata instead of cloning scan-only containers; includes a behavior-preserving `organize` binding for the workspace Clippy gate · earlier: minor (localized shortcut labels, #496; readiness table with hours per audience; full number as weighted sum 49%; second look: ready 40% → 47%, mainstream 55% added; core-workflow gate applied → alpha) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (#594 paragraph drags validated in the Linux test environment; localized shortcut labels, #496; readiness table with hours per audience; full number as weighted sum 49%; earlier: second look: ready 40% → 47%, mainstream 55% added; core-workflow gate applied → alpha) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (architectural paper controls from #599; localized shortcut labels, #496; readiness table with hours per audience; full number as weighted sum 49%; earlier: second look: ready 40% → 47%, mainstream 55% added; core-workflow gate applied → alpha) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
@@ -136,6 +136,8 @@ Ranked; detail and the full milestone table in [docs/roadmap.md](docs/roadmap.md
 | 8 | 1.0 polish: performance, right-to-left, missing languages, keyboard-only (M14) | 55–95 |
 
 ## Progress log
+
+- **2026-10-13 (table extraction):** Add a read-only table preview and CSV/Excel export from native or existing OCR text, with region selection and manual separators. Geometry inference needs review; merged/multiline cells and cross-page reconstruction remain incomplete. See [table extraction](docs/table-extraction.md).
 
 - **2026-10-13 (OCR model/runtime):** Replace the two CC-BY-SA ocrs model files with the pinned Apache-2.0 Tesseract BEST English model. Desktop archives require an installed Tesseract 5 executable; Debian/RPM packages declare it; the current Flatpak cannot run OCR because it does not bundle the engine. Language coverage remains English-only.
 
@@ -381,6 +383,7 @@ Newest first: the date, what moved, and the new overall estimate.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-13 | minor | Table extraction preview and CSV/XLSX export; merged/multiline cells and cross-page reconstruction remain incomplete. Estimates unchanged. |
 | 2026-10-11 | minor | M10: borderless inferred tables and positioned invoice watermarks (#773); estimates unchanged. |
 | 2026-10-11 | minor | M7: #594 paragraph-drag candidate and source regressions prepared; subsequent Linux validation passed all eight CI gates. Estimates unchanged. |
 | 2026-10-10 | minor | Recorded the remaining System appearance repair after #881; estimates unchanged |

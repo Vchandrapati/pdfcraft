@@ -2198,3 +2198,32 @@ scroll speed	Fast	వేగంగా
 	Ink sensitivity	ఇంక్ సున్నితత్వం
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	ఫ్రేమ్‌లో సంతకం కనబడలేదు. ఫ్రేమ్‌ను సంతకం మీదకు జరపండి లేదా ఇంక్ సున్నితత్వాన్ని పెంచండి.
 	Couldn't use the photo: {e}	ఫోటోను ఉపయోగించలేకపోయాం: {e}
+	The document or extraction settings changed. Run extraction again.	పత్రం లేదా సంగ్రహణ సెట్టింగ్‌లు మారాయి. మళ్లీ సంగ్రహించండి.
+	Extract Tables	పట్టికలను సంగ్రహించండి
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	ఎగుమతి చేయడానికి ముందు సంగ్రహించిన సెల్‌లను సమీక్షించండి. ఆటోమేటిక్ గుర్తింపు పాఠ్య మధ్య ఖాళీలను ఉపయోగిస్తుంది; ఇది పత్రంలోని ఉద్దేశించిన పట్టిక అమరికకు సరిపోకపోవచ్చు.
+	Region	ప్రాంతం
+	Use the selected rectangle	ఎంచుకున్న దీర్ఘచతురస్రాన్ని ఉపయోగించండి
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	పేజీ ప్రాంతాన్ని పరిమితం చేయడానికి ఈ డైలాగ్ తెరవడానికి ముందు కాలమ్ ఎంపికతో దీర్ఘచతురస్రాన్ని ఎంచుకోండి.
+	Column separators	నిలువు వరుసల విభాజకాలు
+	Automatic, or e.g. 180, 340	ఆటోమేటిక్, లేదా ఉదా. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	ఆటోమేటిక్ గుర్తింపు కోసం విభాజకాలను ఖాళీగా ఉంచండి. స్థానాలు ప్రదర్శిత పేజీ ఎగువ ఎడమ మూలం నుండి పాయింట్లలో కొలుస్తారు.
+	Run extraction	సంగ్రహణను ప్రారంభించండి
+	Detect tables	పట్టికలను గుర్తించండి
+	Extracting…	సంగ్రహిస్తోంది…
+	Settings changed. Run extraction again to refresh this preview.	సెట్టింగ్‌లు మారాయి. ప్రివ్యూను నవీకరించడానికి మళ్లీ సంగ్రహించండి.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	ఈ ప్రాంతంలో పాఠ్యం లేదు. స్కాన్‌ల కోసం ముందుగా పాఠ్యాన్ని గుర్తించండి; లేకపోతే పాఠ్యం ఉన్న ప్రాంతాన్ని ఎంచుకోండి.
+	No tables detected. Adjust the region or add separator positions and run again.	పట్టికలు గుర్తించబడలేదు. ప్రాంతాన్ని సవరించండి లేదా విభాజక స్థానాలను జోడించి మళ్లీ ప్రారంభించండి.
+	Table {n} · {rows} rows × {columns} columns	పట్టిక {n} · {rows} వరుసలు × {columns} నిలువు వరుసలు
+	Table {n}	పట్టిక {n}
+	Use selected table's separators for correction	సవరణ కోసం ఎంచుకున్న పట్టిక విభాజకాలను ఉపయోగించండి
+	Export Excel	Excel‌కు ఎగుమతి చేయండి
+	Export CSV	CSV‌కు ఎగుమతి చేయండి
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	ప్రివ్యూలో {rows} వరుసలు, {cells} సెల్‌లు కనిపించవు; {shortened} పొడవైన సెల్‌లు కుదించబడ్డాయి. ఎగుమతిలో పూర్తి పట్టిక ఉంటుంది.
+	Run table extraction again before exporting this preview	ఈ ప్రివ్యూను ఎగుమతి చేయడానికి ముందు పట్టికను మళ్లీ సంగ్రహించండి
+	Table export stopped: {error}	పట్టిక ఎగుమతి ఆపివేయబడింది: {error}
+	Exported {name}	{name} ఎగుమతి చేయబడింది
+	Couldn't save {name}: {error}	{name}ను సేవ్ చేయలేకపోయాం: {error}
+	Couldn't download {name}: {error}	{name}ను డౌన్‌లోడ్ చేయలేకపోయాం: {error}
+	Extract tables…	పట్టికలను సంగ్రహించండి…
+	Tables (CSV / Excel)	పట్టికలు (CSV / Excel)
+	of {n}	 / {n}

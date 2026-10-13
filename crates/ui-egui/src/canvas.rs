@@ -556,6 +556,17 @@ impl DocView {
         self.screen_xforms.iter().find(|(p, _)| *p == page).map(|(_, xf)| xf.rect)
     }
 
+    /// The selected Column Select rectangle in displayed page points, in top-left / y-down
+    /// coordinates. Region selection is page-local and never changes document content.
+    pub(crate) fn selected_column_region(&self) -> Option<(usize, [f32; 4])> {
+        let Selection { page, span: Span::Column { rect } } = self.selection? else { return None };
+        if !rect.iter().all(|value| value.is_finite()) {
+            return None;
+        }
+        let normalized = [rect[0].min(rect[2]), rect[1].min(rect[3]), rect[0].max(rect[2]), rect[1].max(rect[3])];
+        (normalized[2] > normalized[0] && normalized[3] > normalized[1]).then_some((page, normalized))
+    }
+
     /// The document area on screen.
     pub fn viewport_rect(&self) -> Rect {
         self.viewport_screen

@@ -2198,3 +2198,32 @@ scroll speed	Fast	Высокая
 	Ink sensitivity	Чувствительность к чернилам
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	В рамке не найдена подпись. Наведите рамку на подпись или увеличьте чувствительность к чернилам.
 	Couldn't use the photo: {e}	Не удалось использовать фото: {e}
+	The document or extraction settings changed. Run extraction again.	Документ или настройки извлечения изменились. Запустите извлечение ещё раз.
+	Extract Tables	Извлечь таблицы
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Проверьте извлечённые ячейки перед экспортом. Автоматическое определение использует интервалы между текстом и может не соответствовать предполагаемой структуре таблицы в документе.
+	Region	Область
+	Use the selected rectangle	Использовать выделенный прямоугольник
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Чтобы ограничить область страницы, выделите прямоугольник инструментом «Выбор столбца» до открытия этого диалога.
+	Column separators	Разделители столбцов
+	Automatic, or e.g. 180, 340	Автоматически или, например, 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Оставьте поле разделителей пустым для автоматического определения. Позиции измеряются в пунктах от верхнего левого угла отображаемой страницы.
+	Run extraction	Запустить извлечение
+	Detect tables	Найти таблицы
+	Extracting…	Извлечение…
+	Settings changed. Run extraction again to refresh this preview.	Настройки изменились. Запустите извлечение ещё раз, чтобы обновить предпросмотр.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	В этой области нет текста. Для сканов сначала выполните распознавание текста, иначе выберите область с текстом.
+	No tables detected. Adjust the region or add separator positions and run again.	Таблицы не найдены. Измените область или добавьте позиции разделителей и запустите снова.
+	Table {n} · {rows} rows × {columns} columns	Таблица {n} · {rows} строк × {columns} столбцов
+	Table {n}	Таблица {n}
+	Use selected table's separators for correction	Использовать разделители выбранной таблицы для исправления
+	Export Excel	Экспортировать в Excel
+	Export CSV	Экспортировать в CSV
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	В предпросмотре пропущено строк: {rows}, ячеек: {cells}; длинных ячеек сокращено: {shortened}. При экспорте будет включена вся таблица.
+	Run table extraction again before exporting this preview	Запустите извлечение таблицы ещё раз перед экспортом этого предпросмотра
+	Table export stopped: {error}	Экспорт таблицы остановлен: {error}
+	Exported {name}	Экспортировано: {name}
+	Couldn't save {name}: {error}	Не удалось сохранить {name}: {error}
+	Couldn't download {name}: {error}	Не удалось скачать {name}: {error}
+	Extract tables…	Извлечь таблицы…
+	Tables (CSV / Excel)	Таблицы (CSV / Excel)
+	of {n}	из {n}

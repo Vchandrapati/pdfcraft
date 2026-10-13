@@ -6955,11 +6955,11 @@ title = "Export to Excel (.xlsx) with table detection"
 area = "J"
 tier = "P1"
 milestone = "M10"
-status = "planned"
-commands = []
-tools = []
-evidence = []
-notes = ""
+status = "partial"
+commands = ["export.tables"]
+tools = ["table_extract", "table_export"]
+evidence = ["crates/engine/src/tables.rs::right_aligned_numbers_blank_cells_and_separate_tables", "crates/engine/src/tables.rs::searchable_ocr_layer_extracts_and_survives_save_reopen", "crates/automation/tests/automation.rs::table_extraction_preview_exports_current_text_without_editing", "crates/ui-egui/tests/table_ui.rs::table_dialog_previews_and_exports_csv_and_xlsx_without_dirtying_document"]
+notes = "Dedicated table preview and CSV/XLSX export for horizontal text, including existing OCR layers; manual region and internal separators. XLSX writes one selected table as literal strings. Inference uses visual rows and common wide gaps; no raster rule detection, table tags, merged/multiline cells, empty rows or cross-page joins. Review required; two-column prose can be misclassified. Full spreadsheet layout export remains incomplete. See docs/table-extraction.md."
 
 [[feature]]
 id = "create.export-pptx"

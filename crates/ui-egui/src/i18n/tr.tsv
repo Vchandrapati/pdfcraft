@@ -2281,3 +2281,32 @@ scroll speed	Fast	Hızlı
 	Ink sensitivity	Mürekkep hassasiyeti
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	Çerçevede imza bulunamadı. Çerçeveyi imzanın üzerine taşıyın veya mürekkep hassasiyetini artırın.
 	Couldn't use the photo: {e}	Fotoğraf kullanılamadı: {e}
+	The document or extraction settings changed. Run extraction again.	Belge veya çıkarma ayarları değişti. Çıkarmayı yeniden çalıştırın.
+	Extract Tables	Tabloları Çıkar
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Dışa aktarmadan önce çıkarılan hücreleri gözden geçirin. Otomatik algılama metin aralıklarını kullanır ve belgenin amaçlanan tablo düzeniyle eşleşmeyebilir.
+	Region	Bölge
+	Use the selected rectangle	Seçili dikdörtgeni kullan
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Sayfa alanını sınırlamak için bu iletişim kutusunu açmadan önce Sütun Seç aracıyla bir dikdörtgen seçin.
+	Column separators	Sütun ayraçları
+	Automatic, or e.g. 180, 340	Otomatik veya ör. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Otomatik algılama için ayraçları boş bırakın. Konumlar, görüntülenen sayfanın sol üst köşesinden itibaren punto cinsindendir.
+	Run extraction	Çıkarmayı çalıştır
+	Detect tables	Tabloları algıla
+	Extracting…	Çıkarılıyor…
+	Settings changed. Run extraction again to refresh this preview.	Ayarlar değişti. Önizlemeyi yenilemek için çıkarmayı yeniden çalıştırın.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Bu bölgede metin yok. Taramalarda önce Metni Tanı'yı çalıştırın; aksi durumda metin içeren bir alan seçin.
+	No tables detected. Adjust the region or add separator positions and run again.	Tablo algılanmadı. Bölgeyi ayarlayın veya ayraç konumları ekleyip yeniden çalıştırın.
+	Table {n} · {rows} rows × {columns} columns	Tablo {n} · {rows} satır × {columns} sütun
+	Table {n}	Tablo {n}
+	Use selected table's separators for correction	Düzeltme için seçili tablonun ayraçlarını kullan
+	Export Excel	Excel'e Aktar
+	Export CSV	CSV'ye Aktar
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Önizlemede {rows} satır ve {cells} hücre gösterilmez; {shortened} uzun hücre kısaltılır. Dışa aktarma tüm tabloyu içerir.
+	Run table extraction again before exporting this preview	Bu önizlemeyi dışa aktarmadan önce tablo çıkarma işlemini yeniden çalıştırın
+	Table export stopped: {error}	Tablo dışa aktarma durduruldu: {error}
+	Exported {name}	{name} dışa aktarıldı
+	Couldn't save {name}: {error}	{name} kaydedilemedi: {error}
+	Couldn't download {name}: {error}	{name} indirilemedi: {error}
+	Extract tables…	Tabloları Çıkar…
+	Tables (CSV / Excel)	Tablolar (CSV / Excel)
+	of {n}	/ {n}

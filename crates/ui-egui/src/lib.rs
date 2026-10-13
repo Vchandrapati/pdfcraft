@@ -54,6 +54,7 @@ mod search_ui;
 mod sign_ui;
 mod stamps_ui;
 mod standards_ui;
+mod table_ui;
 mod zoom_snap;
 /// Header & footer / watermark / background dialog types (tests and automation).
 pub mod marks {
@@ -261,6 +262,8 @@ pub enum Dialog {
     Marks(pdfcraft_engine::MarkKind),
     /// Export a PDF ▸ Image / Text.
     Export(export_ui::ExportKind),
+    /// Export a PDF ▸ Tables.
+    ExtractTables,
     /// Fill & Sign ▸ Create signature (the drawing pad).
     Signature,
     /// Comment Properties.
@@ -666,6 +669,8 @@ pub struct PdfCraftApp {
     pub export_draft: export_ui::ExportDraft,
     /// A running export's progress.
     export_status: Option<export_ui::ExportStatus>,
+    /// Export a PDF ▸ Tables settings, preview and background extraction.
+    pub(crate) tables_ui: table_ui::TablesUi,
     /// The saved Fill & Sign signature and initials (drawn or typed).
     pub signature: Option<fill_sign::SavedSig>,
     pub initials: Option<fill_sign::SavedSig>,
@@ -905,6 +910,7 @@ impl PdfCraftApp {
             marks_draft: Default::default(),
             export_draft: Default::default(),
             export_status: None,
+            tables_ui: table_ui::TablesUi::default(),
             signature: None,
             initials: None,
             signature_draft: Default::default(),
@@ -1906,6 +1912,7 @@ impl PdfCraftApp {
             }
             ("left", _) => self.left_open = value != "closed",
             ("home", _) => self.active = None,
+            ("dialog", _) if value == "extract-tables" => self.open_tables_dialog(),
             ("dialog", _) => {
                 self.dialog = match value {
                     "properties" => Some(Dialog::Properties(PropsTab::Description)),

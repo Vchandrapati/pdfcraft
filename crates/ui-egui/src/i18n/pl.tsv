@@ -2265,3 +2265,32 @@ scroll speed	Fast	Szybka
 	Ink sensitivity	Czułość na atrament
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	W ramce nie znaleziono podpisu. Przesuń ramkę na podpis lub zwiększ czułość na atrament.
 	Couldn't use the photo: {e}	Nie można użyć zdjęcia: {e}
+	The document or extraction settings changed. Run extraction again.	Dokument lub ustawienia ekstrakcji uległy zmianie. Uruchom ekstrakcję ponownie.
+	Extract Tables	Wyodrębnij tabele
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Przed eksportem sprawdź wyodrębnione komórki. Automatyczne wykrywanie wykorzystuje odstępy między tekstem i może nie odpowiadać zamierzonemu układowi tabeli w dokumencie.
+	of {n}	z {n}
+	Region	Obszar
+	Use the selected rectangle	Użyj zaznaczonego prostokąta
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Przed otwarciem tego okna dialogowego zaznacz prostokąt za pomocą narzędzia Zaznaczanie kolumn, aby ograniczyć obszar strony.
+	Column separators	Separatory kolumn
+	Automatic, or e.g. 180, 340	Automatycznie lub np. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Pozostaw separatory puste, aby użyć automatycznego wykrywania. Pozycje są mierzone w punktach od lewego górnego rogu wyświetlanej strony.
+	Run extraction	Uruchom ekstrakcję
+	Detect tables	Wykryj tabele
+	Extracting…	Trwa ekstrakcja…
+	Settings changed. Run extraction again to refresh this preview.	Ustawienia uległy zmianie. Uruchom ekstrakcję ponownie, aby odświeżyć podgląd.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Brak tekstu w tym obszarze. W przypadku skanów najpierw uruchom rozpoznawanie tekstu; w przeciwnym razie zaznacz obszar zawierający tekst.
+	No tables detected. Adjust the region or add separator positions and run again.	Nie wykryto tabel. Dostosuj obszar lub dodaj pozycje separatorów i uruchom ponownie.
+	Use selected table's separators for correction	Użyj separatorów zaznaczonej tabeli do korekty
+	Export Excel	Eksportuj do programu Excel
+	Export CSV	Eksportuj do CSV
+	Table {n} · {rows} rows × {columns} columns	Tabela {n} · {rows} wierszy × {columns} kolumn
+	Table {n}	Tabela {n}
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Podgląd pomija {rows} wierszy i {cells} komórek oraz skraca {shortened} długich komórek. Eksport obejmuje całą tabelę.
+	Run table extraction again before exporting this preview	Przed wyeksportowaniem tego podglądu ponownie uruchom ekstrakcję tabel
+	Table export stopped: {error}	Eksport tabeli zatrzymany: {error}
+	Exported {name}	Wyeksportowano: {name}
+	Couldn't save {name}: {error}	Nie można zapisać {name}: {error}
+	Couldn't download {name}: {error}	Nie można pobrać {name}: {error}
+	Extract tables…	Wyodrębnij tabele…
+	Tables (CSV / Excel)	Tabele (CSV / Excel)

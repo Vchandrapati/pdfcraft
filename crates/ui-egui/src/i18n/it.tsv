@@ -2294,3 +2294,32 @@ scroll speed	Fast	Veloce
 	Ink sensitivity	Sensibilità all’inchiostro
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	Nessuna firma trovata nella cornice. Sposta la cornice sulla firma o aumenta la sensibilità all’inchiostro.
 	Couldn't use the photo: {e}	Impossibile usare la foto: {e}
+	The document or extraction settings changed. Run extraction again.	Il documento o le impostazioni di estrazione sono cambiate. Esegui di nuovo l’estrazione.
+	Extract Tables	Estrai tabelle
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Rivedi le celle estratte prima di esportarle. Il rilevamento automatico usa la spaziatura del testo e potrebbe non corrispondere alla disposizione prevista della tabella nel documento.
+	of {n}	di {n}
+	Region	Area
+	Use the selected rectangle	Usa il rettangolo selezionato
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Seleziona un rettangolo con Selezione colonna prima di aprire questa finestra di dialogo per limitare l’area della pagina.
+	Column separators	Separatori di colonna
+	Automatic, or e.g. 180, 340	Automatico oppure, ad es., 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Lascia vuoti i separatori per il rilevamento automatico. Le posizioni sono misurate in punti dall’angolo superiore sinistro della pagina visualizzata.
+	Run extraction	Esegui estrazione
+	Detect tables	Rileva tabelle
+	Extracting…	Estrazione in corso…
+	Settings changed. Run extraction again to refresh this preview.	Le impostazioni sono cambiate. Esegui di nuovo l’estrazione per aggiornare questa anteprima.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Nessun testo in quest’area. Per le scansioni, esegui prima Riconosci testo; altrimenti seleziona un’area che contenga testo.
+	No tables detected. Adjust the region or add separator positions and run again.	Nessuna tabella rilevata. Modifica l’area o aggiungi le posizioni dei separatori e riprova.
+	Use selected table's separators for correction	Usa i separatori della tabella selezionata per correggere
+	Export Excel	Esporta in Excel
+	Export CSV	Esporta in CSV
+	Table {n} · {rows} rows × {columns} columns	Tabella {n} · {rows} righe × {columns} colonne
+	Table {n}	Tabella {n}
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	L’anteprima omette {rows} righe e {cells} celle e abbrevia {shortened} celle lunghe. L’esportazione include l’intera tabella.
+	Run table extraction again before exporting this preview	Esegui di nuovo l’estrazione della tabella prima di esportare questa anteprima
+	Table export stopped: {error}	Esportazione della tabella interrotta: {error}
+	Exported {name}	Esportato: {name}
+	Couldn't save {name}: {error}	Impossibile salvare {name}: {error}
+	Couldn't download {name}: {error}	Impossibile scaricare {name}: {error}
+	Extract tables…	Estrai tabelle…
+	Tables (CSV / Excel)	Tabelle (CSV / Excel)
