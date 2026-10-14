@@ -1467,15 +1467,18 @@ fn font_size_before(ops: &[Op], at: usize) -> Option<f64> {
 /// Operators of every line that is another drawing of one of `targets` (fake bold, an invisible
 /// text layer). A surviving copy would show the old text under the replacement.
 ///
-/// A copy overlaps a target by more than half the smaller box and sits on the same baseline
-/// (within the tolerance that joins showing operators onto one line). A neighbouring line can
+/// A copy shows the same text, overlaps a target by more than half the smaller box and sits on
+/// the same baseline (within the tolerance that joins showing operators onto one line). A neighbouring line can
 /// share box area when the leading is tighter than the font's ascent plus descent; its baseline
 /// is farther away, so it stays.
 fn coincident_ops(lines: &[TextLine], targets: &[&TextLine]) -> std::collections::HashSet<usize> {
     let area = |r: [f64; 4]| ((r[2] - r[0]) * (r[3] - r[1])).max(0.0);
     let mut drop = std::collections::HashSet::new();
     for line in lines {
-        let copy = targets.iter().any(|target| overlaps_half(line.rect, target.rect, area) && on_same_baseline(line, target));
+        // The same text, too: a paragraph dragged onto another's baseline is not its copy (#1368).
+        let copy = targets
+            .iter()
+            .any(|target| overlaps_half(line.rect, target.rect, area) && on_same_baseline(line, target) && line.text.trim() == target.text.trim());
         if copy {
             drop.extend(line.ops.iter().copied());
         }
