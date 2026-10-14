@@ -171,7 +171,9 @@ function Render-Sheet($page, $sheet, $dpi) {
         AwaitAct ($page.RenderToStreamAsync($random, $options))
         $stream.Position = 0
         $png = [System.Drawing.Image]::FromStream($stream)
-        try { return [System.Drawing.Bitmap]::new($png) } finally { $png.Dispose() }
+        # Windows.Data.Pdf multiplies the destination size by the display's scale factor (2.5x on a
+        # 250% display), so the sheet is resampled to exactly the size requested.
+        try { return [System.Drawing.Bitmap]::new($png, $pixels.Width, $pixels.Height) } finally { $png.Dispose() }
     } finally { $stream.Dispose() }
 }
 
