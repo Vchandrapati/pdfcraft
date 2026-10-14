@@ -49,6 +49,8 @@ pub const TABLE: &[(&str, Class)] = &[
     ("forms", Class::Layer(3)),
     ("js", Class::Layer(3)),
     ("xfa", Class::Layer(3)),
+    // Owned copy of the Craft apps' system print spooler (no workspace dependencies).
+    ("craft-print", Class::Layer(3)),
     ("ml", Class::Layer(3)),
     // L4 features
     ("edit", Class::Layer(4)),
@@ -80,6 +82,8 @@ pub const TABLE: &[(&str, Class)] = &[
     ("platform", Class::Layer(7)),
     ("ui-common", Class::Layer(7)),
     ("ui-egui", Class::Layer(7)),
+    // Owned copy of the Craft apps' egui controls.
+    ("craft-ui", Class::Layer(7)),
     ("automation", Class::Layer(7)),
     // test support
     ("testkit", Class::Testkit),
@@ -104,6 +108,7 @@ pub const SIDEWAYS: &[(&str, &str)] = &[
     ("sign", "security"),
     ("ui-egui", "ui-common"),
     ("ui-egui", "platform"),
+    ("ui-egui", "craft-ui"),
     ("automation", "platform"),
 ];
 

@@ -49,6 +49,9 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/xfa/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/xfdf/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/xtask/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/craft-print/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/craft-ui/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/craft-ui/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
