@@ -43,5 +43,5 @@ idna = "1.1"
 icu_properties = "2.3"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-# Already in the graph through lopdf; used only for the local UTC offset ("today").
+# The local UTC offset ("today").
 chrono = { version = "0.4", default-features = false, features = ["clock"] }

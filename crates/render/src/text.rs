@@ -1493,9 +1493,8 @@ mod tests {
 
     #[test]
     fn identity_v_columns_are_searchable_in_reading_order() {
-        use lopdf::{Document, Object, Stream, dictionary};
         for encoding in ["Identity-V", "UniJIS-UCS2-V"] {
-            let mut doc = Document::with_version("1.7");
+            let mut doc = crate::test_pdf::TestPdf::new();
             let cmap = b"/CIDInit /ProcSet findresource begin 12 dict begin begincmap /CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def /CMapName /TestUnicode def /CMapType 2 def 1 begincodespacerange <0000> <FFFF> endcodespacerange 5 beginbfchar <0001> <65E5> <0002> <672C> <0003> <8A9E> <0004> <6587> <0005> <7AE0> endbfchar endcmap CMapName currentdict /CMap defineresource pop end end";
             let cmap = if encoding == "Identity-V" {
                 cmap.to_vec()
@@ -1506,26 +1505,21 @@ mod tests {
                 }
                 mapping.into_bytes()
             };
-            let unicode = doc.add_object(Stream::new(dictionary! {}, cmap));
-            let cid = doc.add_object(dictionary! {
-            "Type" => "Font", "Subtype" => "CIDFontType2", "BaseFont" => "TestVertical",
-            "CIDSystemInfo" => dictionary! { "Registry" => Object::string_literal("Adobe"), "Ordering" => Object::string_literal("Identity"), "Supplement" => 0 },
-            "DW" => 1000, "DW2" => vec![Object::Integer(880), Object::Integer(-1000)], "CIDToGIDMap" => "Identity"
-        });
-            let font = doc.add_object(dictionary! { "Type" => "Font", "Subtype" => "Type0", "BaseFont" => "TestVertical", "Encoding" => encoding, "DescendantFonts" => vec![Object::Reference(cid)], "ToUnicode" => unicode });
-            let horizontal = doc.add_object(dictionary! { "Type" => "Font", "Subtype" => "Type0", "BaseFont" => "TestVertical", "Encoding" => "Identity-H", "DescendantFonts" => vec![Object::Reference(cid)], "ToUnicode" => unicode });
+            let unicode = doc.add_stream("", &cmap);
+            let cid = doc.add("<< /Type /Font /Subtype /CIDFontType2 /BaseFont /TestVertical /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /DW 1000 /DW2 [880 -1000] /CIDToGIDMap /Identity >>");
+            let font = doc.add(format!("<< /Type /Font /Subtype /Type0 /BaseFont /TestVertical /Encoding /{encoding} /DescendantFonts [{cid} 0 R] /ToUnicode {unicode} 0 R >>"));
+            let horizontal = doc.add(format!("<< /Type /Font /Subtype /Type0 /BaseFont /TestVertical /Encoding /Identity-H /DescendantFonts [{cid} 0 R] /ToUnicode {unicode} 0 R >>"));
             let (first, second) = if encoding == "Identity-V" { ("000100020003", "00040005") } else { ("65E5672C8A9E", "65877AE0") };
             let operators =
                 format!("BT /H1 20 Tf 1 0 0 1 40 280 Tm <{first}> Tj /F1 20 Tf 1 0 0 1 200 250 Tm <{first}> Tj 1 0 0 1 170 250 Tm <{second}> Tj ET");
-            let content = doc.add_object(Stream::new(dictionary! {}, operators.into_bytes()));
-            let pages = doc.new_object_id();
-            let page = doc.add_object(dictionary! { "Type" => "Page", "Parent" => pages, "MediaBox" => vec![Object::Integer(0), Object::Integer(0), Object::Integer(300), Object::Integer(300)], "Resources" => dictionary! {"Font" => dictionary! {"F1" => font, "H1" => horizontal}}, "Contents" => content });
-            doc.objects.insert(pages, dictionary! {"Type" => "Pages", "Kids" => vec![Object::Reference(page)], "Count" => 1}.into());
-            let catalog = doc.add_object(dictionary! {"Type" => "Catalog", "Pages" => pages});
-            doc.trailer.set("Root", catalog);
-            let mut bytes = Vec::new();
-            doc.save_to(&mut bytes).unwrap();
-            let pdf = Pdf::new(std::sync::Arc::new(bytes)).unwrap();
+            let content = doc.add_stream("", operators.as_bytes());
+            let pages = doc.reserve();
+            let page = doc.add(format!(
+                "<< /Type /Page /Parent {pages} 0 R /MediaBox [0 0 300 300] /Resources << /Font << /F1 {font} 0 R /H1 {horizontal} 0 R >> >> /Contents {content} 0 R >>"
+            ));
+            doc.set(pages, format!("<< /Type /Pages /Kids [{page} 0 R] /Count 1 >>"));
+            let catalog = doc.add(format!("<< /Type /Catalog /Pages {pages} 0 R >>"));
+            let pdf = Pdf::new(std::sync::Arc::new(doc.finish(catalog))).unwrap();
             let text = extract_page(&pdf, 0, &InterpreterSettings::default()).unwrap();
             assert_eq!(text.plain_text(), "日本語\n日本語\n文章");
             assert_eq!(text.find("日本語"), vec![0..3, 3..6]);
@@ -1540,27 +1534,24 @@ mod tests {
     /// One page per text matrix, each showing `codes` in Helvetica whose `/ToUnicode` maps the
     /// codes in `unicode` (a `bfchar` body) to several characters.
     fn ligature_pages(unicode: &str, codes: &str, matrices: &[&str]) -> Pdf {
-        use lopdf::{Document, Object, Stream, dictionary};
-        let mut doc = Document::with_version("1.7");
+        let mut doc = crate::test_pdf::TestPdf::new();
         let cmap = format!(
             "/CIDInit /ProcSet findresource begin 12 dict begin begincmap /CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def /CMapName /TestLigatures def /CMapType 2 def 1 begincodespacerange <00> <FF> endcodespacerange {unicode} endcmap CMapName currentdict /CMap defineresource pop end end"
         );
-        let to_unicode = doc.add_object(Stream::new(dictionary! {}, cmap.into_bytes()));
-        let font = doc.add_object(dictionary! { "Type" => "Font", "Subtype" => "Type1", "BaseFont" => "Helvetica", "ToUnicode" => to_unicode });
-        let pages = doc.new_object_id();
+        let to_unicode = doc.add_stream("", cmap.as_bytes());
+        let font = doc.add(format!("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /ToUnicode {to_unicode} 0 R >>"));
+        let pages = doc.reserve();
         let mut kids = Vec::new();
         for m in matrices {
-            let content = doc.add_object(Stream::new(dictionary! {}, format!("BT /F1 20 Tf {m} Tm ({codes}) Tj ET").into_bytes()));
-            let page = doc.add_object(dictionary! { "Type" => "Page", "Parent" => pages, "MediaBox" => vec![Object::Integer(0), Object::Integer(0), Object::Integer(300), Object::Integer(300)], "Resources" => dictionary! {"Font" => dictionary! {"F1" => font}}, "Contents" => content });
-            kids.push(Object::Reference(page));
+            let content = doc.add_stream("", format!("BT /F1 20 Tf {m} Tm ({codes}) Tj ET").as_bytes());
+            let page = doc.add(format!(
+                "<< /Type /Page /Parent {pages} 0 R /MediaBox [0 0 300 300] /Resources << /Font << /F1 {font} 0 R >> >> /Contents {content} 0 R >>"
+            ));
+            kids.push(format!("{page} 0 R"));
         }
-        let count = kids.len() as i64;
-        doc.objects.insert(pages, dictionary! {"Type" => "Pages", "Kids" => kids, "Count" => count}.into());
-        let catalog = doc.add_object(dictionary! {"Type" => "Catalog", "Pages" => pages});
-        doc.trailer.set("Root", catalog);
-        let mut bytes = Vec::new();
-        doc.save_to(&mut bytes).unwrap();
-        Pdf::new(std::sync::Arc::new(bytes)).unwrap()
+        doc.set(pages, format!("<< /Type /Pages /Kids [{}] /Count {} >>", kids.join(" "), kids.len()));
+        let catalog = doc.add(format!("<< /Type /Catalog /Pages {pages} 0 R >>"));
+        Pdf::new(std::sync::Arc::new(doc.finish(catalog))).unwrap()
     }
 
     #[test]
@@ -1586,27 +1577,20 @@ mod tests {
     /// One page per content stream, in Helvetica (`/F1`), with `/P1` in the resources'
     /// `/Properties` naming the `/ActualText` "fi".
     fn marked_pages(contents: &[&str]) -> Pdf {
-        use lopdf::{Document, Object, Stream, dictionary};
-        let mut doc = Document::with_version("1.7");
-        let font = doc.add_object(dictionary! { "Type" => "Font", "Subtype" => "Type1", "BaseFont" => "Helvetica" });
-        let pages = doc.new_object_id();
+        let mut doc = crate::test_pdf::TestPdf::new();
+        let font = doc.add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+        let pages = doc.reserve();
         let mut kids = Vec::new();
         for c in contents {
-            let content = doc.add_object(Stream::new(dictionary! {}, c.as_bytes().to_vec()));
-            let resources = dictionary! {
-                "Font" => dictionary! {"F1" => font},
-                "Properties" => dictionary! {"P1" => dictionary! {"ActualText" => Object::string_literal("fi")}},
-            };
-            let page = doc.add_object(dictionary! { "Type" => "Page", "Parent" => pages, "MediaBox" => vec![Object::Integer(0), Object::Integer(0), Object::Integer(300), Object::Integer(300)], "Resources" => resources, "Contents" => content });
-            kids.push(Object::Reference(page));
+            let content = doc.add_stream("", c.as_bytes());
+            let resources = format!("<< /Font << /F1 {font} 0 R >> /Properties << /P1 << /ActualText (fi) >> >> >>");
+            let page =
+                doc.add(format!("<< /Type /Page /Parent {pages} 0 R /MediaBox [0 0 300 300] /Resources {resources} /Contents {content} 0 R >>"));
+            kids.push(format!("{page} 0 R"));
         }
-        let count = kids.len() as i64;
-        doc.objects.insert(pages, dictionary! {"Type" => "Pages", "Kids" => kids, "Count" => count}.into());
-        let catalog = doc.add_object(dictionary! {"Type" => "Catalog", "Pages" => pages});
-        doc.trailer.set("Root", catalog);
-        let mut bytes = Vec::new();
-        doc.save_to(&mut bytes).unwrap();
-        Pdf::new(std::sync::Arc::new(bytes)).unwrap()
+        doc.set(pages, format!("<< /Type /Pages /Kids [{}] /Count {} >>", kids.join(" "), kids.len()));
+        let catalog = doc.add(format!("<< /Type /Catalog /Pages {pages} 0 R >>"));
+        Pdf::new(std::sync::Arc::new(doc.finish(catalog))).unwrap()
     }
 
     fn marked_text(pdf: &Pdf, page: usize) -> PageText {
@@ -1728,26 +1712,22 @@ mod tests {
 
     #[test]
     fn vertical_ligatures_stay_in_their_column() {
-        use lopdf::{Document, Object, Stream, dictionary};
-        let mut doc = Document::with_version("1.7");
+        let mut doc = crate::test_pdf::TestPdf::new();
         // CID 2 is one glyph for "株式".
         let cmap = b"/CIDInit /ProcSet findresource begin 12 dict begin begincmap /CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def /CMapName /TestUnicode def /CMapType 2 def 1 begincodespacerange <0000> <FFFF> endcodespacerange 3 beginbfchar <0001> <65E5> <0002> <682A5F0F> <0003> <8A9E> endbfchar endcmap CMapName currentdict /CMap defineresource pop end end";
-        let unicode = doc.add_object(Stream::new(dictionary! {}, cmap.to_vec()));
-        let cid = doc.add_object(dictionary! {
-            "Type" => "Font", "Subtype" => "CIDFontType2", "BaseFont" => "TestVertical",
-            "CIDSystemInfo" => dictionary! { "Registry" => Object::string_literal("Adobe"), "Ordering" => Object::string_literal("Identity"), "Supplement" => 0 },
-            "DW" => 1000, "DW2" => vec![Object::Integer(880), Object::Integer(-1000)], "CIDToGIDMap" => "Identity"
-        });
-        let font = doc.add_object(dictionary! { "Type" => "Font", "Subtype" => "Type0", "BaseFont" => "TestVertical", "Encoding" => "Identity-V", "DescendantFonts" => vec![Object::Reference(cid)], "ToUnicode" => unicode });
-        let content = doc.add_object(Stream::new(dictionary! {}, b"BT /F1 20 Tf 1 0 0 1 200 250 Tm <000100020003> Tj ET".to_vec()));
-        let pages = doc.new_object_id();
-        let page = doc.add_object(dictionary! { "Type" => "Page", "Parent" => pages, "MediaBox" => vec![Object::Integer(0), Object::Integer(0), Object::Integer(300), Object::Integer(300)], "Resources" => dictionary! {"Font" => dictionary! {"F1" => font}}, "Contents" => content });
-        doc.objects.insert(pages, dictionary! {"Type" => "Pages", "Kids" => vec![Object::Reference(page)], "Count" => 1}.into());
-        let catalog = doc.add_object(dictionary! {"Type" => "Catalog", "Pages" => pages});
-        doc.trailer.set("Root", catalog);
-        let mut bytes = Vec::new();
-        doc.save_to(&mut bytes).unwrap();
-        let pdf = Pdf::new(std::sync::Arc::new(bytes)).unwrap();
+        let unicode = doc.add_stream("", cmap);
+        let cid = doc.add("<< /Type /Font /Subtype /CIDFontType2 /BaseFont /TestVertical /CIDSystemInfo << /Registry (Adobe) /Ordering (Identity) /Supplement 0 >> /DW 1000 /DW2 [880 -1000] /CIDToGIDMap /Identity >>");
+        let font = doc.add(format!(
+            "<< /Type /Font /Subtype /Type0 /BaseFont /TestVertical /Encoding /Identity-V /DescendantFonts [{cid} 0 R] /ToUnicode {unicode} 0 R >>"
+        ));
+        let content = doc.add_stream("", b"BT /F1 20 Tf 1 0 0 1 200 250 Tm <000100020003> Tj ET");
+        let pages = doc.reserve();
+        let page = doc.add(format!(
+            "<< /Type /Page /Parent {pages} 0 R /MediaBox [0 0 300 300] /Resources << /Font << /F1 {font} 0 R >> >> /Contents {content} 0 R >>"
+        ));
+        doc.set(pages, format!("<< /Type /Pages /Kids [{page} 0 R] /Count 1 >>"));
+        let catalog = doc.add(format!("<< /Type /Catalog /Pages {pages} 0 R >>"));
+        let pdf = Pdf::new(std::sync::Arc::new(doc.finish(catalog))).unwrap();
         let text = extract_page(&pdf, 0, &InterpreterSettings::default()).unwrap();
         assert_eq!(text.plain_text(), "日株式語");
         assert_eq!(text.glyphs.len(), 3);
@@ -1975,19 +1955,17 @@ mod tests {
 
     /// A 400 × 400 page drawing `ops` with Helvetica as /F1 and Courier as /F2.
     fn text_page(ops: &str) -> Pdf {
-        use lopdf::{Document, Object, Stream, dictionary};
-        let mut doc = Document::with_version("1.7");
-        let helvetica = doc.add_object(dictionary! { "Type" => "Font", "Subtype" => "Type1", "BaseFont" => "Helvetica" });
-        let courier = doc.add_object(dictionary! { "Type" => "Font", "Subtype" => "Type1", "BaseFont" => "Courier" });
-        let content = doc.add_object(Stream::new(dictionary! {}, ops.as_bytes().to_vec()));
-        let pages = doc.new_object_id();
-        let page = doc.add_object(dictionary! { "Type" => "Page", "Parent" => pages, "MediaBox" => vec![Object::Integer(0), Object::Integer(0), Object::Integer(400), Object::Integer(400)], "Resources" => dictionary! {"Font" => dictionary! {"F1" => helvetica, "F2" => courier}}, "Contents" => content });
-        doc.objects.insert(pages, dictionary! {"Type" => "Pages", "Kids" => vec![Object::Reference(page)], "Count" => 1}.into());
-        let catalog = doc.add_object(dictionary! {"Type" => "Catalog", "Pages" => pages});
-        doc.trailer.set("Root", catalog);
-        let mut bytes = Vec::new();
-        doc.save_to(&mut bytes).unwrap();
-        Pdf::new(std::sync::Arc::new(bytes)).unwrap()
+        let mut doc = crate::test_pdf::TestPdf::new();
+        let helvetica = doc.add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+        let courier = doc.add("<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>");
+        let content = doc.add_stream("", ops.as_bytes());
+        let pages = doc.reserve();
+        let page = doc.add(format!(
+            "<< /Type /Page /Parent {pages} 0 R /MediaBox [0 0 400 400] /Resources << /Font << /F1 {helvetica} 0 R /F2 {courier} 0 R >> >> /Contents {content} 0 R >>"
+        ));
+        doc.set(pages, format!("<< /Type /Pages /Kids [{page} 0 R] /Count 1 >>"));
+        let catalog = doc.add(format!("<< /Type /Catalog /Pages {pages} 0 R >>"));
+        Pdf::new(std::sync::Arc::new(doc.finish(catalog))).unwrap()
     }
 
     /// `body` shown in /F`font` at `size` with its baseline turned `degrees` counter-clockwise.
