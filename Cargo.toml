@@ -89,6 +89,17 @@ opt-level = 2
 debug = "line-tables-only"
 
 [profile.dev]
+# Unoptimised for the fastest compiles; dependencies stay at opt-level 2 above (built once and
+# cached by sccache), so rendering and decoding run at usable speed.
+opt-level = 0
+# File and line numbers in panics and backtraces, without full debug info: the UI test
+# binaries' PDBs were hundreds of MB each, slowing links and filling the disk.
+debug = "line-tables-only"
+
+# The script engine's nesting limits (256 levels, so a hostile PDF script stops with an error
+# before it exhausts the stack) assume optimised stack frames; unoptimised, the 1 MiB stack
+# test overflowed first.
+[profile.dev.package.pdfcraft-js]
 opt-level = 1
 
 [profile.low-disk]
