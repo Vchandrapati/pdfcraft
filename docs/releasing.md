@@ -69,13 +69,16 @@ pinned in `release.yml` and builds with `CRAFT_FONTS_DIR` and `CRAFT_FONTS_REQUI
 embed its Japanese fonts and fail rather than ship without them (`AGENTS.md` §1.4). Bump the pin
 deliberately.
 
-**OCR models:** every desktop package ships the Scan & OCR models (#103). The packaging scripts call
-`stage_models` (`packaging/env.sh`; `package.ps1` on Windows), which runs `cargo xtask models` to
-fetch every `kind = "model"` file in `ATTRIBUTION.toml` (verified by SHA-256) with its licence text
-and an `ATTRIBUTION.txt`, straight into the package, so packaging needs the network. They go where
-`pdfcraft_ocr::Models::dirs_beside_exe` looks: `models\` beside `pdfcraft.exe` (MSI, portable zip),
-`PdfCraft.app/Contents/Resources/models` (macOS), and `share/pdfcraft/models` beside `bin/`
-(deb, rpm, tar.gz, AppImage, Flatpak, FreeBSD). The web build doesn't include them yet.
+**OCR model and runtime:** desktop packages stage the single English Tesseract BEST model (#103).
+The packaging scripts call `stage_models` (`packaging/env.sh`; `package.ps1` on Windows), which runs
+`cargo xtask models` to fetch each `kind = "model"` entry in `ATTRIBUTION.toml` (SHA-256 verified)
+with its licence text and `ATTRIBUTION.txt`, so packaging needs the network. The model goes in
+`models\` beside `pdfcraft.exe` (MSI, portable zip), `PdfCraft.app/Contents/Resources/models`
+(macOS), and `share/pdfcraft/models` beside `bin/` (deb, rpm, tar.gz, AppImage, Flatpak, FreeBSD).
+Tesseract 5 is a separate executable prerequisite: Debian packages depend on `tesseract-ocr`, RPM
+packages on `tesseract`, and archive, macOS, Windows, and FreeBSD packages require users to install
+it separately or point `PDFCRAFT_TESSERACT` to it. The current Flatpak does not bundle Tesseract,
+so OCR is unavailable there; the web build cannot run the native executable.
 
 ### macOS
 

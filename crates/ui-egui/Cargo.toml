@@ -51,6 +51,8 @@ objc2-foundation = { version = "0.3", default-features = false, features = ["std
 [target.'cfg(windows)'.dependencies]
 # Auto interface language: the Windows display language, without starting a process.
 sys-locale = "0.3"
+# Region ▸ Measurement system for the default Units, read from the registry without starting reg.exe.
+winsafe = { version = "0.0.29", default-features = false, features = ["advapi"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 rfd = { workspace = true, features = ["file-handle-inner"] }

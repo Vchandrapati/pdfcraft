@@ -64,7 +64,6 @@
 	Side panels	Oldalsó panelek
 	Enable Acrobat JavaScript	Acrobat JavaScript engedélyezése
 	OK	OK
-	Join our Discord	Csatlakozás a Discordhoz
 	Close	Bezárás
 	Next / previous match	Következő / előző találat
 	Copy selected text	Kijelölt szöveg másolása
@@ -130,17 +129,10 @@
 	Next page	Következő oldal
 	Previous page	Előző oldal
 	Current page — type a page number or label (such as iv) and press Enter	Aktuális oldal — írj be egy oldalszámot vagy címkét (például iv), majd nyomd meg az Entert
-	Welcome to PdfCraft	Üdvözöljük a PdfCraftban
-	An open-source PDF workbench — local, private, and scriptable.	Nyílt forráskódú PDF-munkapad — helyi, privát és parancsfájlokkal vezérelhető.
-	Join the ArtCraft community	Csatlakozz az ArtCraft közösséghez
-	Get help, share feedback and follow development on Discord.	Kérj segítséget, oszd meg a véleményed, és kövesd a fejlesztést a Discordon.
-	Recommended tools	Ajánlott eszközök
 	Use now	Használat most
 	Open file	Fájl megnyitása
 	Recent	Legutóbbiak
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	A PdfCraftban megnyitott fájlok itt jelennek meg. Húzz ide egy PDF-et a megnyitáshoz.
-	Privacy	Adatvédelem
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	A PdfCraft offline működik. Nincs telemetria, nincs fiók, és nincs felhőfeldolgozás, amíg nem adsz hozzá szolgáltatót.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	A szkriptek homokozóban futnak, fájl- és hálózat-hozzáférés nélkül. Kikapcsolt JavaScript mellett az Acrobat szabványos formázó, ellenőrző és számoló függvényei továbbra is működnek.
 	Back to all tools	Vissza az összes eszközhöz
 	Close panel	Panel bezárása
@@ -275,11 +267,6 @@
 	Split document…	Dokumentum felosztása…
 	Number pages…	Oldalak számozása…
 	Keyboard shortcuts	Billentyűparancsok
-	Join the ArtCraft Discord	Csatlakozás az ArtCraft Discordhoz
-	PdfCraft web page	A PdfCraft weblapja
-	PdfCraft on GitHub	PdfCraft a GitHubon
-	ArtCraft website	Az ArtCraft webhelye
-	Check for updates…	Frissítések keresése…
 	About PdfCraft	A PdfCraftról
 	Export a PDF	PDF exportálása
 	Export to	Exportálás ide
@@ -728,16 +715,6 @@
 	Flip Vertical	Függőleges tükrözés
 	Replace Image…	Kép cseréje…
 	Save Image As…	Kép mentése másként…
-	Check for updates	Frissítések keresése
-	No check has run yet.	Még nem futott ellenőrzés.
-	Checking for a newer version…	Újabb verzió keresése…
-	PdfCraft {v} is available.	Elérhető a PdfCraft {v}.
-	You have version {c}. Download the new version from its release page.	A jelenlegi verzió: {c}. Töltsd le az újat a kiadási oldaláról.
-	PdfCraft {c} is up to date.	A PdfCraft {c} naprakész.
-	Couldn't check for updates: {e}	A frissítések keresése nem sikerült: {e}
-	You have version {c}. All releases are listed at {page}.	A jelenlegi verzió: {c}. Minden kiadás itt található: {page}.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	A GitHubtól kéri le a legújabb kiadást. Semmi sem töltődik le vagy települ automatikusan.
-	Download	Letöltés
 	Later	Később
 	none	nincs
 	Declared conformance: {shown}	Megadott megfelelőség: {shown}
@@ -1359,7 +1336,6 @@
 	Discard	Elvetés
 	Version {v}	{v} verzió
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Tiszta szobás, nyílt forráskódú PDF-alkalmazás, Rustban írva. MIT OR Apache-2.0.
-	Part of	Része
 	Summarize Options	Összefoglaló beállításai
 	Choose a layout:	Válassz elrendezést:
 	Comments only	Csak megjegyzések
@@ -2284,3 +2260,35 @@ scroll speed	Fast	Gyors
 	Ink sensitivity	Tintaérzékenység
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	A keretben nem található aláírás. Húzza a keretet az aláírásra, vagy növelje a tintaérzékenységet.
 	Couldn't use the photo: {e}	A fénykép nem használható: {e}
+	The document or extraction settings changed. Run extraction again.	A dokumentum vagy a kinyerési beállítások megváltoztak. Futtassa újra a kinyerést.
+	Extract Tables	Táblázatok kinyerése
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Exportálás előtt ellenőrizze a kinyert cellákat. Az automatikus felismerés a szöveg térközeit használja, ezért előfordulhat, hogy nem felel meg a dokumentumban szándékolt táblázatelrendezésnek.
+	of {n}	/ {n}
+	Region	Terület
+	Use the selected rectangle	Kijelölt téglalap használata
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Az oldal területének korlátozásához a párbeszédpanel megnyitása előtt jelöljön ki egy téglalapot az Oszlopkijelölés eszközzel.
+	Column separators	Oszlopelválasztók
+	Automatic, or e.g. 180, 340	Automatikus vagy pl. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Hagyja üresen az elválasztókat az automatikus felismeréshez. A pozíciók a megjelenített oldal bal felső sarkától, pontban értendők.
+	Run extraction	Kinyerés futtatása
+	Detect tables	Táblázatok felismerése
+	Extracting…	Kinyerés folyamatban…
+	Settings changed. Run extraction again to refresh this preview.	A beállítások megváltoztak. Az előnézet frissítéséhez futtassa újra a kinyerést.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Nincs szöveg ezen a területen. Szkennelt oldalakon először futtassa a szövegfelismerést; egyébként jelöljön ki szöveget tartalmazó területet.
+	No tables detected. Adjust the region or add separator positions and run again.	Nem található táblázat. Módosítsa a területet, vagy adjon hozzá elválasztópozíciókat, majd futtassa újra.
+	Use selected table's separators for correction	Kijelölt táblázat elválasztóinak használata javításhoz
+	Export Excel	Exportálás Excelbe
+	Export CSV	Exportálás CSV-be
+	Table {n} · {rows} rows × {columns} columns	Táblázat {n} · {rows} sor × {columns} oszlop
+	Table {n}	Táblázat {n}
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Az előnézet kihagy {rows} sort és {cells} cellát, és lerövidít {shortened} hosszú cellát. Az export a teljes táblázatot tartalmazza.
+	Run table extraction again before exporting this preview	Az előnézet exportálása előtt futtassa újra a táblázatok kinyerését
+	Table export stopped: {error}	Táblázatexportálás leállítva: {error}
+	Exported {name}	Exportálva: {name}
+	Couldn't save {name}: {error}	Nem sikerült menteni a következőt: {name}: {error}
+	Couldn't download {name}: {error}	Nem sikerült letölteni a következőt: {name}: {error}
+	Extract tables…	Táblázatok kinyerése…
+	Tables (CSV / Excel)	Táblázatok (CSV / Excel)
+	Quick tools	Gyors eszközök
+	Merge	Egyesítés
+	Reorder	Átrendezés

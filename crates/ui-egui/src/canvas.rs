@@ -404,6 +404,7 @@ pub struct DocView {
     pub(crate) edit_lines: HashMap<usize, (u64, Vec<pdfcraft_engine::TextBlock>)>,
     pub line_editor: Option<crate::edit_text_ui::LineEditor>,
     pub(crate) text_background: crate::edit_text_ui::TextBackground,
+    pub(crate) move_background: crate::content_ui::MoveBackground,
     /// Edit text & images: the images per page (by document generation), and the selected one.
     pub(crate) edit_images: HashMap<usize, (u64, Vec<pdfcraft_engine::PageImage>)>,
     pub(crate) objects: crate::object_ui::ObjectSelection,
@@ -556,6 +557,17 @@ impl DocView {
         self.screen_xforms.iter().find(|(p, _)| *p == page).map(|(_, xf)| xf.rect)
     }
 
+    /// The selected Column Select rectangle in displayed page points, in top-left / y-down
+    /// coordinates. Region selection is page-local and never changes document content.
+    pub(crate) fn selected_column_region(&self) -> Option<(usize, [f32; 4])> {
+        let Selection { page, span: Span::Column { rect } } = self.selection? else { return None };
+        if !rect.iter().all(|value| value.is_finite()) {
+            return None;
+        }
+        let normalized = [rect[0].min(rect[2]), rect[1].min(rect[3]), rect[0].max(rect[2]), rect[1].max(rect[3])];
+        (normalized[2] > normalized[0] && normalized[3] > normalized[1]).then_some((page, normalized))
+    }
+
     /// The document area on screen.
     pub fn viewport_rect(&self) -> Rect {
         self.viewport_screen
@@ -672,6 +684,7 @@ impl DocView {
             edit_lines: HashMap::new(),
             line_editor: None,
             text_background: Default::default(),
+            move_background: Default::default(),
             edit_images: HashMap::new(),
             objects: Default::default(),
             image_selection: None,
@@ -812,7 +825,7 @@ impl DocView {
     }
 
     pub fn render_pending(&self) -> bool {
-        !self.last_queue.is_empty() || self.text_background.pending()
+        !self.last_queue.is_empty() || self.text_background.pending() || self.move_background.pending()
     }
 
     /// Re-render every page and text layer (the document's appearance changed, e.g. a layer
@@ -876,10 +889,6 @@ impl DocView {
         if self.selection.is_some_and(|s| s.page == page) {
             self.selection = None;
         }
-        if let Some(f) = self.find.as_mut() {
-            f.matches.retain(|(p, _)| *p != page);
-            f.current = None;
-        }
     }
 
     /// Pages drawn last frame and their screen rectangles.
@@ -937,9 +946,24 @@ impl DocView {
         f.case_query = f.query.clone();
         f.matches.clear();
         f.current = None;
-        let pages: Vec<usize> = self.texts.keys().copied().collect();
-        for p in pages {
-            self.refresh_find_page(p);
+        if f.case_query.trim().is_empty() {
+            return;
+        }
+        let mut pages: Vec<usize> = self.texts.keys().copied().collect();
+        pages.sort();
+        for &p in &pages {
+            if let Some(text) = self.texts.get(&p) {
+                f.matches.extend(text.find_opts(&f.case_query, f.case_sensitive, f.whole_words).into_iter().map(|r| (p, r)));
+            }
+        }
+        f.matches.sort_by_key(|(p, r)| (*p, r.start));
+        if !f.matches.is_empty() {
+            // First match at or after the page being viewed.
+            let cur = self.current;
+            let i = f.matches.iter().position(|(p, _)| *p >= cur).unwrap_or(0);
+            f.current = Some(i);
+            let (p, _) = f.matches[i];
+            self.flash_match(p);
         }
     }
 
@@ -952,17 +976,16 @@ impl DocView {
         f.matches.retain(|(p, _)| *p != page);
         f.matches.extend(text.find_opts(&f.case_query, f.case_sensitive, f.whole_words).into_iter().map(|r| (page, r)));
         f.matches.sort_by_key(|(p, r)| (*p, r.start));
-        f.current = match current_key {
-            Some(k) => f.matches.iter().position(|m| *m == k),
-            None => None,
-        };
+        f.current = current_key.as_ref().and_then(|k| f.matches.iter().position(|m| m == k));
         if f.current.is_none() && !f.matches.is_empty() {
             // First match at or after the page being viewed.
             let cur = self.current;
             let i = f.matches.iter().position(|(p, _)| *p >= cur).unwrap_or(0);
             f.current = Some(i);
             let (p, _) = f.matches[i];
-            self.flash_match(p);
+            if current_key.is_none() {
+                self.flash_match(p);
+            }
         }
     }
 
@@ -1365,6 +1388,7 @@ impl DocView {
         // Signature previews own a separate renderer and image/background textures.
         self.signature_drag = Default::default();
         self.text_background = Default::default();
+        self.move_background = Default::default();
         if !self.last_queue.is_empty() {
             pool.set_queue(Vec::new());
             self.last_queue.clear();
@@ -1584,6 +1608,15 @@ impl DocView {
                 None => {
                     log::warn!("page {} text: {}", r.request.page + 1, r.error.unwrap_or_default());
                     self.text_failed.insert(r.request.page);
+                    if let Some(f) = self.find.as_mut() {
+                        let current_key = f.current.and_then(|c| f.matches.get(c).cloned());
+                        f.matches.retain(|(p, _)| *p != r.request.page);
+                        f.current = current_key.and_then(|k| f.matches.iter().position(|m| *m == k));
+                        if f.current.is_none() && !f.matches.is_empty() {
+                            let cur = self.current;
+                            f.current = Some(f.matches.iter().position(|(p, _)| *p >= cur).unwrap_or(0));
+                        }
+                    }
                 }
             }
             return 0;
@@ -1627,6 +1660,7 @@ impl DocView {
             let tex = ctx.load_texture(format!("page-{:?}-{page}", self.id), img, TextureOptions::LINEAR);
             self.pages.insert(page, PageTex { tag: r.request.tag, tex });
             self.signature_drag.page_received(page);
+            self.move_background.page_received(page);
             self.waiting_since.remove(&page);
             if !self.stale_tiles.iter().any(|k| k.0 == page) {
                 self.forms.unbaked.retain(|(_, p)| *p != page);
@@ -2346,12 +2380,8 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
     let mut hover_text: Option<(Pos2, String)> = None;
     // A dialog, save prompt or palette covers the page. Hover tips are drawn above those
     // windows, so a comment under the pointer would otherwise float over the dialog.
-    let page_covered = app.dialog.is_some()
-        || app.close_request.is_some()
-        || app.palette_open
-        || app.password_prompt.is_some()
-        || app.pending_link.is_some()
-        || app.updates.open;
+    let page_covered =
+        app.dialog.is_some() || app.close_request.is_some() || app.palette_open || app.password_prompt.is_some() || app.pending_link.is_some();
     let mut clicked_link: Option<LinkTarget> = None;
     let mut canvas_action: Option<comments::CanvasAction> = None;
     let mut field_menu: Option<FieldMenu> = None;
@@ -2373,6 +2403,7 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
     } else {
         view.content.selected = None;
     }
+    view.move_background.prepare(ui.ctx(), doc, &view.content, scale);
 
     // A destination's position (bookmarks, links) refines `goto`: its point at the window's
     // top-left, or the centre of a /FitR rectangle at the window's centre.
@@ -2568,6 +2599,10 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
                 }
             }
             view.text_background.paint(painter, &xf, i, view.line_editor.as_ref());
+            if editing_content {
+                let page_tex = view.pages.get(&i).map(|p| p.tex.id());
+                view.move_background.paint(ui, painter, &xf, i, info, &view.content, page_tex);
+            }
             painter.rect_stroke(r, CornerRadius::ZERO, Stroke::new(0.5, t.border.gamma_multiply(0.8)), egui::StrokeKind::Outside);
 
             // Comments: tools, selection, moving and resizing come before text selection.
@@ -3931,7 +3966,27 @@ fn quick_bar(app: &mut PdfCraftApp, area: Rect, ui: &mut egui::Ui) {
                     if let QuickTool::Comment(tool) = app.quick_tool {
                         let (r, _) = ui.allocate_exact_size(vec2(32.0, 9.0), Sense::hover());
                         ui.painter().hline(r.x_range().shrink(6.0), r.center().y, Stroke::new(1.0, t.divider));
-                        comments::quick_bar_controls(ui, tool, &mut app.comment_prefs);
+                        if let Some(color) = comments::quick_bar_controls(ui, tool, &mut app.comment_prefs)
+                            && let Some((index, id)) = app.active_ids()
+                            && let Some((page, annotation)) = app.views.get(index).and_then(|view| view.comments.selected)
+                            && app.session.get(id).is_some_and(|doc| {
+                                doc.allows_annotation()
+                                    && doc
+                                        .info
+                                        .annotations
+                                        .iter()
+                                        .any(|a| a.page == page && a.index == annotation && a.in_reply_to.is_none() && comments::made_by(a, tool))
+                            })
+                        {
+                            app.apply_edit(Edit::StyleAnnotation {
+                                page,
+                                index: annotation,
+                                color: Some(color),
+                                opacity: None,
+                                width: None,
+                                endings: None,
+                            });
+                        }
                     }
                 });
             });
@@ -5168,5 +5223,38 @@ trailer << /Root 1 0 R >>
         let empty = pdfcraft_render::DocInfo::default();
         v.go_to_dest(1, DestView::FitH { top: Some(100.0) }, &empty);
         assert_eq!((v.current, v.goto_point), (1, None));
+    }
+
+    #[test]
+    fn page_text_failure_preserves_valid_search_match_without_jitter() {
+        let mut v = view(3, PageLayout::Single, true);
+        v.current = 1;
+        v.find = Some(Find {
+            query: "test".into(),
+            case_query: "test".into(),
+            matches: vec![(0, 0..4), (1, 5..9)],
+            current: Some(0),
+            ..Default::default()
+        });
+        let req = RenderRequest { page: 0, kind: RequestKind::Text, ..Default::default() };
+        v.last_queue = vec![req];
+        let ctx = egui::Context::default();
+        v.receive_result(
+            &ctx,
+            pdfcraft_render::RenderedPage {
+                request: req,
+                width: 0,
+                height: 0,
+                rgba: Default::default(),
+                error: Some("extraction failed".into()),
+                text: None,
+                warnings: Vec::new(),
+                millis: 0,
+            },
+        );
+        // Active match was on page 0 which failed: current should fall back to match on page 1 without jitter
+        assert_eq!(v.find.as_ref().unwrap().current, Some(0));
+        assert_eq!(v.find.as_ref().unwrap().matches, vec![(1, 5..9)]);
+        assert!(v.goto.is_none());
     }
 }

@@ -70,7 +70,6 @@ comment menu	Edit	సవరించు
 	Side panels	సైడ్ ప్యానెల్‌లు
 	Enable Acrobat JavaScript	Acrobat JavaScriptను ప్రారంభించు
 	OK	సరే
-	Join our Discord	మా Discordలో చేరండి
 	Close	మూసివేయి
 	Next / previous match	తదుపరి / మునుపటి సరిపోలిక
 	Copy selected text	ఎంచుకున్న టెక్స్ట్‌ను కాపీ చేయి
@@ -136,17 +135,10 @@ comment menu	Edit	సవరించు
 	Next page	తదుపరి పేజీ
 	Previous page	మునుపటి పేజీ
 	Current page — type a page number or label (such as iv) and press Enter	ప్రస్తుత పేజీ — పేజీ సంఖ్యను లేదా లేబుల్‌ను (iv వంటిది) టైప్ చేసి Enter నొక్కండి
-	Welcome to PdfCraft	PdfCraftకు స్వాగతం
-	An open-source PDF workbench — local, private, and scriptable.	ఓపెన్-సోర్స్ PDF వర్క్‌బెంచ్ — మీ కంప్యూటర్‌లోనే నడుస్తుంది, గోప్యంగా ఉంటుంది, స్క్రిప్ట్‌లతో ఆటోమేట్ చేయవచ్చు.
-	Join the ArtCraft community	ArtCraft కమ్యూనిటీలో చేరండి
-	Get help, share feedback and follow development on Discord.	Discordలో సహాయం పొందండి, మీ అభిప్రాయాన్ని పంచుకోండి, అభివృద్ధిని అనుసరించండి.
-	Recommended tools	సిఫార్సు చేసిన సాధనాలు
 	Use now	ఇప్పుడే ఉపయోగించు
 	Open file	ఫైల్‌ను తెరువు
 	Recent	ఇటీవలి
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	PdfCraftలో మీరు తెరిచే ఫైల్‌లు ఇక్కడ కనిపిస్తాయి. PDFను తెరవడానికి దాన్ని ఎక్కడైనా లాగి వదలండి.
-	Privacy	గోప్యత
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft ఆఫ్‌లైన్‌లో పనిచేస్తుంది. టెలిమెట్రీ లేదు, ఖాతా అవసరం లేదు, మీరు ప్రొవైడర్‌ను జోడిస్తే తప్ప క్లౌడ్ ప్రాసెసింగ్ ఉండదు.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	స్క్రిప్ట్‌లు ఫైల్ లేదా నెట్‌వర్క్ యాక్సెస్ లేని శాండ్‌బాక్స్‌లో నడుస్తాయి. JavaScript ఆఫ్‌లో ఉన్నా, Acrobat ప్రామాణిక ఫార్మాట్, ధృవీకరణ, గణన ఫంక్షన్‌లు పనిచేస్తాయి.
 	Back to all tools	అన్ని సాధనాలకు తిరిగి వెళ్లు
 	Close panel	ప్యానెల్‌ను మూసివేయి
@@ -281,11 +273,6 @@ comment menu	Edit	సవరించు
 	Split document…	పత్రాన్ని విభజించు…
 	Number pages…	పేజీలకు సంఖ్యలు వేయి…
 	Keyboard shortcuts	కీబోర్డ్ షార్ట్‌కట్‌లు
-	Join the ArtCraft Discord	ArtCraft Discordలో చేరండి
-	PdfCraft web page	PdfCraft వెబ్ పేజీ
-	PdfCraft on GitHub	GitHubలో PdfCraft
-	ArtCraft website	ArtCraft వెబ్‌సైట్
-	Check for updates…	అప్‌డేట్‌ల కోసం తనిఖీ చేయి…
 	About PdfCraft	PdfCraft గురించి
 	Export a PDF	PDFను ఎగుమతి చేయి
 	Export to	ఎగుమతి ఫార్మాట్
@@ -732,16 +719,6 @@ comment menu	Edit	సవరించు
 	Flip Vertical	నిలువుగా తిరగేయి
 	Replace Image…	చిత్రాన్ని భర్తీ చేయి…
 	Save Image As…	చిత్రాన్ని ఫైల్‌గా సేవ్ చేయి…
-	Check for updates	అప్‌డేట్‌ల కోసం తనిఖీ చేయి
-	No check has run yet.	ఇంకా తనిఖీ జరగలేదు.
-	Checking for a newer version…	కొత్త వెర్షన్ కోసం తనిఖీ చేస్తోంది…
-	PdfCraft {v} is available.	PdfCraft {v} అందుబాటులో ఉంది.
-	You have version {c}. Download the new version from its release page.	మీ వద్ద వెర్షన్ {c} ఉంది. కొత్త వెర్షన్‌ను దాని విడుదల పేజీ నుండి డౌన్‌లోడ్ చేసుకోండి.
-	PdfCraft {c} is up to date.	PdfCraft {c} తాజా వెర్షన్.
-	Couldn't check for updates: {e}	అప్‌డేట్‌ల కోసం తనిఖీ చేయడం సాధ్యం కాలేదు: {e}
-	You have version {c}. All releases are listed at {page}.	మీ వద్ద వెర్షన్ {c} ఉంది. అన్ని విడుదలల జాబితా: {page}.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	తాజా విడుదల గురించి GitHubను అడుగుతుంది. ఏదీ ఆటోమేటిక్‌గా డౌన్‌లోడ్ లేదా ఇన్‌స్టాల్ చేయబడదు.
-	Download	డౌన్‌లోడ్ చేయి
 	Later	తర్వాత
 	none	ఏదీ లేదు
 	Declared conformance: {shown}	ప్రకటించిన అనుగుణ్యత: {shown}
@@ -1360,7 +1337,6 @@ signature pad	Type	టైప్ చేయి
 	Discard	విస్మరించు
 	Version {v}	వెర్షన్ {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Rustలో రాసిన క్లీన్-రూమ్, ఓపెన్-సోర్స్ PDF అప్లికేషన్. MIT OR Apache-2.0.
-	Part of	దీనిలో భాగం:
 	Summarize Options	సారాంశ ఎంపికలు
 	Choose a layout:	లేఅవుట్‌ను ఎంచుకోండి:
 	Comments only	వ్యాఖ్యలు మాత్రమే
@@ -2198,3 +2174,35 @@ scroll speed	Fast	వేగంగా
 	Ink sensitivity	ఇంక్ సున్నితత్వం
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	ఫ్రేమ్‌లో సంతకం కనబడలేదు. ఫ్రేమ్‌ను సంతకం మీదకు జరపండి లేదా ఇంక్ సున్నితత్వాన్ని పెంచండి.
 	Couldn't use the photo: {e}	ఫోటోను ఉపయోగించలేకపోయాం: {e}
+	The document or extraction settings changed. Run extraction again.	పత్రం లేదా సంగ్రహణ సెట్టింగ్‌లు మారాయి. మళ్లీ సంగ్రహించండి.
+	Extract Tables	పట్టికలను సంగ్రహించండి
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	ఎగుమతి చేయడానికి ముందు సంగ్రహించిన సెల్‌లను సమీక్షించండి. ఆటోమేటిక్ గుర్తింపు పాఠ్య మధ్య ఖాళీలను ఉపయోగిస్తుంది; ఇది పత్రంలోని ఉద్దేశించిన పట్టిక అమరికకు సరిపోకపోవచ్చు.
+	Region	ప్రాంతం
+	Use the selected rectangle	ఎంచుకున్న దీర్ఘచతురస్రాన్ని ఉపయోగించండి
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	పేజీ ప్రాంతాన్ని పరిమితం చేయడానికి ఈ డైలాగ్ తెరవడానికి ముందు కాలమ్ ఎంపికతో దీర్ఘచతురస్రాన్ని ఎంచుకోండి.
+	Column separators	నిలువు వరుసల విభాజకాలు
+	Automatic, or e.g. 180, 340	ఆటోమేటిక్, లేదా ఉదా. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	ఆటోమేటిక్ గుర్తింపు కోసం విభాజకాలను ఖాళీగా ఉంచండి. స్థానాలు ప్రదర్శిత పేజీ ఎగువ ఎడమ మూలం నుండి పాయింట్లలో కొలుస్తారు.
+	Run extraction	సంగ్రహణను ప్రారంభించండి
+	Detect tables	పట్టికలను గుర్తించండి
+	Extracting…	సంగ్రహిస్తోంది…
+	Settings changed. Run extraction again to refresh this preview.	సెట్టింగ్‌లు మారాయి. ప్రివ్యూను నవీకరించడానికి మళ్లీ సంగ్రహించండి.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	ఈ ప్రాంతంలో పాఠ్యం లేదు. స్కాన్‌ల కోసం ముందుగా పాఠ్యాన్ని గుర్తించండి; లేకపోతే పాఠ్యం ఉన్న ప్రాంతాన్ని ఎంచుకోండి.
+	No tables detected. Adjust the region or add separator positions and run again.	పట్టికలు గుర్తించబడలేదు. ప్రాంతాన్ని సవరించండి లేదా విభాజక స్థానాలను జోడించి మళ్లీ ప్రారంభించండి.
+	Table {n} · {rows} rows × {columns} columns	పట్టిక {n} · {rows} వరుసలు × {columns} నిలువు వరుసలు
+	Table {n}	పట్టిక {n}
+	Use selected table's separators for correction	సవరణ కోసం ఎంచుకున్న పట్టిక విభాజకాలను ఉపయోగించండి
+	Export Excel	Excel‌కు ఎగుమతి చేయండి
+	Export CSV	CSV‌కు ఎగుమతి చేయండి
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	ప్రివ్యూలో {rows} వరుసలు, {cells} సెల్‌లు కనిపించవు; {shortened} పొడవైన సెల్‌లు కుదించబడ్డాయి. ఎగుమతిలో పూర్తి పట్టిక ఉంటుంది.
+	Run table extraction again before exporting this preview	ఈ ప్రివ్యూను ఎగుమతి చేయడానికి ముందు పట్టికను మళ్లీ సంగ్రహించండి
+	Table export stopped: {error}	పట్టిక ఎగుమతి ఆపివేయబడింది: {error}
+	Exported {name}	{name} ఎగుమతి చేయబడింది
+	Couldn't save {name}: {error}	{name}ను సేవ్ చేయలేకపోయాం: {error}
+	Couldn't download {name}: {error}	{name}ను డౌన్‌లోడ్ చేయలేకపోయాం: {error}
+	Extract tables…	పట్టికలను సంగ్రహించండి…
+	Tables (CSV / Excel)	పట్టికలు (CSV / Excel)
+	of {n}	 / {n}
+	Quick tools	త్వరిత సాధనాలు
+	Merge	విలీనం
+	Reorder	క్రమాన్ని మార్చు

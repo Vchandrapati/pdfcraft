@@ -2267,8 +2267,26 @@ fn recognize_text_reads_the_euro_sign() {
     let id = s.open("scan.pdf", None, scan, None).unwrap();
     s.recognize_text(id, &[], ocr::OcrSettings::default()).unwrap();
     let text = page_texts(&s, id)[0].clone();
-    // The model was trained with € where the ocrs crate's alphabet has a second E.
+    // English OCR and the saved WinAnsi layer must both preserve the currency symbol.
     assert!(text.contains("€250"), "{text}");
+}
+
+#[test]
+fn ocr_page_failure_preserves_the_whole_document() {
+    let (mut s, id) = session_with(2);
+    let before = s.get(id).unwrap().bytes.clone();
+    let successful = ocr::OcrPage {
+        page: 0,
+        words: vec![ocr::PlacedWord { text: "Recognized".into(), origin: [20.0, 30.0], across: [60.0, 0.0], up: [0.0, 12.0] }],
+        already_on_page: 0,
+        skipped: None,
+        error: None,
+    };
+    let failed = ocr::OcrPage { page: 1, words: Vec::new(), already_on_page: 0, skipped: None, error: Some("Tesseract timed out".into()) };
+    let error = s.apply_ocr(id, &[successful, failed]).unwrap_err();
+    assert!(error.to_string().contains("page 2") && error.to_string().contains("timed out"), "{error}");
+    assert_eq!(s.get(id).unwrap().bytes, before);
+    assert_eq!(s.get(id).unwrap().can_undo(), None);
 }
 
 #[test]
@@ -3050,6 +3068,63 @@ fn xfa_data_import_adds_and_removes_rows_of_a_dynamic_form() {
 }
 
 #[test]
+fn hundreds_of_xfa_calculations_run_in_one_engine_within_the_open_budget() {
+    let (sections, rows) = (10, 20);
+    let bytes = Arc::new(pdfcraft_xfa::fixtures::shell(&pdfcraft_xfa::fixtures::many_calculations_template(sections, rows)));
+    let mut s = Session::new().with_clock(|| 1_700_000_000);
+    let started = std::time::Instant::now();
+    let id = s.open("many.pdf", None, bytes, None).expect("opens");
+    let elapsed = started.elapsed();
+    let out = s.take_js_output(id);
+    assert!(!out.errors.iter().any(|e| e.contains("were skipped") || e.contains("stopped")), "{:?}", out.errors);
+    let form = &s.get(id).unwrap().form;
+    let totals: Vec<&pdfcraft_forms::Field> = form.iter().filter(|f| f.name.starts_with("total")).collect();
+    assert_eq!(totals.len(), sections * rows);
+    assert!(totals.iter().all(|f| !f.value.is_empty()), "every row's total was calculated");
+    let sums: Vec<&pdfcraft_forms::Field> = form.iter().filter(|f| f.name.starts_with("sum")).collect();
+    assert_eq!(sums.len(), sections);
+    // 2 × (1 + 2 + … + rows)
+    let expect = (rows * (rows + 1)).to_string();
+    assert!(sums.iter().all(|f| f.value == vec![expect.clone()]), "{:?}", sums.iter().map(|f| f.value.clone()).collect::<Vec<_>>());
+    eprintln!("{} calculate scripts on open in {elapsed:?}", sections * rows + sections);
+    // A change recalculates them all again, well within the event budget.
+    let started = std::time::Instant::now();
+    s.apply(id, Edit::SetFieldValue { name: "qty".into(), value: FieldValue::Text("100".into()) }).unwrap();
+    let out = s.take_js_output(id);
+    assert!(!out.errors.iter().any(|e| e.contains("were skipped")), "{:?}", out.errors);
+    assert_eq!(s.get(id).unwrap().form.iter().find(|f| f.name == "total").unwrap().value, vec!["200".to_string()]);
+    assert_eq!(s.get(id).unwrap().form.iter().find(|f| f.name == "sum").unwrap().value, vec![(rows * (rows + 1) - 2 + 200).to_string()]);
+    eprintln!("recalculated after a change in {:?}", started.elapsed());
+}
+
+#[test]
+fn xfa_scripts_of_one_event_see_the_form_as_the_engine_holds_it() {
+    // In document order: `a` holds 1; `b`'s calculate writes `a` then fails; `c`'s calculate
+    // reads `a`. A failed script's half-done changes reach nobody. And `d` sets a choice list
+    // by its shown text: the next script reads the saved value the engine kept.
+    let tpl = pdfcraft_xfa::fixtures::fields_template("<form><page1><country>JP</country></page1></form>").replace(
+        r#"<field name="summary" w="3in" h="0.3in" access="readOnly"><ui><textEdit/></ui>"#,
+        r#"<field name="a" w="1in" h="0.3in"><ui><numericEdit/></ui><value><integer>1</integer></value></field>
+  <field name="b" w="1in" h="0.3in"><ui><numericEdit/></ui><calculate><script contentType="application/x-javascript">a.rawValue = 99; throw new Error("boom");</script></calculate></field>
+  <field name="c" w="1in" h="0.3in"><ui><numericEdit/></ui><calculate><script contentType="application/x-javascript">a.rawValue + 1</script></calculate></field>
+  <field name="d" w="1in" h="0.3in"><ui><textEdit/></ui><calculate><script contentType="application/x-javascript">country.rawValue = "Canada"; "set"</script></calculate></field>
+  <field name="e" w="1in" h="0.3in"><ui><textEdit/></ui><calculate><script>country</script></calculate></field>
+  <field name="summary" w="3in" h="0.3in" access="readOnly"><ui><textEdit/></ui>"#,
+    );
+    let bytes = Arc::new(pdfcraft_xfa::fixtures::shell(&tpl));
+    let mut s = Session::new().with_clock(|| 1_700_000_000);
+    let id = s.open("iso.pdf", None, bytes, None).expect("opens");
+    let value = |s: &Session, n: &str| s.get(id).unwrap().form.iter().find(|f| f.name == n).map(|f| f.value.clone()).unwrap_or_default();
+    let out = s.take_js_output(id);
+    assert!(out.errors.iter().any(|e| e.contains("boom")), "{out:?}");
+    assert_eq!(value(&s, "a"), vec!["1".to_string()], "the failed script's write reached nothing");
+    assert_eq!(value(&s, "c"), vec!["2".to_string()]);
+    assert_eq!(value(&s, "country"), vec!["CA".to_string()], "shown text mapped to the saved value");
+    assert_eq!(value(&s, "e"), vec!["CA".to_string()], "the next script reads the saved value");
+    assert_eq!(value(&s, "summary"), vec!["Country: CA".to_string()]);
+}
+
+#[test]
 fn xfa_scripts_initialize_calculate_validate_toggle_and_add_rows() {
     let bytes = Arc::new(pdfcraft_xfa::fixtures::shell(&pdfcraft_xfa::fixtures::scripted_template()));
     let mut s = Session::new().with_clock(|| 1_700_000_000);
@@ -3681,6 +3756,61 @@ fn recovered_user_passwords_reach_the_renderer_byte_for_byte() {
     assert_eq!(crate::renderer_password(&[0xC7, b'o', b'k']), "Çok");
 }
 
+/// AES-256 passwords as typed, each with its SASLprep form, which ISO 32000-2 keys the file on:
+/// a decomposed é (NFKC composes it), a no-break space (mapped to a space) and fullwidth letters
+/// (what a Japanese IME types in full-width mode; NFKC narrows them). Precomposed "café" is the
+/// control: SASLprep leaves it as it is.
+const SASLPREP_CHANGES: [(&str, &str); 4] =
+    [("cafe\u{301}", "caf\u{E9}"), ("a\u{A0}b", "a b"), ("\u{FF41}\u{FF42}", "ab"), ("caf\u{E9}", "caf\u{E9}")];
+
+#[test]
+fn aes256_open_passwords_that_saslprep_changes_protect_and_reopen_as_typed() {
+    for (typed, prepared) in SASLPREP_CHANGES {
+        let (mut s, id) = session_with(1);
+        // The renderer used to take the password as typed, so the protected file didn't reopen
+        // and the edit was rolled back: "the password is incorrect".
+        s.apply(id, Edit::Protect(protection(Some(typed), None))).unwrap_or_else(|e| panic!("{typed:?}: {e:?}"));
+        assert!(s.get(id).unwrap().info.encrypted, "{typed:?}");
+        assert_eq!(page_texts(&s, id), ["Page 1"], "{typed:?}");
+        let saved = s.save_bytes(id).unwrap();
+        for pw in [typed, prepared] {
+            let mut again = Session::new();
+            let reopened = again.open("x.pdf", None, saved.clone(), Some(pw)).unwrap_or_else(|e| panic!("{typed:?} as {pw:?}: {e:?}"));
+            assert_eq!(page_texts(&again, reopened), ["Page 1"], "{typed:?} as {pw:?}");
+        }
+        assert!(matches!(Session::new().open("x.pdf", None, saved, Some("cafe")), Err(OpenError::WrongPassword)), "{typed:?}");
+    }
+}
+
+#[test]
+fn aes256_files_whose_passwords_saslprep_changes_open_as_typed() {
+    // A fullwidth Ｏ: SASLprep makes the owner password "Owner".
+    let (owner, owner_prepared) = ("\u{FF2F}wner", "Owner");
+    for (typed, prepared) in SASLPREP_CHANGES {
+        // pdfcraft-cos keys the file on the SASLprep forms, as ISO 32000-2 asks.
+        let mut cos = pdfcraft_cos::Document::open(Arc::new(fixture(1))).unwrap();
+        let params = pdfcraft_cos::NewEncryption {
+            algorithm: pdfcraft_cos::Algorithm::Aes256,
+            user_password: typed,
+            owner_password: owner,
+            permissions: -1,
+            encrypt_metadata: true,
+            seed: [7; 32],
+        };
+        cos.set_encryption(&params).unwrap();
+        let bytes = Arc::new(pdfcraft_cos::write_full(&cos, &pdfcraft_cos::SaveOptions::default()).unwrap());
+        let mut s = Session::new();
+        // pdfcraft-cos accepts the password as typed (it applies SASLprep); the renderer used to
+        // refuse it, so the session called it a wrong password.
+        for pw in [typed, prepared, owner, owner_prepared] {
+            let id = s.open("x.pdf", None, bytes.clone(), Some(pw)).unwrap_or_else(|e| panic!("{typed:?} as {pw:?}: {e:?}"));
+            assert_eq!(page_texts(&s, id), ["Page 1"], "{typed:?} as {pw:?}");
+            assert!(s.get(id).unwrap().info.encrypted, "{typed:?} as {pw:?}");
+        }
+        assert!(matches!(s.open("x.pdf", None, bytes, Some("cafe")), Err(OpenError::WrongPassword)), "{typed:?}");
+    }
+}
+
 /// A synthetic phone photo, 400 × 300 px: a white sheet, tilted, on a grey table, with a black
 /// mark in the sheet's top-left corner. Returns the PNG and the sheet's corners in pixels.
 fn camera_photo() -> (Vec<u8>, [[f64; 2]; 4]) {
@@ -3904,4 +4034,74 @@ fn fonts_added_by_a_content_edit_show_after_refresh_fonts() {
     let fonts = format!("{:?}", session.get(id).unwrap().info.fonts);
     session.refresh_fonts(id);
     assert_eq!(format!("{:?}", session.get(id).unwrap().info.fonts), fonts);
+}
+
+/// Gap 13: every edit writes a new working file (the original plus one revision). Before the
+/// next one is written, the current one is let go of by the working bytes, the display bytes and
+/// the renderer: on a 1 GiB file, keeping it is a whole extra gigabyte at the peak of each edit.
+#[test]
+fn the_working_file_is_let_go_of_before_the_next_is_written() {
+    let (mut s, id) = session_with(2);
+    s.apply(id, Edit::RotatePages { pages: vec![1], degrees: 90 }).unwrap();
+    let doc = s.doc_mut(id).unwrap();
+    let (working, original) = (Arc::downgrade(&doc.bytes), doc.editor.as_ref().unwrap().cos.bytes().clone());
+    assert!(!Arc::ptr_eq(&doc.bytes, &original), "an edited working file is a buffer of its own");
+    Session::release_working(doc);
+    assert!(Arc::ptr_eq(&doc.bytes, &original) && Arc::ptr_eq(&doc.display, &original));
+    // The old renderer's workers let go of the file when they exit, just after.
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    while working.upgrade().is_some() {
+        assert!(std::time::Instant::now() < deadline, "the working file is still held");
+        std::thread::sleep(std::time::Duration::from_millis(5));
+    }
+    // The refresh that follows brings everything back.
+    Session::refresh(doc).unwrap();
+    assert_eq!(s.get(id).unwrap().info.pages[1].rotation, 90);
+    let _ = shown(&s, id, 1);
+}
+
+/// Every refresh path (full, comments, content, undo, redo) lets go of the previous working file
+/// and still shows the current state.
+#[test]
+fn edits_let_go_of_the_previous_working_file() {
+    let (mut s, id) = session_with(2);
+    let shape = Shape::Rectangle { rect: [20.0, 20.0, 60.0, 60.0] };
+    let comment = || {
+        Edit::AddAnnotation(NewAnnotation {
+            page: 0,
+            style: Style::default_for(&shape),
+            shape: shape.clone(),
+            contents: String::new(),
+            author: "Test".into(),
+        })
+    };
+    let watermark =
+        || Edit::AddWatermark { pages: vec![0], settings: Watermark { text: "Draft".into(), ..Watermark::default() }, file: None, replace: false };
+    s.apply(id, Edit::RotatePages { pages: vec![1], degrees: 90 }).unwrap();
+    // A full refresh, a comment refresh, a content refresh, then undo and redo.
+    type Step<'a> = Box<dyn Fn(&mut Session) + 'a>;
+    let steps: [(&str, Step<'_>); 5] = [
+        ("rotate", Box::new(|s: &mut Session| s.apply(id, Edit::RotatePages { pages: vec![0], degrees: 90 }).unwrap())),
+        ("comment", Box::new(move |s: &mut Session| s.apply(id, comment()).unwrap())),
+        ("watermark", Box::new(move |s: &mut Session| s.apply(id, watermark()).unwrap())),
+        ("undo", Box::new(|s: &mut Session| drop(s.undo(id).unwrap()))),
+        ("redo", Box::new(|s: &mut Session| drop(s.redo(id).unwrap()))),
+    ];
+    for (name, step) in steps {
+        let (bytes, display) = {
+            let doc = s.get(id).unwrap();
+            (Arc::downgrade(&doc.bytes), Arc::downgrade(&doc.display))
+        };
+        step(&mut s);
+        // The old renderer's workers let go of the file when they exit, just after.
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        while bytes.upgrade().is_some() || display.upgrade().is_some() {
+            assert!(std::time::Instant::now() < deadline, "{name}: the previous working file is still held");
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+    }
+    // What is shown is still the current state.
+    let doc = s.get(id).unwrap();
+    assert_eq!(doc.info.annotations.len(), 1);
+    let _ = shown(&s, id, 0);
 }

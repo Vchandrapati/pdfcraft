@@ -1905,6 +1905,98 @@ mod tests {
         assert!(remainder.is_empty());
         assert!(pixels.iter().all(|pixel| *pixel == [0, 0, 255, 255]));
     }
+    /// #1203: a /Lab colour space must honour its own /WhitePoint. The old path
+    /// fed every Lab value to the ICC transform as if the white point were D50,
+    /// shifting non-D50 pages several levels per channel (for example a D65
+    /// blue came out 45 levels too red). Conversion and expected values follow
+    /// ISO 32000-2 §8.6.5.4 with the space's own /WhitePoint [0.9505 1 1.089].
+    #[test]
+    fn lab_honours_the_space_white_point() {
+        use super::*;
+        let render = |l: f32, a: f32, b: f32| -> [u8; 4] {
+            let content = format!("/L cs {l} {a} {b} sc 0 0 200 200 re f");
+            let bytes = format!(
+                "%PDF-1.7\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n\
+                 2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n\
+                 3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Resources << /ColorSpace << /L [/Lab << /WhitePoint [0.9505 1 1.089] /Range [-100 100 -100 100] >>] >> >> /Contents 4 0 R >> endobj\n\
+                 4 0 obj << /Length {} >> stream\n{content}\nendstream endobj\n\
+                 trailer << /Root 1 0 R >>\n%%EOF",
+                content.len()
+            )
+            .into_bytes();
+            let page = PageRenderer::new(Arc::new(bytes), RenderConfig::default()).render(RenderRequest {
+                page: 0,
+                kind: RequestKind::Pixels,
+                tile: None,
+                scale: 1.0,
+                tag: 0,
+                preview: false,
+            });
+            assert!(page.error.is_none(), "Lab ({l} {a} {b}): {:?}", page.error);
+            assert_eq!((page.width, page.height), (200, 200));
+            page.rgba[(100 * page.width as usize + 100) * 4..][..4].try_into().unwrap()
+        };
+
+        for (l, a, b, expected) in [
+            (40.0, 20.0, -60.0, [19, 90, 194, 255]),
+            (70.0, -50.0, 30.0, [77, 193, 114, 255]),
+            (60.0, 0.0, -40.0, [87, 148, 215, 255]),
+            (50.0, 60.0, 40.0, [217, 61, 55, 255]),
+            (30.0, 40.0, 20.0, [130, 37, 42, 255]),
+        ] {
+            let got = render(l, a, b);
+            for (channel, (got, want)) in got.iter().zip(expected).enumerate() {
+                assert!((*got).abs_diff(want) <= 2, "Lab ({l} {a} {b}) channel {channel}: got {got:?}, expected {expected:?}");
+            }
+        }
+    }
+    /// #1203: an `/Indexed` palette over Lab looks its entries up as
+    /// `byte / 255`, which must map onto L* 0..100 and the a*/b* /Range. They
+    /// were read as raw L*a*b* (L* below 1), so such palettes drew near black.
+    #[test]
+    fn indexed_palettes_over_lab_keep_their_colours() {
+        use super::*;
+        let lab = "[/Lab << /WhitePoint [0.9505 1 1.089] /Range [-100 100 -100 100] >>]";
+        let render = |content: &str| -> [u8; 4] {
+            let bytes = format!(
+                "%PDF-1.7\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n\
+                 2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n\
+                 3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Resources << /ColorSpace << /L {lab} /I [/Indexed {lab} 1 <000000 80CCB2>] >> >> /Contents 4 0 R >> endobj\n\
+                 4 0 obj << /Length {} >> stream\n{content}\nendstream endobj\n\
+                 trailer << /Root 1 0 R >>\n%%EOF",
+                content.len()
+            )
+            .into_bytes();
+            let page = PageRenderer::new(Arc::new(bytes), RenderConfig::default()).render(RenderRequest {
+                page: 0,
+                kind: RequestKind::Pixels,
+                tile: None,
+                scale: 1.0,
+                tag: 0,
+                preview: false,
+            });
+            assert!(page.error.is_none(), "{content}: {:?}", page.error);
+            assert_eq!((page.width, page.height), (200, 200));
+            let start = (100 * page.width as usize + 100) * 4;
+            let mut pixel = [0; 4];
+            pixel.copy_from_slice(page.rgba.get(start..start + 4).expect("centre pixel"));
+            pixel
+        };
+
+        // Palette entry 1 is <80 CC B2>: L* = 128/255·100, a* = -100 + 204/255·200,
+        // b* = -100 + 178/255·200, about Lab (50.2 60 39.6): a warm red.
+        let indexed = render("/I cs 1 sc 0 0 200 200 re f");
+        let direct = render(&format!(
+            "/L cs {} {} {} sc 0 0 200 200 re f",
+            128.0 / 255.0 * 100.0,
+            -100.0 + 204.0 / 255.0 * 200.0,
+            -100.0 + 178.0 / 255.0 * 200.0
+        ));
+        for (channel, (got, want)) in indexed.iter().zip(direct).enumerate() {
+            assert!(got.abs_diff(want) <= 1, "channel {channel}: indexed {indexed:?}, direct {direct:?}");
+        }
+        assert!(indexed[0] > 180, "the palette red must not render near black: {indexed:?}");
+    }
     #[test]
     fn watchdog_skips_a_stuck_page_and_keeps_rendering() {
         use super::*;
@@ -4618,6 +4710,41 @@ trailer << /Root 1 0 R >>
         assert!(pixels(&enabled).iter().any(|px| px[..3].iter().any(|&c| (32..=223).contains(&c))), "/Interpolate true made no mid-tone");
     }
 
+    /// A shrunk, interpolated image whose edges fall between device pixels is snapped to whole
+    /// pixels (shrunk once to that size, drawn 1:1). Before, the shrunk raster was sampled a second
+    /// time at the fractional offset, so every edge of a scan was a blended, soft pixel.
+    #[test]
+    fn interpolated_minified_image_edges_snap_to_whole_pixels() {
+        let black = vec![0u8; 40 * 40];
+        let content = "q 10 0 0 10 0.4 0.4 cm /Im0 Do Q";
+        let image = hex(&black);
+        let pdf = format!(
+            "%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n\
+             2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n\
+             3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 11 11] /Contents 4 0 R /Resources << /XObject << /Im0 5 0 R >> >> >> endobj\n\
+             4 0 obj << /Length {} >> stream\n{content}\nendstream endobj\n\
+             5 0 obj << /Type /XObject /Subtype /Image /Width 40 /Height 40 /ColorSpace /DeviceGray /BitsPerComponent 8 /Interpolate true /Filter /ASCIIHexDecode /Length {} >> stream\n{image}>\nendstream endobj\n\
+             trailer << /Root 1 0 R >>\n%%EOF\n",
+            content.len(),
+            image.len() + 1
+        );
+        let mut renderer = PageRenderer::new(Arc::new(pdf.into_bytes()), RenderConfig::default());
+        let page = renderer.render(RenderRequest { page: 0, kind: RequestKind::Pixels, scale: 1.0, ..Default::default() });
+        assert!(page.error.is_none(), "{:?}", page.error);
+        assert_eq!((page.width, page.height), (11, 11));
+        let gray = |x: usize, y: usize| page.rgba[(y * 11 + x) * 4];
+        // Device box 0.4..10.4 × 0.6..10.6 snaps to columns 0..10 and rows 1..11.
+        for y in 1..11 {
+            for x in 0..10 {
+                assert_eq!(gray(x, y), 0, "pixel ({x}, {y}) inside the snapped image");
+            }
+            assert_eq!(gray(10, y), 255, "column 10 is outside the snapped image (row {y})");
+        }
+        for x in 0..11 {
+            assert_eq!(gray(x, 0), 255, "row 0 is outside the snapped image (column {x})");
+        }
+    }
+
     #[test]
     fn non_interpolated_gray_images_are_not_smoothed_when_minified() {
         let levels = [0u8, 255, 85, 170, 40, 200, 120, 230];
@@ -4812,6 +4939,66 @@ trailer << /Root 1 0 R >>
         let (px, text) = rx.recv_timeout(std::time::Duration::from_secs(20)).expect("a huge /FirstChar must not exhaust memory");
         assert!(px.error.is_none() && text.is_none(), "{:?} {text:?}", px.error);
         assert!(px.rgba[((50 * px.width + 25) * 4) as usize] < 64, "the glyph is drawn");
+    }
+
+    /// Accented letters in non-embedded fonts (vendored hayro-interpret patch to
+    /// `StandardKind`): the stand-ins for the standard fonts hold only the glyphs of the
+    /// Standard, WinAnsi and Mac Roman encodings, so a letter a font names beyond those in its
+    /// /Differences drew nothing. iText 2 writes Turkish this way (`/Gbreve`, `/Idotaccent`,
+    /// `/Scedilla`, `/gbreve`, `/scedilla` over Ð, Ý, Þ, ð, þ), and a Turkish letter had blanks
+    /// for Ğ, İ, Ş, ğ and ş. Each is now its base letter with the accent above or below it.
+    #[test]
+    fn accented_letters_the_standard_stand_ins_lack_are_built_from_their_parts() {
+        let letters = ["G", "Gbreve", "S", "Scedilla", "I", "Idotaccent", "g", "gbreve", "s", "scedilla"];
+        let mut content = String::new();
+        for (i, _) in letters.iter().enumerate() {
+            content.push_str(&format!("BT /F1 40 Tf {} 20 Td <{:02X}> Tj ET\n", 10 + 40 * i, 65 + i));
+        }
+        let differences = letters.iter().map(|n| format!("/{n}")).collect::<Vec<_>>().join(" ");
+        let pdf = format!(
+            "%PDF-1.4
+1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
+2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj
+3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 420 80] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj
+4 0 obj << /Length {} >> stream
+{content}endstream endobj
+5 0 obj << /Type /Font /Subtype /TrueType /BaseFont /TimesNewRomanPSMT /FirstChar 65 /LastChar 74
+  /Widths [722 722 556 556 333 333 500 500 389 389] /FontDescriptor 6 0 R
+  /Encoding << /Type /Encoding /Differences [65 {differences}] >> >> endobj
+6 0 obj << /Type /FontDescriptor /FontName /TimesNewRomanPSMT /Flags 32 /FontBBox [-568 -306 2045 1039]
+  /ItalicAngle 0 /Ascent 693 /Descent -215 /CapHeight 662 /StemV 80 >> endobj
+trailer << /Root 1 0 R >>
+%%EOF",
+            content.len()
+        );
+        let mut r = PageRenderer::new(Arc::new(pdf.into_bytes()), RenderConfig::default());
+        let p = r.render(RenderRequest { page: 0, kind: RequestKind::Pixels, tile: None, scale: 1.0, tag: 0, ..Default::default() });
+        assert!(p.error.is_none(), "{:?}", p.error);
+        // The dark pixels of the i-th letter: how many, and its top and bottom rows (y down).
+        let ink = |i: u32| {
+            let (mut count, mut top, mut bottom) = (0, u32::MAX, 0);
+            for y in 0..p.height {
+                for x in (8 + 40 * i)..(46 + 40 * i).min(p.width) {
+                    if p.rgba[((y * p.width + x) * 4) as usize] < 128 {
+                        count += 1;
+                        top = top.min(y);
+                        bottom = bottom.max(y);
+                    }
+                }
+            }
+            (count, top, bottom)
+        };
+        for (pair, above) in [(0, true), (1, false), (2, true), (3, true), (4, false)] {
+            let (base, accented) = (ink(2 * pair), ink(2 * pair + 1));
+            let name = letters[2 * pair as usize + 1];
+            assert!(base.0 > 0, "{name}: the base letter draws");
+            assert!(accented.0 > base.0, "{name} draws its letter and accent: {accented:?} vs {base:?}");
+            if above {
+                assert!(accented.1 + 2 < base.1, "{name}: the accent sits above the letter: {accented:?} vs {base:?}");
+            } else {
+                assert!(accented.2 > base.2 + 2, "{name}: the accent hangs below the letter: {accented:?} vs {base:?}");
+            }
+        }
     }
 
     /// A page's `/UserUnit` (the size of its unit in points) scales the page and everything on
@@ -5539,6 +5726,48 @@ trailer << /Root 1 0 R >>
         ] {
             let p = render(content);
             assert!([(5, 5), (50, 50), (95, 95)].iter().all(|(x, y)| px(&p, *x, *y) == red), "{content}: no stray clip");
+        }
+    }
+
+    /// ISO 32000-1 §9.3.6: only text rendering mode 3 has any effect on a Type 3 font (vendored
+    /// hayro-interpret patch in `show_glyph`). Print-stream PDFs set `2 Tr` for Type 3 bitmap
+    /// fonts, and the glyph procedure ran twice (fill, then stroke), so its anti-aliased edges
+    /// doubled up and the text looked bold; under `1 Tr` an uncoloured glyph took the stroking
+    /// colour, and under `7 Tr` it disappeared. Both glyph kinds have edges between pixels.
+    #[test]
+    fn text_rendering_modes_other_than_invisible_draw_type3_glyphs_as_filled() {
+        let render = |glyph: &str, mode: u8| {
+            let content = format!("BT 1 0 0 RG 6 w 0 g /F1 20 Tf {mode} Tr 10.3 10.3 Td (A) Tj ET");
+            let pdf = format!(
+                "%PDF-1.7
+1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj
+2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj
+3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 40 40] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj
+4 0 obj << /Length {} >> stream
+{content}
+endstream endobj
+5 0 obj << /Type /Font /Subtype /Type3 /FontBBox [0 0 1 1] /FontMatrix [1 0 0 1 0 0] /FirstChar 65 /LastChar 65 /Widths [1]
+  /Encoding << /Differences [65 /a] >> /CharProcs << /a 6 0 R >> >> endobj
+6 0 obj << /Length {} >> stream
+{glyph}
+endstream endobj
+trailer << /Root 1 0 R >>
+%%EOF",
+                content.len(),
+                glyph.len()
+            );
+            let mut r = PageRenderer::new(Arc::new(pdf.into_bytes()), RenderConfig::default());
+            let p = r.render(RenderRequest { page: 0, kind: RequestKind::Pixels, tile: None, scale: 1.0, tag: 0, ..Default::default() });
+            assert!(p.error.is_none(), "{glyph} {mode} Tr: {:?}", p.error);
+            p.rgba
+        };
+        for glyph in ["1 0 0 0 1 1 d1 0.12 0.12 0.71 0.71 re f", "1 0 d0 0.12 0.12 0.71 0.71 re f"] {
+            let filled = render(glyph, 0);
+            assert!(filled.as_chunks::<4>().0.iter().any(|p| p[0] < 128), "{glyph}: the glyph paints");
+            for mode in [1, 2, 4, 5, 6, 7] {
+                assert!(render(glyph, mode) == filled, "{glyph}: {mode} Tr draws as 0 Tr");
+            }
+            assert!(render(glyph, 3).as_chunks::<4>().0.iter().all(|p| p[..3] == [255, 255, 255]), "{glyph}: 3 Tr hides the glyph");
         }
     }
 }

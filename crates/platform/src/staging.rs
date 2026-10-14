@@ -1,5 +1,5 @@
-//! Staging files for atomic saves: a new, unpredictably named file beside the target, written and
-//! then renamed over it. Writing, closing, renaming and cleaning up stay with the caller.
+//! Staging files for atomic saves: a new, unpredictably named file beside the target, written,
+//! flushed to disk and then renamed over it ([`write_atomic`]).
 
 use std::path::{Path, PathBuf};
 
@@ -62,6 +62,29 @@ pub fn staging_suffixes() -> impl Iterator<Item = u64> {
     use std::hash::BuildHasher;
     let state = std::hash::RandomState::new();
     (0u64..).map(move |i| state.hash_one(i))
+}
+
+/// Write `bytes` to `path` atomically: into a new staging file beside it ([`create_staging`]),
+/// flushed to disk so a crash right after the rename can't leave a truncated file, then renamed
+/// over `path`. On failure the staging file is removed and `path` is unchanged.
+pub fn write_atomic(path: &Path, bytes: &[u8], form: StagingName, suffixes: impl IntoIterator<Item = u64>) -> std::io::Result<()> {
+    use std::io::Write;
+    let dir = path.parent().filter(|d| !d.as_os_str().is_empty()).unwrap_or(Path::new("."));
+    let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| "save".into());
+    let (tmp, file) = create_staging(dir, &name, form, suffixes)?;
+    let result = (|| {
+        // Closed at the end of the block, before the rename.
+        {
+            let mut file = file;
+            file.write_all(bytes)?;
+            file.sync_all()?;
+        }
+        std::fs::rename(&tmp, path)
+    })();
+    if result.is_err() {
+        let _ = std::fs::remove_file(&tmp);
+    }
+    result
 }
 
 #[cfg(test)]

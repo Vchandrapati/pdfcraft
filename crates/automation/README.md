@@ -71,6 +71,12 @@ claude mcp add pdfcraft -- pdfcraft-cli mcp --root <dir>
 
 ## Adding a tool
 
+`table_extract {doc, page, rect?, columns?}` previews rectangular table candidates from native or
+previously OCR-recognised text. `table_export` takes the same settings plus `table?`, `format?`
+(`csv` or `xlsx`) and `path`, writing one table atomically within `--root`. Extraction is read-only;
+review the cells before exporting. See [table extraction](../../docs/table-extraction.md) for
+coordinate conventions, spreadsheet escaping and detection limits.
+
 1. Add the engine capability first, with its tests (the tool is a thin adapter).
 2. Add a `ToolDef` in `src/tools.rs`: a precise description, the schema, `ro()`/`destructive()`, and `cmd()` if a registry command exists.
 3. Handle it in `Automation::call`, validating pages and positions with the existing helpers.

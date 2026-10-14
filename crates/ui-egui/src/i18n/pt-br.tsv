@@ -390,16 +390,6 @@
 	Flip Vertical	Inverter verticalmente
 	Replace Image…	Substituir imagem…
 	Save Image As…	Salvar imagem como…
-	Check for updates	Verificar atualizações
-	No check has run yet.	Nenhuma verificação foi executada ainda.
-	Checking for a newer version…	Verificando se há uma versão mais recente…
-	PdfCraft {v} is available.	O PdfCraft {v} está disponível.
-	You have version {c}. Download the new version from its release page.	Você tem a versão {c}. Baixe a nova versão na página de lançamentos.
-	PdfCraft {c} is up to date.	O PdfCraft {c} está atualizado.
-	Couldn't check for updates: {e}	Não foi possível verificar atualizações: {e}
-	You have version {c}. All releases are listed at {page}.	Você tem a versão {c}. Todos os lançamentos estão listados em {page}.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	Consulta o GitHub para obter o lançamento mais recente. Nada é baixado ou instalado automaticamente.
-	Download	Baixar
 	Later	Mais tarde
 	none	nenhum
 	Declared conformance: {shown}	Conformidade declarada: {shown}
@@ -1284,7 +1274,6 @@
 	Select all pages (Organize)	Selecionar todas as páginas (Organizar)
 	Version {v}	Versão {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Um aplicativo PDF de código aberto e clean-room escrito em Rust. MIT OU Apache-2.0.
-	Part of	Parte de
 	Summarize Options	Opções de resumo
 	Choose a layout:	Escolha um layout:
 	Comments only	Somente comentários
@@ -1641,12 +1630,8 @@
 	Read	Ler
 	Convert	Converter
 	E-Sign	Assinatura eletrônica
-	Welcome to PdfCraft	Bem-vindo ao PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	Uma bancada de trabalho de PDF de código aberto — local, privada e programável.
-	Recommended tools	Ferramentas recomendadas
 	Use now	Usar agora
 	Recent	Recentes
-	Privacy	Privacidade
 	Export to image…	Exportar para imagem…
 	Reduce file size…	Reduzir tamanho do arquivo…
 	Optimize PDF…	Otimizar PDF…
@@ -1676,14 +1661,6 @@
 	Split document…	Dividir documento…
 	Number pages…	Numerar páginas…
 	Keyboard shortcuts	Atalhos de teclado
-	Join the ArtCraft Discord	Entrar no Discord do ArtCraft
-	Join the ArtCraft community	Entrar na comunidade ArtCraft
-	Get help, share feedback and follow development on Discord.	Obtenha ajuda, compartilhe comentários e acompanhe o desenvolvimento no Discord.
-	Join our Discord	Entrar em nosso Discord
-	PdfCraft web page	Página da Web do PdfCraft
-	PdfCraft on GitHub	PdfCraft no GitHub
-	ArtCraft website	Site do ArtCraft
-	Check for updates…	Verificar atualizações…
 	About PdfCraft	Sobre o PdfCraft
 	JavaScript console…	Console JavaScript…
 	Document JavaScripts…	JavaScripts do documento…
@@ -1695,7 +1672,6 @@
 	Prepare a form	Preparar um formulário
 	Digitally sign	Assinar digitalmente
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Os arquivos abertos no PdfCraft aparecem aqui. Solte um PDF em qualquer lugar para abri-lo.
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	O PdfCraft funciona offline. Sem telemetria, sem conta e sem processamento em nuvem, a menos que você adicione um provedor.
 	Measure distance	Medir distância
 	Measure perimeter	Medir perímetro
 	Measure area	Medir área
@@ -2299,3 +2275,35 @@ scroll speed	Fast	Rápida
 	Ink sensitivity	Sensibilidade à tinta
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	Nenhuma assinatura encontrada no quadro. Mova o quadro sobre a assinatura ou aumente a sensibilidade à tinta.
 	Couldn't use the photo: {e}	Não foi possível usar a foto: {e}
+	The document or extraction settings changed. Run extraction again.	O documento ou as configurações de extração foram alterados. Execute a extração novamente.
+	Extract Tables	Extrair tabelas
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Revise as células extraídas antes de exportar. A detecção automática usa o espaçamento do texto e pode não corresponder ao layout de tabela previsto no documento.
+	of {n}	de {n}
+	Region	Região
+	Use the selected rectangle	Usar o retângulo selecionado
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Selecione um retângulo com Seleção de coluna antes de abrir esta caixa de diálogo para limitar a área da página.
+	Column separators	Separadores de coluna
+	Automatic, or e.g. 180, 340	Automático ou, por exemplo, 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Deixe os separadores vazios para a detecção automática. As posições são medidas em pontos a partir do canto superior esquerdo da página exibida.
+	Run extraction	Executar extração
+	Detect tables	Detectar tabelas
+	Extracting…	Extraindo…
+	Settings changed. Run extraction again to refresh this preview.	As configurações mudaram. Execute a extração novamente para atualizar esta prévia.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Não há texto nesta região. Em digitalizações, execute Reconhecer texto primeiro; caso contrário, selecione uma área que contenha texto.
+	No tables detected. Adjust the region or add separator positions and run again.	Nenhuma tabela detectada. Ajuste a região ou adicione posições de separador e execute novamente.
+	Use selected table's separators for correction	Usar os separadores da tabela selecionada para corrigir
+	Export Excel	Exportar para Excel
+	Export CSV	Exportar para CSV
+	Table {n} · {rows} rows × {columns} columns	Tabela {n} · {rows} linhas × {columns} colunas
+	Table {n}	Tabela {n}
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	A prévia omite {rows} linhas e {cells} células; ela encurta {shortened} células longas. A exportação inclui a tabela completa.
+	Run table extraction again before exporting this preview	Execute a extração de tabelas novamente antes de exportar esta prévia
+	Table export stopped: {error}	Exportação da tabela interrompida: {error}
+	Exported {name}	Exportado: {name}
+	Couldn't save {name}: {error}	Não foi possível salvar {name}: {error}
+	Couldn't download {name}: {error}	Não foi possível baixar {name}: {error}
+	Extract tables…	Extrair tabelas…
+	Tables (CSV / Excel)	Tabelas (CSV / Excel)
+	Quick tools	Ferramentas rápidas
+	Merge	Mesclar
+	Reorder	Reordenar

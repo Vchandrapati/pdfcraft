@@ -91,7 +91,6 @@
 	Side panels	Бічні панелі
 	Enable Acrobat JavaScript	Увімкнути Acrobat JavaScript
 	OK	OK
-	Join our Discord	Приєднатися до нашого Discord
 	Close	Закрити
 	Next / previous match	Наступний / попередній збіг
 	Copy selected text	Копіювати виділений текст
@@ -157,17 +156,10 @@
 	Next page	Наступна сторінка
 	Previous page	Попередня сторінка
 	Current page — type a page number or label (such as iv) and press Enter	Поточна сторінка — введіть номер або позначку сторінки (наприклад iv) і натисніть Enter
-	Welcome to PdfCraft	Вітаємо в PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	Відкритий інструментарій для PDF — локальний, приватний і з підтримкою сценаріїв.
-	Join the ArtCraft community	Приєднатися до спільноти ArtCraft
-	Get help, share feedback and follow development on Discord.	Отримуйте допомогу, діліться відгуками й стежте за розробкою в Discord.
-	Recommended tools	Рекомендовані інструменти
 	Use now	Використати зараз
 	Open file	Відкрити файл
 	Recent	Нещодавні
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Тут з’являються файли, які ви відкриваєте в PdfCraft. Перетягніть PDF будь-куди, щоб відкрити його.
-	Privacy	Приватність
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft працює офлайн. Без телеметрії, облікового запису та хмарної обробки, якщо ви не додасте постачальника.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Сценарії виконуються в ізольованому середовищі без доступу до файлів і мережі. Коли JavaScript вимкнено, стандартні функції форматування, перевірки й обчислення Acrobat усе одно працюють.
 	Back to all tools	Назад до всіх інструментів
 	Close panel	Закрити панель
@@ -302,11 +294,6 @@
 	Split document…	Розділити документ…
 	Number pages…	Пронумерувати сторінки…
 	Keyboard shortcuts	Клавіатурні скорочення
-	Join the ArtCraft Discord	Приєднатися до Discord ArtCraft
-	PdfCraft web page	Вебсторінка PdfCraft
-	PdfCraft on GitHub	PdfCraft на GitHub
-	ArtCraft website	Вебсайт ArtCraft
-	Check for updates…	Перевірити оновлення…
 	About PdfCraft	Про PdfCraft
 	Export a PDF	Експортувати PDF
 	Export to	Експортувати в
@@ -755,16 +742,6 @@
 	Flip Vertical	Віддзеркалити вертикально
 	Replace Image…	Замінити зображення…
 	Save Image As…	Зберегти зображення як…
-	Check for updates	Перевірити оновлення
-	No check has run yet.	Перевірку ще не виконано.
-	Checking for a newer version…	Перевірка наявності новішої версії…
-	PdfCraft {v} is available.	Доступна версія PdfCraft {v}.
-	You have version {c}. Download the new version from its release page.	У вас версія {c}. Завантажте нову версію зі сторінки випуску.
-	PdfCraft {c} is up to date.	Ваша версія PdfCraft {c} актуальна.
-	Couldn't check for updates: {e}	Не вдалося перевірити оновлення: {e}
-	You have version {c}. All releases are listed at {page}.	У вас версія {c}. Усі випуски наведено на {page}.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	Запитує в GitHub найновіший випуск. Нічого не завантажується й не встановлюється автоматично.
-	Download	Завантажити
 	Later	Пізніше
 	none	немає
 	Declared conformance: {shown}	Заявлена відповідність: {shown}
@@ -1387,7 +1364,6 @@
 	Discard	Відкинути
 	Version {v}	Версія {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Відкритий застосунок для PDF, написаний на Rust за принципом незалежної розробки. MIT OR Apache-2.0.
-	Part of	Частина
 	Summarize Options	Параметри зведення
 	Choose a layout:	Виберіть макет:
 	Comments only	Лише коментарі
@@ -2307,3 +2283,35 @@ scroll speed	Fast	Швидка
 	Ink sensitivity	Чутливість до чорнила
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	У рамці не знайдено підпису. Наведіть рамку на підпис або збільште чутливість до чорнила.
 	Couldn't use the photo: {e}	Не вдалося використати фото: {e}
+	The document or extraction settings changed. Run extraction again.	Документ або налаштування видобування змінилися. Запустіть видобування ще раз.
+	Extract Tables	Видобути таблиці
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Перевірте видобуті клітинки перед експортом. Автоматичне визначення використовує інтервали між текстом і може не відповідати передбаченому макету таблиці в документі.
+	Region	Область
+	Use the selected rectangle	Використати вибраний прямокутник
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Щоб обмежити область сторінки, виберіть прямокутник інструментом «Вибір стовпця» перед відкриттям цього діалогу.
+	Column separators	Розділювачі стовпців
+	Automatic, or e.g. 180, 340	Автоматично або, наприклад, 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Залиште розділювачі порожніми для автоматичного визначення. Позиції вимірюються в пунктах від верхнього лівого кута відображеної сторінки.
+	Run extraction	Запустити видобування
+	Detect tables	Знайти таблиці
+	Extracting…	Видобування…
+	Settings changed. Run extraction again to refresh this preview.	Налаштування змінено. Запустіть видобування ще раз, щоб оновити попередній перегляд.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	У цій області немає тексту. Для сканів спочатку запустіть розпізнавання тексту, інакше виберіть область із текстом.
+	No tables detected. Adjust the region or add separator positions and run again.	Таблиць не знайдено. Змініть область або додайте позиції розділювачів і запустіть знову.
+	Table {n} · {rows} rows × {columns} columns	Таблиця {n} · {rows} рядків × {columns} стовпців
+	Table {n}	Таблиця {n}
+	Use selected table's separators for correction	Використати розділювачі вибраної таблиці для виправлення
+	Export Excel	Експортувати в Excel
+	Export CSV	Експортувати в CSV
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Попередній перегляд не показує {rows} рядків і {cells} клітинок; довгі клітинки скорочено: {shortened}. Під час експорту буде включено повну таблицю.
+	Run table extraction again before exporting this preview	Перед експортом цього попереднього перегляду запустіть видобування таблиць ще раз
+	Table export stopped: {error}	Експорт таблиці зупинено: {error}
+	Exported {name}	Експортовано {name}
+	Couldn't save {name}: {error}	Не вдалося зберегти {name}: {error}
+	Couldn't download {name}: {error}	Не вдалося завантажити {name}: {error}
+	Extract tables…	Видобути таблиці…
+	Tables (CSV / Excel)	Таблиці (CSV / Excel)
+	of {n}	із {n}
+	Quick tools	Швидкі інструменти
+	Merge	Об’єднати
+	Reorder	Змінити порядок

@@ -78,7 +78,6 @@
 	Side panels	Πλευρικοί πίνακες
 	Enable Acrobat JavaScript	Ενεργοποίηση Acrobat JavaScript
 	OK	Εντάξει
-	Join our Discord	Ελάτε στο Discord μας
 	Close	Κλείσιμο
 	Next / previous match	Επόμενο / προηγούμενο αποτέλεσμα
 	Copy selected text	Αντιγραφή επιλεγμένου κειμένου
@@ -137,23 +136,15 @@
 	Toggle fit page / fit width	Εναλλαγή προσαρμογής στη σελίδα / στο πλάτος
 	Next page	Επόμενη σελίδα
 	Previous page	Προηγούμενη σελίδα
-	Welcome to PdfCraft	Καλώς ορίσατε στο PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	Ένα εργαλείο PDF ανοιχτού κώδικα — τοπικό, ιδιωτικό και αυτοματοποιήσιμο.
-	Join the ArtCraft community	Γίνετε μέλος της κοινότητας ArtCraft
-	Get help, share feedback and follow development on Discord.	Βρείτε βοήθεια, μοιραστείτε σχόλια και παρακολουθήστε την ανάπτυξη στο Discord.
-	Recommended tools	Προτεινόμενα εργαλεία
 	Use now	Χρήση τώρα
 	Open file	Άνοιγμα αρχείου
 	Recent	Πρόσφατα
-	Privacy	Απόρρητο
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	Το PdfCraft λειτουργεί χωρίς σύνδεση στο διαδίκτυο. Χωρίς τηλεμετρία, λογαριασμό ή επεξεργασία στο νέφος, εκτός αν προσθέσετε εσείς υπηρεσία.
 	Date	Ημερομηνία
 	Rotate	Περιστροφή
 	Delete	Διαγραφή
 	Cancel	Ακύρωση
 	Apply	Εφαρμογή
 	Password	Κωδικός πρόσβασης
-	Download	Λήψη
 	Add	Προσθήκη
 	Name	Όνομα
 	Remove	Αφαίρεση
@@ -267,7 +258,6 @@
 	General	Γενικά
 	About	Πληροφορίες
 	About PdfCraft	Σχετικά με το PdfCraft
-	Check for updates	Έλεγχος για ενημερώσεις
 	Keyboard shortcuts	Συντομεύσεις πληκτρολογίου
 	Default	Προεπιλογή
 	Custom	Προσαρμοσμένο
@@ -385,14 +375,6 @@
 	Flip Vertical	Κατακόρυφη αναστροφή
 	Replace Image…	Αντικατάσταση εικόνας…
 	Save Image As…	Αποθήκευση εικόνας ως…
-	No check has run yet.	Δεν έχει πραγματοποιηθεί ακόμη έλεγχος.
-	Checking for a newer version…	Έλεγχος για νεότερη έκδοση…
-	PdfCraft {v} is available.	Η έκδοση {v} του PdfCraft είναι διαθέσιμη.
-	You have version {c}. Download the new version from its release page.	Έχετε την έκδοση {c}. Κάντε λήψη της νέας έκδοσης από τη σελίδα εκδόσεών της.
-	PdfCraft {c} is up to date.	Το PdfCraft {c} είναι ενημερωμένο.
-	Couldn't check for updates: {e}	Δεν ήταν δυνατός ο έλεγχος για ενημερώσεις: {e}
-	You have version {c}. All releases are listed at {page}.	Έχετε την έκδοση {c}. Όλες οι εκδόσεις βρίσκονται στη διεύθυνση {page}.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	Αναζητά την τελευταία έκδοση στο GitHub. Δεν γίνεται αυτόματα λήψη ή εγκατάσταση.
 	Later	Αργότερα
 	none	κανένα
 	Declared conformance: {shown}	Δηλωμένη συμμόρφωση: {shown}
@@ -935,7 +917,6 @@
 	Recover	Ανάκτηση
 	Version {v}	Έκδοση {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Μια εφαρμογή PDF ανοικτού κώδικα, αναπτυγμένη ανεξάρτητα σε Rust. Άδεια MIT ή Apache-2.0.
-	Part of	Μέρος του
 	Summarize Options	Επιλογές σύνοψης
 	Choose a layout:	Επιλέξτε διάταξη:
 	Comments only	Μόνο σχόλια
@@ -1663,11 +1644,6 @@
 	Extract pages…	Εξαγωγή σελίδων…
 	Split document…	Διαχωρισμός εγγράφου…
 	Number pages…	Αρίθμηση σελίδων…
-	Join the ArtCraft Discord	Συμμετοχή στο Discord του ArtCraft
-	PdfCraft web page	Ιστότοπος του PdfCraft
-	PdfCraft on GitHub	PdfCraft στο GitHub
-	ArtCraft website	Ιστότοπος ArtCraft
-	Check for updates…	Έλεγχος για ενημερώσεις…
 	Export a PDF	Εξαγωγή PDF
 	Export to	Εξαγωγή σε
 	Microsoft Word (.docx)	Microsoft Word (.docx)
@@ -2228,13 +2204,13 @@ comment menu	Edit	Επεξεργασία
 	Offset from centre	Μετατόπιση από το κέντρο
 	Graphic	Γραφικό
 	Signer's name	Όνομα υπογράφοντος
-	Fill & Sign signature	Υπογραφή από τη Συμπλήρωση και υπογραφή
+	Fill & Sign signature	Υπογραφή από το εργαλείο «Συμπλήρωση και υπογραφή»
 	Choose image…	Επιλογή εικόνας…
 	Looking for printers…	Αναζήτηση εκτυπωτών…
 	Sending to {printer}…	Αποστολή στον {printer}…
 	Enter permissions password…	Εισαγωγή κωδικού δικαιωμάτων…
 	Permissions password	Κωδικός δικαιωμάτων
-	“{name}” has security restrictions. Enter its permissions password to lift them.	Το «{name}» έχει περιορισμούς ασφαλείας. Εισαγάγετε τον κωδικό δικαιωμάτων για να τους αρθούν.
+	“{name}” has security restrictions. Enter its permissions password to lift them.	Το «{name}» έχει περιορισμούς ασφαλείας. Εισαγάγετε τον κωδικό δικαιωμάτων για να αρθούν οι περιορισμοί.
 	Restrictions lifted	Οι περιορισμοί άρθηκαν
 	Couldn't unlock {name}: {e}	Δεν ήταν δυνατό το ξεκλείδωμα του {name}: {e}
 	This document has no restrictions to lift	Αυτό το έγγραφο δεν έχει περιορισμούς προς άρση
@@ -2244,7 +2220,7 @@ comment menu	Edit	Επεξεργασία
 	These files can't be read, so they won't be in the combined PDF:	Αυτά τα αρχεία δεν διαβάζονται, οπότε δεν θα συμπεριληφθούν στο συνδυασμένο PDF:
 	Combine the rest	Συνδυασμός των υπολοίπων
 	and {n} more	και {n} ακόμη
-	Drop PDFs, images, text files or folders here, or choose them.	Αποθέστε εδώ PDF, εικόνες, αρχεία κειμένου ή φακέλους ή επιλέξτε τα.
+	Drop PDFs, images, text files or folders here, or choose them.	Σύρετε εδώ PDF, εικόνες, αρχεία κειμένου ή φακέλους, ή επιλέξτε τα.
 	Every PDF, image and text file in the folder	Όλα τα PDF, οι εικόνες και τα αρχεία κειμένου του φακέλου
 	Every PDF, image and text file in the folder and the folders inside it	Όλα τα PDF, οι εικόνες και τα αρχεία κειμένου του φακέλου και των υποφακέλων του
 	No PDFs, images or text files found in {folder}	Δεν βρέθηκαν PDF, εικόνες ή αρχεία κειμένου στο {folder}
@@ -2260,7 +2236,7 @@ comment menu	Edit	Επεξεργασία
 	Tools	Εργαλεία
 	Inspector	Επιθεωρητής
 	PDF page: {size}	Σελίδα PDF: {size}
-	Match page at 100%	Ταίριασμα σελίδας στο 100%
+	Match page at 100%	Προσαρμογή σελίδας στο 100%
 	PDF scale: {scale}%	Κλίμακα PDF: {scale}%
 	Printer paper and scaling may differ. Check driver settings.	Το χαρτί και η κλίμακα του εκτυπωτή μπορεί να διαφέρουν. Ελέγξτε τις ρυθμίσεις του προγράμματος οδήγησης.
 	Drawing scale changes. Use Actual size for full-scale plans.	Η κλίμακα του σχεδίου αλλάζει. Για σχέδια σε πλήρη κλίμακα χρησιμοποιήστε το Πραγματικό μέγεθος.
@@ -2301,3 +2277,35 @@ scroll speed	Fast	Γρήγορη
 	Ink sensitivity	Ευαισθησία μελανιού
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	Δεν βρέθηκε υπογραφή στο πλαίσιο. Μετακινήστε το πλαίσιο πάνω από την υπογραφή ή αυξήστε την ευαισθησία μελανιού.
 	Couldn't use the photo: {e}	Δεν ήταν δυνατή η χρήση της φωτογραφίας: {e}
+	The document or extraction settings changed. Run extraction again.	Το έγγραφο ή οι ρυθμίσεις εξαγωγής έχουν αλλάξει. Εκτελέστε ξανά την εξαγωγή.
+	Extract Tables	Εξαγωγή πινάκων
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Ελέγξτε τα κελιά που εντοπίστηκαν πριν από την εξαγωγή. Η αυτόματη ανίχνευση βασίζεται στα κενά του κειμένου και ενδέχεται να μη συμφωνεί με την προβλεπόμενη διάταξη του πίνακα στο έγγραφο.
+	of {n}	από {n}
+	Region	Περιοχή
+	Use the selected rectangle	Χρήση επιλεγμένου ορθογωνίου
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Επιλέξτε ένα ορθογώνιο με την Επιλογή στήλης πριν ανοίξετε αυτό το παράθυρο διαλόγου, για να περιορίσετε την περιοχή της σελίδας.
+	Column separators	Διαχωριστικά στηλών
+	Automatic, or e.g. 180, 340	Αυτόματα ή π.χ. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Αφήστε κενά τα διαχωριστικά για αυτόματη ανίχνευση. Οι θέσεις μετρώνται σε σημεία από την πάνω αριστερή γωνία της εμφανιζόμενης σελίδας.
+	Run extraction	Εκτέλεση εξαγωγής
+	Detect tables	Εντοπισμός πινάκων
+	Extracting…	Εξαγωγή σε εξέλιξη…
+	Settings changed. Run extraction again to refresh this preview.	Οι ρυθμίσεις άλλαξαν. Εκτελέστε ξανά την εξαγωγή για ανανέωση της προεπισκόπησης.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Δεν υπάρχει κείμενο σε αυτή την περιοχή. Για σαρωμένα έγγραφα, εκτελέστε πρώτα την Αναγνώριση κειμένου· διαφορετικά, επιλέξτε μια περιοχή που περιέχει κείμενο.
+	No tables detected. Adjust the region or add separator positions and run again.	Δεν εντοπίστηκαν πίνακες. Προσαρμόστε την περιοχή ή προσθέστε θέσεις διαχωριστικών και εκτελέστε ξανά.
+	Use selected table's separators for correction	Χρήση των διαχωριστικών του επιλεγμένου πίνακα για διόρθωση
+	Export Excel	Εξαγωγή στο Excel
+	Export CSV	Εξαγωγή σε CSV
+	Table {n} · {rows} rows × {columns} columns	Πίνακας {n} · {rows} γραμμές × {columns} στήλες
+	Table {n}	Πίνακας {n}
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Η προεπισκόπηση παραλείπει {rows} γραμμές και {cells} κελιά· συντομεύει {shortened} μεγάλα κελιά. Η εξαγωγή περιλαμβάνει ολόκληρο τον πίνακα.
+	Run table extraction again before exporting this preview	Εκτελέστε ξανά την εξαγωγή πινάκων πριν εξαγάγετε αυτή την προεπισκόπηση
+	Table export stopped: {error}	Η εξαγωγή του πίνακα διακόπηκε: {error}
+	Exported {name}	Έγινε εξαγωγή: {name}
+	Couldn't save {name}: {error}	Δεν ήταν δυνατή η αποθήκευση του {name}: {error}
+	Couldn't download {name}: {error}	Δεν ήταν δυνατή η λήψη του {name}: {error}
+	Extract tables…	Εξαγωγή πινάκων…
+	Tables (CSV / Excel)	Πίνακες (CSV / Excel)
+	Quick tools	Γρήγορα εργαλεία
+	Merge	Συγχώνευση
+	Reorder	Αναδιάταξη

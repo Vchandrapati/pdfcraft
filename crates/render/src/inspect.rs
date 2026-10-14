@@ -1,9 +1,8 @@
 //! Document inspection: everything panels need that is not pixels.
 //!
 //! Page geometry comes from hayro (which resolves inheritance and rotation); the rest comes from
-//! the lazy COS reader through a read-only lopdf object adapter. The original lopdf loader
-//! remains the compatibility fallback. When neither can inspect a renderable file, panels
-//! are empty and `warnings` says why.
+//! the lazy COS reader (which repairs damaged cross-reference data) through a read-only object
+//! adapter. When it can't inspect a renderable file, panels are empty and `warnings` says why.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
@@ -13,18 +12,13 @@ use std::panic::{AssertUnwindSafe, catch_unwind};
 use hayro::hayro_syntax::DecryptionError;
 use hayro::hayro_syntax::LoadPdfError;
 use hayro::hayro_syntax::Pdf;
-use lopdf::{Dictionary, Document, LoadOptions, Object, ObjectId};
 use pdfcraft_cos::page_labels::{
     MAX_LABEL_BYTES, MAX_LABEL_TOTAL_BYTES, MAX_LABEL_TREE_DEPTH, MAX_LABEL_TREE_WORK, MAX_PREFIX_BYTES, MAX_PREFIX_TOTAL_BYTES, alpha, roman,
 };
 
 use crate::OpenError;
+use crate::pdfobj::{Dictionary, Object, ObjectId};
 use crate::structure::{LazyStructure, Structure};
-
-/// lopdf decodes object and cross-reference streams while it loads, with no limit unless one is
-/// set: a few hundred bytes of nested FlateDecode then inflate to gigabytes. Real object and
-/// xref streams are far below this.
-const LOAD_STREAM_LIMIT: usize = 256 << 20;
 
 /// At most this many `/State` entries of a set-layer-visibility action are read.
 const MAX_LAYER_STATE: usize = 1024;
@@ -38,10 +32,6 @@ const OUTLINE_WINDOW: usize = 10_000;
 
 /// Deepest level `DocInfo::outline` nests (the top level is 0); deeper bookmarks are left out.
 const OUTLINE_DEPTH: usize = 32;
-
-fn load_options(password: Option<&str>) -> LoadOptions {
-    LoadOptions { password: password.map(str::to_owned), max_decompressed_size: Some(LOAD_STREAM_LIMIT), ..LoadOptions::default() }
-}
 
 #[derive(Clone, Debug, Default)]
 pub struct DocInfo {
@@ -413,31 +403,23 @@ pub fn inspect(bytes: Arc<Vec<u8>>, password: Option<&str>) -> Result<DocInfo, O
         Ok(p) => info.pages = p,
         Err(p) => return Err(OpenError::Invalid(format!("the page tree could not be read: {}", crate::raster::panic_message(&p)))),
     }
-    let options = load_options(password);
     // Geometry no longer needs the renderer parser. Do not overlap its allocations with
-    // structural inspection, including the compatibility fallback for damaged files.
+    // structural inspection.
     drop(pdf);
     inspect_structure(&mut info, |tmp| {
-        // The lazy reader first; lopdf's repair/tolerance path when it can't expose the same
-        // page tree or an object a panel needs. No partial result is published.
-        let lazy = catch_unwind(AssertUnwindSafe(|| {
-            let doc = LazyStructure::new(bytes.clone(), password).ok()?;
-            let mut t = DocInfo { pages: tmp.pages.clone(), ..Default::default() };
-            let inspector = Inspector::new(&doc);
-            if inspector.page_index.len() != t.pages.len() {
-                return None;
-            }
-            inspector.fill(&mut t);
-            (!doc.failed()).then_some(t)
-        }))
-        .ok()
-        .flatten();
-        if let Some(t) = lazy {
-            *tmp = t;
-            return Ok(());
+        let doc = LazyStructure::new(bytes.clone(), password)?;
+        let mut t = DocInfo { pages: tmp.pages.clone(), ..Default::default() };
+        let inspector = Inspector::new(&doc);
+        // Panels place everything by page index: a page tree that disagrees with the renderer's
+        // would put comments and fields on the wrong pages.
+        if inspector.page_index.len() != t.pages.len() {
+            return Err(format!("its page tree lists {} pages where the renderer found {}", inspector.page_index.len(), t.pages.len()));
         }
-        let doc = Document::load_mem_with_options(&bytes, options).map_err(|e| e.to_string())?;
-        Inspector::new(&doc).fill(tmp);
+        inspector.fill(&mut t);
+        if doc.failed() {
+            t.warnings.push("Some objects could not be read, so bookmarks, comments or fields may be incomplete.".into());
+        }
+        *tmp = t;
         Ok(())
     });
     if info.pages.is_empty() {
@@ -491,7 +473,6 @@ impl<'a> Inspector<'a> {
     }
 
     fn fill(&self, info: &mut DocInfo) {
-        // lopdf drops /Encrypt from the trailer once it has decrypted the file.
         info.encrypted = self.doc.encrypted();
         if let Some(d) = self.doc.trailer().get(b"Info").ok().and_then(|o| self.dict(o)) {
             info.title = self.text(d, b"Title");
@@ -1317,8 +1298,7 @@ pub fn pretty_date(s: &str) -> String {
 /// Fetch an attachment's bytes (decoded). Capped at 1 GiB to defuse decompression bombs.
 pub fn attachment_data(bytes: &[u8], password: Option<&str>, att: &Attachment) -> Result<Vec<u8>, String> {
     let run = || -> Result<Vec<u8>, String> {
-        let options = load_options(password);
-        let doc = Document::load_mem_with_options(bytes, options).map_err(|e| e.to_string())?;
+        let doc = LazyStructure::new(Arc::new(bytes.to_vec()), password)?;
         let insp = Inspector::new(&doc);
         let spec: &Object = match &att.source {
             AttachmentSource::Document { key } => {
@@ -1336,87 +1316,16 @@ pub fn attachment_data(bytes: &[u8], password: Option<&str>, att: &Attachment) -
         };
         let fs = insp.dict(spec).ok_or("bad file specification")?;
         let ef = fs.get(b"EF").ok().and_then(|o| insp.dict(o)).ok_or("the file is not embedded (external reference)")?;
-        let stream = ef.get(b"UF").ok().or_else(|| ef.get(b"F").ok()).map(|o| insp.resolve(o)).ok_or("no embedded stream")?;
-        let stream = stream.as_stream().map_err(|e| e.to_string())?;
-        if stream.dict.get(b"Filter").is_ok() {
-            stream.decompressed_content_with_limit(1 << 30).map_err(|e| e.to_string())
-        } else {
-            Ok(stream.content.clone())
-        }
+        let embedded = ef.get(b"UF").ok().or_else(|| ef.get(b"F").ok()).ok_or("no embedded stream")?;
+        // A stream is always an indirect object: decode it from the reader, with the cap.
+        let id = embedded.as_reference().map_err(|_| "the embedded file is not a stream")?;
+        doc.stream_data(id, 1 << 30)
     };
     catch_unwind(AssertUnwindSafe(run)).unwrap_or_else(|p| Err(format!("reading the attachment crashed: {}", crate::raster::panic_message(&p))))
 }
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn png_predictor_rows_longer_than_the_data_are_refused_before_allocating() {
-        // Vendored lopdf patch: a fuzzed `/Columns 4294967295` allocated two 4 GiB rows before
-        // reading any data. A row that cannot fit in the data is refused up front.
-        let e = lopdf::filters::png::decode_frame(&[2, 0, 0, 0], 1, 64 << 20).unwrap_err();
-        assert!(e.to_string().contains("longer than the data"), "{e}");
-        // A real frame still decodes: two 3-byte rows, the second Up-filtered.
-        assert_eq!(lopdf::filters::png::decode_frame(&[0, 1, 2, 3, 2, 1, 1, 1], 1, 3).unwrap(), [1, 2, 3, 2, 3, 4]);
-    }
-
-    #[test]
-    fn empty_png_predictor_frames_do_not_allocate_rows() {
-        // usize::MAX cannot be reserved, so the old code safely errors before allocating.
-        // An empty frame needs no rows regardless of the declared width.
-        assert!(lopdf::filters::png::decode_frame(&[], 1, usize::MAX).unwrap().is_empty());
-    }
-
-    fn tiff_predictor_stream(data: Vec<u8>, columns: i64, colors: i64, bits: i64) -> lopdf::Stream {
-        let mut params = lopdf::Dictionary::new();
-        params.set("Predictor", 2i64);
-        params.set("Columns", columns);
-        params.set("Colors", colors);
-        params.set("BitsPerComponent", bits);
-        let mut dict = lopdf::Dictionary::new();
-        dict.set("DecodeParms", params);
-        let mut stream = lopdf::Stream::new(dict, data);
-        stream.compress().unwrap();
-        assert_eq!(stream.dict.get(b"Filter").unwrap().as_name().unwrap(), b"FlateDecode");
-        stream
-    }
-
-    #[test]
-    fn tiff_subbyte_predictor_row_width_overflow_is_refused() {
-        // Each multiplication overflows before any scratch allocation in the old debug build.
-        for bits in [1, 2, 4] {
-            let stream = tiff_predictor_stream(vec![0; 64], i64::MAX, 3, bits);
-            assert!(
-                matches!(stream.decompressed_content_with_limit(64), Err(lopdf::Error::Decompress(lopdf::DecompressError::Predictor(_)))),
-                "{bits}-bit row"
-            );
-        }
-    }
-
-    #[test]
-    fn tiff_subbyte_predictor_scratch_is_bounded_by_available_samples() {
-        // 1/2-bit row widths fit usize on 32- and 64-bit hosts; Colors previously made Vec<u16>
-        // reject the capacity before allocating. A partial row has no preceding pixel.
-        for bits in [1, 2] {
-            let data = vec![0b1010_0110; 64];
-            let stream = tiff_predictor_stream(data.clone(), 1, i64::try_from(isize::MAX).unwrap(), bits);
-            assert_eq!(stream.decompressed_content_with_limit(64).unwrap(), data, "{bits}-bit row");
-        }
-    }
-
-    #[test]
-    fn tiff_subbyte_predictors_keep_components_rows_and_padding() {
-        // Repeated tiny rows compress through the public Stream API. Rows remain independent,
-        // differences wrap at each component depth, and trailing padding bits survive.
-        for (columns, colors, bits, encoded, decoded) in [
-            (16, 1, 1, vec![255, 170, 8, 255], vec![170, 204, 15, 85]),
-            (6, 1, 2, vec![85, 179], vec![108, 147]),
-            (3, 1, 4, vec![25, 16], vec![26, 176]),
-            (2, 2, 4, vec![18, 34], vec![18, 52]),
-        ] {
-            let stream = tiff_predictor_stream(encoded.repeat(32), columns, colors, bits);
-            assert_eq!(stream.decompressed_content_with_limit(128).unwrap(), decoded.repeat(32), "{bits}-bit, {colors} colours");
-        }
-    }
 
     // Xref-stream fixtures exercise indirect /Length lookup during document loading: stream 2's /Length is `3 0 R`,
     // `containers` lists compressed (id, container, index) entries and `objects` the other objects in the file.
@@ -1481,139 +1390,54 @@ mod tests {
         compressed_length_pdf(&containers, &objects)
     }
 
-    // Lenient loading keeps a document whose stream 2 has an unresolvable /Length: the catalog, and stream 2's
-    // dictionary without its data.
-    fn load_without_stream_2_data(pdf: &[u8]) -> Document {
-        let doc = Document::load_mem(pdf).unwrap();
-        assert!(doc.catalog().unwrap().has_type(b"Catalog"));
-        assert!(doc.get_object((2, 0)).unwrap().as_stream().unwrap().content.is_empty());
+    /// The objects of `pdf` as the inspector reads them; reading every one must not recurse.
+    fn read_every_object(pdf: Vec<u8>) -> LazyStructure {
+        let doc = LazyStructure::new(Arc::new(pdf), None).unwrap();
+        assert_eq!(doc.catalog().and_then(|c| c.get_type()).unwrap(), b"Catalog");
+        for n in 1..=100_010 {
+            let _ = doc.get_object((n, 0));
+        }
         doc
     }
 
+    /// Container and /Length chains that once overflowed the stack or looped in a reader: each
+    /// compressed object naming itself or a partner as its container, an object stream whose
+    /// /Length is the object it holds, 100,000 containers in a row, and 5,000-hop /Length chains
+    /// through object streams and plain streams. Every object is read without recursing.
     #[test]
-    fn compressed_object_self_container_does_not_recurse() {
-        let doc = load_without_stream_2_data(&compressed_length_pdf(&[(3, 3, 0)], &[]));
-        assert!(doc.get_object((3, 0)).is_err());
-    }
-
-    #[test]
-    fn compressed_object_mutual_containers_do_not_recurse() {
-        let doc = load_without_stream_2_data(&compressed_length_pdf(&[(3, 4, 0), (4, 3, 0)], &[]));
-        assert!(doc.get_object((3, 0)).is_err());
-        assert!(doc.get_object((4, 0)).is_err());
-    }
-
-    #[test]
-    fn object_stream_length_cycle_does_not_recurse() {
-        let pdf = compressed_length_pdf(&[(3, 4, 0)], &[(4, b"<< /Type /ObjStm /N 1 /First 4 /Length 3 0 R >>\nstream\n3 0 5\nendstream")]);
-        let doc = load_without_stream_2_data(&pdf);
-        // The container's /Length is the object it holds: the container is kept without data, so 3 never loads.
-        assert!(doc.get_object((4, 0)).unwrap().as_stream().unwrap().content.is_empty());
-        assert!(doc.get_object((3, 0)).is_err());
-    }
-
-    #[test]
-    fn compressed_object_container_chain_does_not_recurse() {
+    fn hostile_container_and_length_chains_do_not_recurse() {
+        let cycle = compressed_length_pdf(&[(3, 4, 0)], &[(4, b"<< /Type /ObjStm /N 1 /First 4 /Length 3 0 R >>\nstream\n3 0 5\nendstream")]);
         let containers: Vec<_> = (3..100_003).map(|id| (id, id + 1, 0)).collect();
-        let pdf = compressed_length_pdf(&containers, &[(100_003, b"<< /Type /ObjStm /N 1 /First 4 /Length 5 >>\nstream\n3 0 5\nendstream")]);
-        let doc = load_without_stream_2_data(&pdf);
-        // The object stream in the file loads, but the xref puts 3 in the compressed container 4, which is refused.
-        assert_eq!(doc.get_object((100_003, 0)).unwrap().as_stream().unwrap().content, b"3 0 5");
-        assert!(doc.get_object((3, 0)).is_err());
+        let chain = compressed_length_pdf(&containers, &[(100_003, b"<< /Type /ObjStm /N 1 /First 4 /Length 5 >>\nstream\n3 0 5\nendstream")]);
+        for pdf in [
+            compressed_length_pdf(&[(3, 3, 0)], &[]),
+            compressed_length_pdf(&[(3, 4, 0), (4, 3, 0)], &[]),
+            cycle,
+            chain,
+            length_chain_pdf(5_000, true),
+            length_chain_pdf(5_000, false),
+        ] {
+            read_every_object(pdf);
+        }
     }
 
+    /// Valid files: compressed objects, and a /Length compressed in a container whose own /Length
+    /// is indirect, still read.
     #[test]
-    fn compressed_objects_and_indirect_stream_length_still_load() {
-        let pdf = compressed_length_pdf(
+    fn compressed_objects_and_indirect_lengths_still_load() {
+        let doc = read_every_object(compressed_length_pdf(
             &[(3, 4, 0), (5, 4, 1)],
             &[(4, b"<< /Type /ObjStm /N 2 /First 8 /Length 17 >>\nstream\n3 0 5 2 5 (value)\nendstream")],
-        );
-        let doc = Document::load_mem_with_options(&pdf, LoadOptions { strict: true, ..Default::default() }).unwrap();
+        ));
         assert_eq!(doc.get_object((3, 0)).unwrap().as_i64().unwrap(), 5);
         assert_eq!(doc.get_object((5, 0)).unwrap().as_str().unwrap(), b"value");
         assert_eq!(doc.get_object((2, 0)).unwrap().as_stream().unwrap().content, b"hello");
-    }
-
-    #[test]
-    fn compressed_length_in_a_container_with_an_indirect_length_still_loads() {
-        // Two hops, as in a valid file: stream 2's /Length (3) is compressed in container 4, whose own /Length (5) is
-        // a plain indirect integer.
-        let pdf =
-            compressed_length_pdf(&[(3, 4, 0)], &[(4, b"<< /Type /ObjStm /N 1 /First 4 /Length 5 0 R >>\nstream\n3 0 5\nendstream"), (5, b"5")]);
-        let doc = Document::load_mem_with_options(&pdf, LoadOptions { strict: true, ..Default::default() }).unwrap();
+        let doc = read_every_object(compressed_length_pdf(
+            &[(3, 4, 0)],
+            &[(4, b"<< /Type /ObjStm /N 1 /First 4 /Length 5 0 R >>\nstream\n3 0 5\nendstream"), (5, b"5")],
+        ));
         assert_eq!(doc.get_object((3, 0)).unwrap().as_i64().unwrap(), 5);
-        assert_eq!(doc.get_object((5, 0)).unwrap().as_i64().unwrap(), 5);
         assert_eq!(doc.get_object((2, 0)).unwrap().as_stream().unwrap().content, b"hello");
-    }
-
-    #[test]
-    fn compressed_length_chain_does_not_recurse() {
-        // Every container is an ordinary object in the file and every hop names a new object, so neither the
-        // container check nor the cycle history stops the chain; each hop recursed once more (a 512 KiB stack
-        // overflowed within 150 hops). Lookups past the cap fail: the first link never loads, while the last one,
-        // next to the direct /Length, does.
-        let hops = 5_000;
-        let doc = load_without_stream_2_data(&length_chain_pdf(hops, true));
-        assert!(doc.get_object((3, 0)).is_err());
-        assert!(doc.get_object((3 + 2 * (hops - 1), 0)).unwrap().as_i64().is_ok());
-        // The cap itself: loading link j reads its container's /Length, a chain of 2 * (hops - 1 - j) lookups, and
-        // 16 are allowed, so the 9th link from the end loads and the 10th does not.
-        assert!(doc.get_object((3 + 2 * (hops - 9), 0)).is_ok());
-        assert!(doc.get_object((3 + 2 * (hops - 10), 0)).is_err());
-    }
-
-    #[test]
-    fn plain_stream_length_chain_does_not_recurse() {
-        // The same recursion without object streams: each stream's /Length names the next stream (a 512 KiB stack
-        // overflowed within 200 hops). A stream is no length, so every link is kept as a stream without data.
-        let hops = 5_000;
-        let doc = load_without_stream_2_data(&length_chain_pdf(hops, false));
-        assert!((3..3 + hops).all(|id| doc.get_object((id, 0)).is_ok_and(|link| link.as_stream().is_ok_and(|s| s.content.is_empty()))));
-    }
-
-    fn indexed_object_stream(pairs: &[(u32, usize)], members: &[u8]) -> lopdf::Stream {
-        let mut content = Vec::new();
-        for &(id, offset) in pairs {
-            content.extend_from_slice(format!("{id} {offset} ").as_bytes());
-        }
-        let mut dict = Dictionary::new();
-        dict.set("Type", "ObjStm");
-        dict.set("N", pairs.len() as i64);
-        dict.set("First", content.len() as i64);
-        content.extend_from_slice(members);
-        lopdf::Stream::new(dict, content)
-    }
-
-    #[test]
-    fn object_stream_member_extents_bound_owned_strings() {
-        let mut members = vec![b'('; 32];
-        members.extend(vec![b'x'; 1 << 20]);
-        members.extend([b')'; 32]);
-        // Put the innermost (complete) string first in index order, then overlapping starts
-        // and duplicates. Only this first member at offset 31 may own the large string.
-        let mut pairs = vec![(100, 31)];
-        pairs.extend((0..31).map(|offset| (offset as u32 + 1, offset)));
-        pairs.extend([(200, 31), (201, 31)]);
-        let stream = indexed_object_stream(&pairs, &members);
-        let parsed = lopdf::ObjectStream::new_with_limit(&stream, Some(2 << 20)).unwrap();
-        assert_eq!(parsed.objects.get(&(100, 0)).unwrap().as_str().unwrap().len(), 1 << 20);
-        let total: usize = parsed.objects.values().filter_map(|object| object.as_str().ok()).map(<[u8]>::len).sum();
-        assert!(total <= stream.content.len(), "owned {total} string bytes from {} decoded bytes", stream.content.len());
-        assert!(!parsed.objects.contains_key(&(200, 0)));
-        assert!(!parsed.objects.contains_key(&(201, 0)));
-    }
-
-    #[test]
-    fn object_stream_member_extents_preserve_index_order_and_whitespace() {
-        let members = b" \n42\n /Name \n[true 7]\n << /Key (value) >>\n (last)";
-        // Unsorted offsets, and object 9 appears twice: its last index entry still wins.
-        let pairs = [(9, 0), (12, 21), (10, 5), (11, 12), (9, 41)];
-        let parsed = lopdf::ObjectStream::new(&indexed_object_stream(&pairs, members)).unwrap();
-        assert_eq!(parsed.objects.len(), 4);
-        assert_eq!(parsed.objects.get(&(9, 0)).unwrap().as_str().unwrap(), b"last");
-        assert_eq!(parsed.objects.get(&(10, 0)).unwrap().as_name().unwrap(), b"Name");
-        assert_eq!(parsed.objects.get(&(11, 0)).unwrap().as_array().unwrap(), &[Object::Boolean(true), Object::Integer(7)]);
-        assert_eq!(parsed.objects.get(&(12, 0)).unwrap().as_dict().unwrap().get(b"Key").unwrap().as_str().unwrap(), b"value");
     }
 
     #[test]
@@ -1634,6 +1458,32 @@ mod tests {
     }
 
     use super::*;
+    use crate::pdfobj::{Error, Result as ObjResult, StringFormat};
+
+    /// An in-memory document for inspector tests: objects by id and a trailer.
+    #[derive(Default)]
+    struct Document {
+        objects: BTreeMap<ObjectId, Object>,
+        trailer: Dictionary,
+    }
+
+    impl Document {
+        fn with_version(_version: &str) -> Self {
+            Self::default()
+        }
+    }
+
+    impl Structure for Document {
+        fn trailer(&self) -> &Dictionary {
+            &self.trailer
+        }
+        fn get_object(&self, id: ObjectId) -> ObjResult<&Object> {
+            self.objects.get(&id).ok_or(Error::ObjectNotFound(id))
+        }
+        fn encrypted(&self) -> bool {
+            false
+        }
+    }
 
     #[test]
     fn roman_and_alpha_labels() {
@@ -1669,7 +1519,7 @@ mod tests {
     fn label_spec(style: &str, prefix: Vec<u8>, first: i64) -> Object {
         let mut d = Dictionary::new();
         d.set("S", Object::Name(style.as_bytes().to_vec()));
-        d.set("P", Object::String(prefix, lopdf::StringFormat::Hexadecimal));
+        d.set("P", Object::String(prefix, StringFormat::Hexadecimal));
         d.set("St", first);
         Object::Dictionary(d)
     }
@@ -1783,7 +1633,7 @@ mod tests {
         // `ranges` ranges naming one shared prefix object of `prefix` bytes, without a style.
         let shared = |ranges: i64, prefix: usize| {
             let mut doc = Document::with_version("1.7");
-            doc.objects.insert((7, 0), Object::String(vec![b'x'; prefix], lopdf::StringFormat::Literal));
+            doc.objects.insert((7, 0), Object::String(vec![b'x'; prefix], StringFormat::Literal));
             let mut spec = Dictionary::new();
             spec.set("P", Object::Reference((7, 0)));
             doc.objects.insert((8, 0), Object::Dictionary(spec));
@@ -1936,33 +1786,24 @@ trailer << /Root 1 0 R >>
         assert_eq!(listed, [("alpha", Some("one"), Some(0)), ("beta", None, Some(0))], "{:?}", info.fields);
     }
 
+    /// Each fixture inspects the same with its objects in object streams.
     #[test]
-    fn lazy_structure_matches_the_compatibility_inspector() {
-        // Each fixture as lopdf writes it, and with its objects in object streams.
-        let packed = |bytes: &[u8]| {
+    fn object_streams_inspect_the_same() {
+        // Both written by the full writer, which renumbers objects the same way with or without
+        // object streams.
+        let rewritten = |bytes: &[u8], object_streams: bool| {
             let doc = pdfcraft_cos::Document::open(Arc::new(bytes.to_vec())).unwrap();
-            pdfcraft_cos::write_full(&doc, &pdfcraft_cos::SaveOptions { object_streams: true, ..Default::default() }).unwrap()
+            pdfcraft_cos::write_full(&doc, &pdfcraft_cos::SaveOptions { object_streams, ..Default::default() }).unwrap()
         };
-        let fixtures = [ATTACHMENTS, LAYERS, DESTS].into_iter().flat_map(|bytes| {
-            let mut original = Document::load_mem(bytes).unwrap();
-            let mut plain = Vec::new();
-            original.save_to(&mut plain).unwrap();
-            let stm = packed(&plain);
-            [plain, stm]
-        });
-        for bytes in fixtures {
-            let lazy = LazyStructure::new(Arc::new(bytes.clone()), None).unwrap();
-            let eager = Document::load_mem(&bytes).unwrap();
-            let mut a = inspect(Arc::new(bytes), None).unwrap();
+        for bytes in [ATTACHMENTS, LAYERS, DESTS] {
+            let lazy = LazyStructure::new(Arc::new(rewritten(bytes, true)), None).unwrap();
+            let mut a = inspect(Arc::new(rewritten(bytes, false)), None).unwrap();
             let mut b = DocInfo { pages: a.pages.clone(), ..Default::default() };
-            let mut c = DocInfo { pages: a.pages.clone(), ..Default::default() };
             Inspector::new(&lazy).fill(&mut b);
-            Inspector::new(&eager).fill(&mut c);
             assert!(!lazy.failed());
-            assert_eq!(format!("{b:?}"), format!("{c:?}"));
             a.file_size = 0;
             a.pdf_version.clear();
-            assert_eq!(format!("{a:?}"), format!("{c:?}"));
+            assert_eq!(format!("{a:?}"), format!("{b:?}"));
         }
     }
 
@@ -2256,38 +2097,16 @@ trailer << /Root 1 0 R >>
 
     #[test]
     fn unicode_annotation_date_does_not_prevent_opening() {
-        use lopdf::dictionary;
-
         let date = "D:12345678901éX";
         let mut encoded_date = vec![0xFE, 0xFF];
         encoded_date.extend(date.encode_utf16().flat_map(u16::to_be_bytes));
-        let mut doc = Document::with_version("1.7");
-        let pages_id = doc.new_object_id();
-        let annot_id = doc.add_object(dictionary! {
-            "Type" => "Annot",
-            "Subtype" => "Text",
-            "Rect" => vec![10.into(), 10.into(), 30.into(), 30.into()],
-            "M" => Object::String(encoded_date, lopdf::StringFormat::Hexadecimal),
-        });
-        let page_id = doc.add_object(dictionary! {
-            "Type" => "Page",
-            "Parent" => pages_id,
-            "MediaBox" => vec![0.into(), 0.into(), 200.into(), 300.into()],
-            "Annots" => vec![annot_id.into()],
-        });
-        doc.objects.insert(
-            pages_id,
-            dictionary! {
-                "Type" => "Pages",
-                "Kids" => vec![page_id.into()],
-                "Count" => 1,
-            }
-            .into(),
-        );
-        let catalog_id = doc.add_object(dictionary! { "Type" => "Catalog", "Pages" => pages_id });
-        doc.trailer.set("Root", catalog_id);
-        let mut bytes = Vec::new();
-        doc.save_to(&mut bytes).expect("write synthetic fixture");
+        let hex: String = encoded_date.iter().map(|b| format!("{b:02X}")).collect();
+        let bytes = pdf_of(&[
+            "<< /Type /Catalog /Pages 2 0 R >>".into(),
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 300] /Annots [4 0 R] >>".into(),
+            format!("<< /Type /Annot /Subtype /Text /Rect [10 10 30 30] /M <{hex}> >>"),
+        ]);
 
         let info = inspect(Arc::new(bytes), None).expect("opens despite a non-date /M string");
         assert_eq!(info.pages.len(), 1);
@@ -2299,29 +2118,13 @@ trailer << /Root 1 0 R >>
 
     #[test]
     fn carriage_returns_in_comment_text_become_line_breaks() {
-        use lopdf::dictionary;
-
-        let mut doc = Document::with_version("1.7");
-        let pages_id = doc.new_object_id();
-        let annot_id = doc.add_object(dictionary! {
-            "Type" => "Annot",
-            "Subtype" => "Text",
-            "Rect" => vec![10.into(), 10.into(), 30.into(), 30.into()],
+        let bytes = pdf_of(&[
+            "<< /Type /Catalog /Pages 2 0 R >>".into(),
+            "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".into(),
+            "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 300] /Annots [4 0 R] >>".into(),
             // Acrobat ends lines in /Contents with CR; the interface only breaks lines at LF.
-            "Contents" => Object::string_literal("one\r\rtwo\r\nthree"),
-        });
-        let page_id = doc.add_object(dictionary! {
-            "Type" => "Page",
-            "Parent" => pages_id,
-            "MediaBox" => vec![0.into(), 0.into(), 200.into(), 300.into()],
-            "Annots" => vec![annot_id.into()],
-        });
-        doc.objects.insert(pages_id, dictionary! { "Type" => "Pages", "Kids" => vec![page_id.into()], "Count" => 1 }.into());
-        let catalog_id = doc.add_object(dictionary! { "Type" => "Catalog", "Pages" => pages_id });
-        doc.trailer.set("Root", catalog_id);
-        let mut bytes = Vec::new();
-        doc.save_to(&mut bytes).expect("write synthetic fixture");
-
+            "<< /Type /Annot /Subtype /Text /Rect [10 10 30 30] /Contents (one\r\rtwo\r\nthree) >>".into(),
+        ]);
         let info = inspect(Arc::new(bytes), None).expect("opens");
         assert_eq!(info.annotations[0].contents.as_deref(), Some("one\n\ntwo\nthree"));
     }

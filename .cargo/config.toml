@@ -1,2 +1,13 @@
+# sccache caches compiled crates across builds and `cargo clean` (installed with
+# `winget install Mozilla.sccache`, with sccache.exe copied into ~/.cargo/bin so every shell and
+# RustRover find it; remove this line to build without it).
+[build]
+rustc-wrapper = "sccache"
+
 [alias]
 xtask = "run -p xtask --"
+
+# rust-lld ships with the Rust toolchain and links much faster than MSVC's link.exe, which
+# dominated build time here (87 test executables, each linking the whole app).
+[target.x86_64-pc-windows-msvc]
+linker = "rust-lld.exe"

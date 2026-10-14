@@ -1,5 +1,5 @@
-//! Read-only structure inspection backed by the lazy COS reader. Keep the existing
-//! inspector's lopdf object vocabulary while loading only the objects its queries use.
+//! Read-only structure inspection backed by the lazy COS reader, in the inspector's object
+//! vocabulary ([`crate::pdfobj`]), loading only the objects its queries use.
 
 use std::collections::{BTreeMap, HashSet};
 use std::sync::{
@@ -7,7 +7,7 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 
-use lopdf::{Dictionary, Error, Object, ObjectId, Result};
+use crate::pdfobj::{Dictionary, Error, Object, ObjectId, Result, Stream, StringFormat};
 use pdfcraft_cos::{Document, Object as CosObject};
 
 pub(crate) trait Structure {
@@ -66,8 +66,8 @@ pub(crate) trait Structure {
         pages
     }
 
-    // Match lopdf's font-resource precedence: a page's direct resources, then its
-    // indirect resources and ancestors. Stop cycles and excessive inheritance depth.
+    // Font-resource precedence: a page's direct resources, then its indirect resources and
+    // ancestors. Stop cycles and excessive inheritance depth.
     fn get_page_fonts(&self, page: ObjectId) -> Result<BTreeMap<Vec<u8>, &Dictionary>> {
         let mut resources = Vec::new();
         let mut current = Some(page);
@@ -107,24 +107,6 @@ pub(crate) trait Structure {
     }
 }
 
-impl Structure for lopdf::Document {
-    fn trailer(&self) -> &Dictionary {
-        &self.trailer
-    }
-    fn get_object(&self, id: ObjectId) -> Result<&Object> {
-        self.get_object(id)
-    }
-    fn encrypted(&self) -> bool {
-        self.is_encrypted() || self.was_encrypted() || self.trailer.has(b"Encrypt")
-    }
-    // `page_ids` is not overridden: lopdf's own page-tree walk trusts /Count and pre-allocates
-    // by it, so a hostile /Count (a fuzz finding: 4294967295) aborted the process with a 48 GiB
-    // allocation. The trait's bounded default walk counts the real pages instead.
-    fn get_page_fonts(&self, page: ObjectId) -> Result<BTreeMap<Vec<u8>, &Dictionary>> {
-        self.get_page_fonts(page)
-    }
-}
-
 type Slot = (u32, OnceLock<Option<Box<Object>>>);
 
 pub(crate) struct LazyStructure {
@@ -137,11 +119,10 @@ pub(crate) struct LazyStructure {
 }
 
 impl LazyStructure {
+    /// Read `bytes` for inspection. A damaged file is read as COS repairs it (its cross-reference
+    /// data rebuilt from the object headers); `repair_log` says what was done.
     pub(crate) fn new(bytes: Arc<Vec<u8>>, password: Option<&str>) -> std::result::Result<Self, String> {
         let source = Document::open_with_stream_limit(bytes, password, 256 << 20).map_err(|e| e.to_string())?;
-        if !source.repair_log().is_empty() {
-            return Err("the structure requires compatibility repair".into());
-        }
         let trailer = convert_dict(source.trailer(), 0).map_err(|e| e.to_string())?;
         let objects = source.object_numbers().into_iter().map(|n| (n, OnceLock::new())).collect();
         Ok(Self { source, trailer, objects, failed: AtomicBool::new(false) })
@@ -149,6 +130,17 @@ impl LazyStructure {
 
     pub(crate) fn failed(&self) -> bool {
         self.failed.load(Ordering::Relaxed)
+    }
+
+    /// The decoded data of stream `id`, at most `max` bytes (a decompression bomb is refused).
+    pub(crate) fn stream_data(&self, id: ObjectId, max: usize) -> std::result::Result<Vec<u8>, String> {
+        if self.source.generation(id.0) != id.1 {
+            return Err(Error::ObjectNotFound(id).to_string());
+        }
+        match self.source.try_get(id.0).map_err(|e| e.to_string())?.as_ref() {
+            CosObject::Stream(stream) => stream.decoded_within(max).map_err(|e| e.to_string()),
+            _ => Err("not a stream".into()),
+        }
     }
 }
 
@@ -195,13 +187,11 @@ fn convert(object: &CosObject, depth: usize) -> Result<Object> {
         CosObject::Int(value) => Object::Integer(*value),
         CosObject::Real(value) => Object::Real(*value as f32),
         CosObject::Name(value) => Object::Name(value.clone()),
-        CosObject::String(value) => {
-            Object::String(value.bytes.clone(), if value.hex { lopdf::StringFormat::Hexadecimal } else { lopdf::StringFormat::Literal })
-        }
+        CosObject::String(value) => Object::String(value.bytes.clone(), if value.hex { StringFormat::Hexadecimal } else { StringFormat::Literal }),
         CosObject::Ref(value) => Object::Reference((value.num, value.generation)),
         CosObject::Array(value) => Object::Array(value.iter().map(|o| convert(o, depth + 1)).collect::<Result<_>>()?),
         CosObject::Dict(value) => Object::Dictionary(convert_dict(value, depth + 1)?),
-        CosObject::Stream(value) => Object::Stream(lopdf::Stream::new(convert_dict(&value.dict, depth + 1)?, value.raw.to_vec())),
+        CosObject::Stream(value) => Object::Stream(Stream { dict: convert_dict(&value.dict, depth + 1)?, content: value.raw.to_vec() }),
     })
 }
 
@@ -209,104 +199,83 @@ fn convert(object: &CosObject, depth: usize) -> Result<Object> {
 mod tests {
     use super::*;
 
-    /// A hostile page-tree /Count must not abort the process: lopdf's own `get_pages`
-    /// pre-allocates by it (fuzz finding: /Count 4294967295 -> a 48 GiB allocation),
-    /// the bounded default walk counts the real pages instead.
-    #[test]
-    fn a_hostile_page_count_does_not_abort_inspection() {
-        let pdf = b"%PDF-1.7
-1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
-endobj
-2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 4294967295 >>
-endobj
-3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] >>
-endobj
-trailer
-<< /Size 4 /Root 1 0 R >>
-%%EOF";
-        let doc = lopdf::Document::load_mem(&pdf[..]).unwrap();
-        let pages = Structure::page_ids(&doc);
-        assert_eq!(pages, [(3, 0)], "the walk counts the one real page, not /Count");
+    /// A PDF holding `objects` (number, body) under a cross-reference table with free entries for
+    /// the numbers left out, and `root` as its catalog.
+    fn pdf_with(objects: &[(u32, String)], root: u32) -> Vec<u8> {
+        let mut out = b"%PDF-1.7\n".to_vec();
+        let mut offsets = std::collections::BTreeMap::new();
+        for (n, body) in objects {
+            offsets.insert(*n, out.len());
+            out.extend_from_slice(format!("{n} 0 obj\n{body}\nendobj\n").as_bytes());
+        }
+        let size = offsets.keys().max().map_or(1, |n| n + 1);
+        let xref = out.len();
+        out.extend_from_slice(format!("xref\n0 {size}\n").as_bytes());
+        for n in 0..size {
+            let line = match offsets.get(&n) {
+                Some(offset) => format!("{offset:010} 00000 n \n"),
+                None => "0000000000 65535 f \n".to_string(),
+            };
+            out.extend_from_slice(line.as_bytes());
+        }
+        out.extend_from_slice(format!("trailer\n<< /Size {size} /Root {root} 0 R >>\nstartxref\n{xref}\n%%EOF\n").as_bytes());
+        out
     }
 
-    fn nested_sparse_page_tree(repeated_and_cyclic: bool) -> lopdf::Document {
-        let mut doc = lopdf::Document::with_version("1.7");
-        let mut catalog = Dictionary::new();
-        catalog.set("Type", Object::Name(b"Catalog".to_vec()));
-        catalog.set("Pages", Object::Reference((5, 0)));
-        doc.objects.insert((17, 0), Object::Dictionary(catalog));
+    /// A hostile page-tree /Count must not abort the process (fuzz finding: /Count 4294967295 made
+    /// a reader that trusted it pre-allocate 48 GiB): the bounded walk counts the real pages.
+    #[test]
+    fn a_hostile_page_count_does_not_abort_inspection() {
+        let pdf = pdf_with(
+            &[
+                (1, "<< /Type /Catalog /Pages 2 0 R >>".into()),
+                (2, "<< /Type /Pages /Kids [3 0 R] /Count 4294967295 >>".into()),
+                (3, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] >>".into()),
+            ],
+            1,
+        );
+        let doc = LazyStructure::new(Arc::new(pdf), None).unwrap();
+        assert_eq!(doc.page_ids(), [(3, 0)], "the walk counts the one real page, not /Count");
+    }
 
-        let mut pages = Dictionary::new();
-        pages.set("Type", Object::Name(b"Pages".to_vec()));
-        pages.set("Kids", vec![Object::Reference((31, 0)), Object::Reference((88, 0))]);
-        pages.set("Count", Object::Integer(if repeated_and_cyclic { 5 } else { 3 }));
-        doc.objects.insert((5, 0), Object::Dictionary(pages));
-
-        let mut nested = Dictionary::new();
-        nested.set("Type", Object::Name(b"Pages".to_vec()));
-        nested.set("Parent", Object::Reference((5, 0)));
-        let kids = if repeated_and_cyclic {
-            vec![Object::Reference((12, 0)), Object::Reference((5, 0)), Object::Reference((31, 0)), Object::Reference((42, 0))]
-        } else {
-            vec![Object::Reference((12, 0)), Object::Reference((42, 0))]
-        };
-        nested.set("Kids", kids);
-        nested.set("Count", Object::Integer(if repeated_and_cyclic { 4 } else { 2 }));
-        doc.objects.insert((88, 0), Object::Dictionary(nested));
-
+    fn nested_sparse_page_tree(repeated_and_cyclic: bool) -> Vec<u8> {
+        let nested_kids = if repeated_and_cyclic { "[12 0 R 5 0 R 31 0 R 42 0 R]" } else { "[12 0 R 42 0 R]" };
+        let (count, nested_count) = if repeated_and_cyclic { (5, 4) } else { (3, 2) };
+        let mut objects = vec![
+            (17, "<< /Type /Catalog /Pages 5 0 R >>".to_string()),
+            (5, format!("<< /Type /Pages /Kids [31 0 R 88 0 R] /Count {count} >>")),
+            (88, format!("<< /Type /Pages /Parent 5 0 R /Kids {nested_kids} /Count {nested_count} >>")),
+        ];
         for (id, parent) in [(31, 5), (12, 88), (42, 88)] {
-            let mut page = Dictionary::new();
-            page.set("Type", Object::Name(b"Page".to_vec()));
-            page.set("Parent", Object::Reference((parent, 0)));
-            doc.objects.insert((id, 0), Object::Dictionary(page));
+            objects.push((id, format!("<< /Type /Page /Parent {parent} 0 R >>")));
         }
-        doc.max_id = 88;
-        doc.trailer.set("Root", Object::Reference((17, 0)));
-        doc
+        pdf_with(&objects, 17)
     }
 
     #[test]
     fn page_walk_keeps_nested_sparse_order_and_first_visit_semantics() {
-        let doc = nested_sparse_page_tree(true);
-        assert_eq!(Structure::page_ids(&doc), [(31, 0), (12, 0), (42, 0)]);
-    }
-
-    #[test]
-    fn lazy_and_compatibility_walks_keep_nested_sparse_order() {
-        let mut source = nested_sparse_page_tree(false);
-        let mut bytes = Vec::new();
-        source.save_to(&mut bytes).unwrap();
         let expected = [(31, 0), (12, 0), (42, 0)];
-        let eager = lopdf::Document::load_mem(&bytes).unwrap();
-        let lazy = LazyStructure::new(Arc::new(bytes), None).unwrap();
-        assert_eq!(Structure::page_ids(&eager), expected);
-        assert_eq!(Structure::page_ids(&lazy), expected);
+        for repeated_and_cyclic in [false, true] {
+            let doc = LazyStructure::new(Arc::new(nested_sparse_page_tree(repeated_and_cyclic)), None).unwrap();
+            assert_eq!(doc.page_ids(), expected, "repeated and cyclic kids: {repeated_and_cyclic}");
+        }
     }
 
     #[test]
     fn inspection_loads_only_requested_objects_in_a_compressed_document() {
-        let mut source = lopdf::Document::with_version("1.7");
-        let catalog = source.add_object(lopdf::dictionary! { "Type" => "Catalog", "Pages" => (2, 0) });
-        source.add_object(lopdf::dictionary! { "Type" => "Pages", "Kids" => vec![Object::Reference((3, 0))], "Count" => 1 });
-        source
-            .add_object(lopdf::dictionary! { "Type" => "Page", "Parent" => (2, 0), "MediaBox" => vec![0.into(), 0.into(), 100.into(), 100.into()] });
-        source.trailer.set("Root", catalog);
-        let unused: Vec<_> = (0..300).map(|i| Object::Reference(source.add_object(lopdf::dictionary! { "Unused" => i }))).collect();
-        // Keep these objects reachable when the full writer removes orphan objects,
-        // through a catalog extension that the panel inspector has no reason to read.
-        source.get_dictionary_mut(catalog).unwrap().set("Uninspected", unused);
-        let mut bytes = Vec::new();
-        source.save_to(&mut bytes).unwrap();
-        let cos = Document::open(Arc::new(bytes)).unwrap();
+        // Keep the unused objects reachable when the full writer removes orphan objects, through a
+        // catalog extension that the panel inspector has no reason to read.
+        let unused: String = (0..300).map(|i| format!("{} 0 R ", 4 + i)).collect();
+        let mut objects = vec![
+            (1, format!("<< /Type /Catalog /Pages 2 0 R /Uninspected [{unused}] >>")),
+            (2, "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".to_string()),
+            (3, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] >>".to_string()),
+        ];
+        objects.extend((0..300).map(|i| (4 + i, format!("<< /Unused {i} >>"))));
+        let cos = Document::open(Arc::new(pdf_with(&objects, 1))).unwrap();
         let compressed = pdfcraft_cos::write_full(&cos, &pdfcraft_cos::SaveOptions::default()).unwrap();
-        let eager = lopdf::Document::load_mem(&compressed).unwrap();
-        let expected = Structure::page_ids(&eager);
         let view = LazyStructure::new(Arc::new(compressed), None).unwrap();
         assert_eq!(view.page_ids().len(), 1);
-        assert_eq!(view.page_ids(), expected);
         assert!(!view.failed());
         assert!(
             view.objects.iter().filter(|(_, slot)| slot.get().is_some()).count() <= 3,

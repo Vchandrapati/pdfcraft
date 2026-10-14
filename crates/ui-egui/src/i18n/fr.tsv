@@ -66,7 +66,6 @@
 	Flatten Fill & Sign when saving	Aplatir Remplir et signer à l'enregistrement
 	Text, marks and signatures become part of the page. Other comments stay editable.	Le texte, les marques et les signatures deviennent partie de la page. Les autres commentaires restent modifiables.
 	OK	OK
-	Join our Discord	Rejoindre notre Discord
 	Close	Fermer
 	Next / previous match	Correspondance suivante / précédente
 	Copy selected text	Copier le texte sélectionné
@@ -132,17 +131,10 @@
 	Next page	Page suivante
 	Previous page	Page précédente
 	Current page — type a page number or label (such as iv) and press Enter	Page actuelle — saisissez un numéro ou une étiquette de page (comme iv) et appuyez sur Entrée
-	Welcome to PdfCraft	Bienvenue dans PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	Un atelier PDF open source — local, privé et automatisable.
-	Join the ArtCraft community	Rejoindre la communauté ArtCraft
-	Get help, share feedback and follow development on Discord.	Obtenez de l'aide, partagez vos retours et suivez le développement sur Discord.
-	Recommended tools	Outils recommandés
 	Use now	Utiliser
 	Open file	Ouvrir un fichier
 	Recent	Récents
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Les fichiers que vous ouvrez dans PdfCraft apparaissent ici. Déposez un PDF n'importe où pour l'ouvrir.
-	Privacy	Confidentialité
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft fonctionne hors ligne. Pas de télémétrie, pas de compte, et aucun traitement dans le cloud sauf si vous ajoutez un fournisseur.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Les scripts s'exécutent dans un bac à sable, sans accès aux fichiers ni au réseau. Si JavaScript est désactivé, les fonctions standard de format, de validation et de calcul d'Acrobat continuent de fonctionner.
 	Back to all tools	Retour à tous les outils
 	Close panel	Fermer le panneau
@@ -277,11 +269,6 @@
 	Split document…	Fractionner le document…
 	Number pages…	Numéroter les pages…
 	Keyboard shortcuts	Raccourcis clavier
-	Join the ArtCraft Discord	Rejoindre le Discord ArtCraft
-	PdfCraft web page	Page web de PdfCraft
-	PdfCraft on GitHub	PdfCraft sur GitHub
-	ArtCraft website	Site web d'ArtCraft
-	Check for updates…	Rechercher des mises à jour…
 	About PdfCraft	À propos de PdfCraft
 	Export a PDF	Exporter un PDF
 	Export to	Exporter vers
@@ -731,16 +718,6 @@
 	Flip Vertical	Retourner verticalement
 	Replace Image…	Remplacer l'image…
 	Save Image As…	Enregistrer l'image sous…
-	Check for updates	Rechercher des mises à jour
-	No check has run yet.	Aucune vérification n'a encore été faite.
-	Checking for a newer version…	Recherche d'une version plus récente…
-	PdfCraft {v} is available.	PdfCraft {v} est disponible.
-	You have version {c}. Download the new version from its release page.	Vous avez la version {c}. Téléchargez la nouvelle version depuis sa page de publication.
-	PdfCraft {c} is up to date.	PdfCraft {c} est à jour.
-	Couldn't check for updates: {e}	Impossible de rechercher les mises à jour : {e}
-	You have version {c}. All releases are listed at {page}.	Vous avez la version {c}. Toutes les versions sont listées sur {page}.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	Demande à GitHub la dernière version. Rien n'est téléchargé ni installé automatiquement.
-	Download	Télécharger
 	Later	Plus tard
 	none	aucun
 	Declared conformance: {shown}	Conformité déclarée : {shown}
@@ -1369,7 +1346,6 @@
 	Discard	Abandonner
 	Version {v}	Version {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Une application PDF open source, en salle blanche, écrite en Rust. MIT OR Apache-2.0.
-	Part of	Partie de
 	Summarize Options	Options du résumé
 	Choose a layout:	Choisissez une disposition :
 	Comments only	Commentaires seulement
@@ -2285,3 +2261,35 @@ scroll speed	Fast	Rapide
 	Ink sensitivity	Sensibilité à l’encre
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	Aucune signature trouvée dans le cadre. Placez le cadre sur la signature ou augmentez la sensibilité à l’encre.
 	Couldn't use the photo: {e}	Impossible d’utiliser la photo : {e}
+	The document or extraction settings changed. Run extraction again.	Le document ou les paramètres d’extraction ont changé. Relancez l’extraction.
+	Extract Tables	Extraire les tableaux
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Vérifiez les cellules extraites avant l’exportation. La détection automatique s’appuie sur l’espacement du texte et peut ne pas correspondre à la disposition prévue du tableau dans le document.
+	of {n}	sur {n}
+	Region	Zone
+	Use the selected rectangle	Utiliser le rectangle sélectionné
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Sélectionnez un rectangle avec Sélection de colonne avant d’ouvrir cette boîte de dialogue afin de limiter la zone de la page.
+	Column separators	Séparateurs de colonnes
+	Automatic, or e.g. 180, 340	Automatique ou, par ex., 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Laissez les séparateurs vides pour une détection automatique. Les positions sont mesurées en points depuis le coin supérieur gauche de la page affichée.
+	Run extraction	Relancer l’extraction
+	Detect tables	Détecter les tableaux
+	Extracting…	Extraction en cours…
+	Settings changed. Run extraction again to refresh this preview.	Les paramètres ont changé. Relancez l’extraction pour actualiser cet aperçu.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Aucun texte dans cette zone. Pour les documents numérisés, lancez d’abord Reconnaître le texte ; sinon, sélectionnez une zone qui contient du texte.
+	No tables detected. Adjust the region or add separator positions and run again.	Aucun tableau détecté. Ajustez la zone ou ajoutez des positions de séparateur, puis relancez l’extraction.
+	Use selected table's separators for correction	Utiliser les séparateurs du tableau sélectionné pour corriger
+	Export Excel	Exporter vers Excel
+	Export CSV	Exporter au format CSV
+	Table {n} · {rows} rows × {columns} columns	Tableau {n} · {rows} lignes × {columns} colonnes
+	Table {n}	Tableau {n}
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	L’aperçu omet {rows} lignes et {cells} cellules ; il raccourcit {shortened} cellules longues. L’exportation inclut le tableau complet.
+	Run table extraction again before exporting this preview	Relancez l’extraction du tableau avant d’exporter cet aperçu
+	Table export stopped: {error}	Exportation du tableau interrompue : {error}
+	Exported {name}	Exporté : {name}
+	Couldn't save {name}: {error}	Impossible d’enregistrer {name} : {error}
+	Couldn't download {name}: {error}	Impossible de télécharger {name} : {error}
+	Extract tables…	Extraire les tableaux…
+	Tables (CSV / Excel)	Tableaux (CSV / Excel)
+	Quick tools	Outils rapides
+	Merge	Fusionner
+	Reorder	Réorganiser

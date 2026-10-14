@@ -30,11 +30,40 @@ fn harness(setup: impl FnOnce(&mut PdfCraftApp) + 'static) -> Harness<'static, P
 }
 
 #[test]
-fn home_shows_welcome_and_tools() {
+fn home_shows_quick_tools() {
     let h = harness(|_| {});
-    h.get_by_label_contains("Welcome to PdfCraft");
-    assert!(h.query_all_by_label("Organize pages").count() >= 2, "tool list + home card");
-    h.get_by_label("Open file");
+    h.get_by_label("Quick tools");
+    for label in ["Rotate", "Merge", "Split", "Reorder"] {
+        h.get_by_label(label);
+    }
+    for label in ["Welcome to PdfCraft", "Recommended tools", "Join the ArtCraft community", "Privacy", "Open file"] {
+        assert!(h.query_by_label(label).is_none(), "{label} was removed from Home");
+    }
+    let mut h = harness(|_| {});
+    h.get_by_label("Merge").click();
+    h.run_steps(3);
+    assert!(h.state().combine_showing());
+
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        use pdfcraft_ui_egui::Dialog;
+        let dir = std::env::temp_dir().join(format!("pdfcraft-home-quick-tools-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let file = dir.join("pages.pdf");
+        std::fs::write(&file, FIXTURE).unwrap();
+        for (label, dialog) in [("Rotate", Some(Dialog::RotatePages)), ("Split", Some(Dialog::Split)), ("Reorder", None)] {
+            let mut h = harness(|_| {});
+            h.state_mut().pick_override = Some(vec![file.to_string_lossy().into_owned()]);
+            h.get_by_label(label).click();
+            h.run_steps(4);
+            assert_eq!(h.state().views.len(), 1, "{label} opens the chosen PDF");
+            assert_eq!(h.state().dialog, dialog, "{label} opens its workflow");
+            if label == "Reorder" {
+                assert!(h.state().views[0].organize);
+            }
+        }
+        let _ = std::fs::remove_dir_all(dir);
+    }
 }
 
 #[test]
@@ -302,8 +331,8 @@ fn tabs_shrink_to_fit_then_arrows_step_through_them_and_open_stays_in_sight() {
         }
     });
     let open = h.get_by_label("Open").rect();
-    let discord = h.get_by_label("Discord").rect();
-    assert!(open.right() <= discord.left(), "Open {open:?} must not run under Discord {discord:?}");
+    let shortcuts = h.get_by_label("Keyboard shortcuts").rect();
+    assert!(open.right() <= shortcuts.left(), "Open {open:?} must not run under shortcuts {shortcuts:?}");
     let mut previous_right = f32::MIN;
     for i in 0..5 {
         let tab = h.get_by_label(&name(i)).rect();
@@ -327,15 +356,15 @@ fn tabs_shrink_to_fit_then_arrows_step_through_them_and_open_stays_in_sight() {
     assert_eq!(enabled(&h, "Scroll tabs right"), Some(true), "and then there is more to the right");
     let open = h.get_by_label("Open").rect();
     let right = h.get_by_label("Scroll tabs right").rect();
-    assert!(right.right() <= open.left() + 0.5 && open.right() <= h.get_by_label("Discord").rect().left());
-    // Twenty: Open stays in sight left of Discord.
+    assert!(right.right() <= open.left() + 0.5 && open.right() <= h.get_by_label("Keyboard shortcuts").rect().left());
+    // Twenty: Open stays in sight left of the shortcut button.
     for i in 0..13 {
         h.state_mut().open_bytes(&format!("more-{i:02}.pdf"), None, FIXTURE.to_vec()).unwrap();
     }
     h.run_steps(4);
     let open = h.get_by_label("Open").rect();
-    let discord = h.get_by_label("Discord").rect();
-    assert!(open.left() > 0.0 && open.right() <= discord.left(), "Open {open:?} stays in sight left of Discord {discord:?}");
+    let shortcuts = h.get_by_label("Keyboard shortcuts").rect();
+    assert!(open.left() > 0.0 && open.right() <= shortcuts.left(), "Open {open:?} stays in sight left of shortcuts {shortcuts:?}");
 }
 
 /// macOS (#789): with the integrated title bar, the strip is the 28 pt band AppKit centres the
@@ -348,7 +377,7 @@ fn the_integrated_title_bar_is_the_traffic_light_band() {
         app.open_bytes("band.pdf", None, FIXTURE.to_vec()).unwrap();
     });
     let band = 28.0;
-    for label in ["Home", "band.pdf", "Open", "Discord", "Keyboard shortcuts"] {
+    for label in ["Home", "band.pdf", "Open", "Keyboard shortcuts"] {
         let r = h.get_by_label(label).rect();
         assert!(r.top() >= 0.0 && r.bottom() <= band, "{label}: {r:?} inside the {band} pt title bar");
         assert!(r.height() >= 24.0, "{label}: {r:?} stays clickable");
@@ -950,7 +979,7 @@ fn closing_the_last_active_tab_selects_the_previous_one_then_home() {
         assert!(app.session.get(ids[removed]).is_none());
     }
     assert_eq!(h.state().active, None);
-    h.get_by_label_contains("Welcome to PdfCraft");
+    h.get_by_label("Quick tools");
 }
 
 #[test]

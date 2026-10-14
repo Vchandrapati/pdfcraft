@@ -114,11 +114,6 @@
 	Split document…	Rozdělit dokument…
 	Number pages…	Očíslovat stránky…
 	Keyboard shortcuts	Klávesové zkratky
-	Join the ArtCraft Discord	Připojit se ke komunitě ArtCraft na Discordu
-	PdfCraft web page	Webová stránka PdfCraft
-	PdfCraft on GitHub	PdfCraft na GitHubu
-	ArtCraft website	Web ArtCraft
-	Check for updates…	Zkontrolovat aktualizace…
 	About PdfCraft	O aplikaci PdfCraft
 	Auto	Automaticky
 	Continuous scrolling	Plynulé posouvání
@@ -221,7 +216,6 @@ key	Space	Mezerník
 	{folder} is already pinned to Home	Složka {folder} už je připnutá na úvodní obrazovce
 	You can pin up to {n} folders. Unpin one first.	Připnout lze nejvýše {n} složek. Nejdříve některou odepněte.
 	Pinned {folder} to Home	Složka {folder} je připnutá na úvodní obrazovce
-	Join our Discord	Připojit se k našemu Discordu
 	Close	Zavřít
 	Next / previous match	Další / předchozí shoda
 	Copy selected text	Kopírovat vybraný text
@@ -276,17 +270,10 @@ key	Space	Mezerník
 	Next page	Další stránka
 	Previous page	Předchozí stránka
 	Current page — type a page number or label (such as iv) and press Enter	Aktuální stránka — zadejte číslo nebo označení stránky (třeba iv) a stiskněte Enter
-	Welcome to PdfCraft	Vítá vás PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	Open-source dílna pro PDF — lokální, soukromá a skriptovatelná.
-	Join the ArtCraft community	Připojte se ke komunitě ArtCraft
-	Get help, share feedback and follow development on Discord.	Získejte pomoc, sdílejte zpětnou vazbu a sledujte vývoj na Discordu.
-	Recommended tools	Doporučené nástroje
 	Use now	Použít
 	Open file	Otevřít soubor
 	Recent	Nedávné
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Zde se zobrazí soubory, které otevřete v PdfCraftu. Soubor PDF otevřete přetažením kamkoli do okna.
-	Privacy	Soukromí
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft funguje offline. Žádná telemetrie, žádný účet a žádné zpracování v cloudu, pokud nepřidáte poskytovatele.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Skripty běží v izolovaném prostředí bez přístupu k souborům a síti. S vypnutým JavaScriptem dál fungují standardní funkce Acrobatu pro formátování, ověření a výpočty.
 	Back to all tools	Zpět na všechny nástroje
 	Close panel	Zavřít panel
@@ -832,16 +819,6 @@ key	Space	Mezerník
 	Flip Vertical	Převrátit svisle
 	Replace Image…	Nahradit obrázek…
 	Save Image As…	Uložit obrázek jako…
-	Check for updates	Zkontrolovat aktualizace
-	No check has run yet.	Kontrola zatím neproběhla.
-	Checking for a newer version…	Hledání novější verze…
-	PdfCraft {v} is available.	Je k dispozici PdfCraft {v}.
-	You have version {c}. Download the new version from its release page.	Máte verzi {c}. Novou verzi si stáhněte z její stránky s vydáním.
-	PdfCraft {c} is up to date.	PdfCraft {c} je aktuální.
-	Couldn't check for updates: {e}	Aktualizace nelze zkontrolovat: {e}
-	You have version {c}. All releases are listed at {page}.	Máte verzi {c}. Všechna vydání najdete na {page}.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	Zjistí na GitHubu nejnovější vydání. Nic se automaticky nestahuje ani neinstaluje.
-	Download	Stáhnout
 	Later	Později
 	none	žádná
 	Declared conformance: {shown}	Deklarovaná shoda: {shown}
@@ -1457,7 +1434,6 @@ key	Space	Mezerník
 	Discard	Zahodit
 	Version {v}	Verze {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Open-source aplikace pro PDF napsaná v Rustu metodou clean-room. MIT OR Apache-2.0.
-	Part of	Součást
 	Summarize Options	Možnosti souhrnu
 	Choose a layout:	Vyberte rozvržení:
 	Comments only	Jen komentáře
@@ -2359,3 +2335,35 @@ scroll speed	Fast	Rychlá
 	Ink sensitivity	Citlivost na inkoust
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	V rámečku nebyl nalezen žádný podpis. Přesuňte rámeček na podpis nebo zvyšte citlivost na inkoust.
 	Couldn't use the photo: {e}	Fotografii nelze použít: {e}
+	The document or extraction settings changed. Run extraction again.	Dokument nebo nastavení extrakce se změnilo. Spusťte extrakci znovu.
+	Extract Tables	Extrakce tabulek
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Před exportem zkontrolujte extrahované buňky. Automatická detekce vychází z mezer mezi textem a nemusí odpovídat zamýšlenému rozložení tabulky v dokumentu.
+	of {n}	z {n}
+	Region	Oblast
+	Use the selected rectangle	Použít vybraný obdélník
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Před otevřením tohoto dialogu vyberte pomocí nástroje Výběr sloupce obdélník, kterým omezíte oblast stránky.
+	Column separators	Oddělovače sloupců
+	Automatic, or e.g. 180, 340	Automaticky, nebo např. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Pokud chcete automatickou detekci, ponechte oddělovače prázdné. Polohy se měří v bodech od levého horního rohu zobrazené stránky.
+	Run extraction	Spustit extrakci
+	Detect tables	Rozpoznat tabulky
+	Extracting…	Probíhá extrakce…
+	Settings changed. Run extraction again to refresh this preview.	Nastavení se změnilo. Spusťte extrakci znovu a obnovte náhled.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	V této oblasti není žádný text. U skenů nejprve spusťte Rozpoznat text, jinak vyberte oblast obsahující text.
+	No tables detected. Adjust the region or add separator positions and run again.	Nebyly rozpoznány žádné tabulky. Upravte oblast nebo přidejte polohy oddělovačů a spusťte akci znovu.
+	Use selected table's separators for correction	Použít oddělovače vybrané tabulky k opravě
+	Export Excel	Exportovat do Excelu
+	Export CSV	Exportovat do CSV
+	Table {n} · {rows} rows × {columns} columns	Tabulka {n} · {rows} řádků × {columns} sloupců
+	Table {n}	Tabulka {n}
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Náhled vynechává {rows} řádků a {cells} buněk a zkracuje {shortened} dlouhých buněk. Export zahrnuje celou tabulku.
+	Run table extraction again before exporting this preview	Před exportem tohoto náhledu spusťte extrakci tabulek znovu
+	Table export stopped: {error}	Export tabulky byl zastaven: {error}
+	Exported {name}	Exportováno: {name}
+	Couldn't save {name}: {error}	{name} nelze uložit: {error}
+	Couldn't download {name}: {error}	{name} nelze stáhnout: {error}
+	Extract tables…	Extrahovat tabulky…
+	Tables (CSV / Excel)	Tabulky (CSV / Excel)
+	Quick tools	Rychlé nástroje
+	Merge	Sloučit
+	Reorder	Změnit pořadí

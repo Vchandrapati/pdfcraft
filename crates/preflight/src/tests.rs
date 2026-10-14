@@ -214,3 +214,39 @@ fn verify_reports_an_output_intent_that_does_not_match_device_colour() {
     let headed = format!("<< /Length 128 >>\nstream\n{header}\nendstream");
     assert!(!messages(&verify(&cmyk_page(intent, "/Im0 Do", &[&headed]), Level::A2b)).contains(&cmyk_msg));
 }
+
+/// Issue #1334: a colour operator is found whichever of the six PDF whitespace characters
+/// separates the tokens, not only after a space or a line feed.
+#[test]
+fn device_colour_is_found_after_any_whitespace() {
+    let page = |content: &[u8]| {
+        let content = String::from_utf8(content.to_vec()).unwrap();
+        let stream = format!("<< /Length {} >>\nstream\n{content}\nendstream", content.len());
+        build(
+            &[
+                "<< /Type /Catalog /Pages 2 0 R >>",
+                "<< /Type /Pages /Kids [3 0 R] /Count 1 /MediaBox [0 0 200 200] >>",
+                "<< /Type /Page /Parent 2 0 R /Contents 4 0 R /Resources << >> >>",
+                stream.as_str(),
+            ],
+            "",
+        )
+    };
+    let cmyk_msg = "DeviceCMYK is used: it needs a CMYK output intent (not added automatically)";
+    for separator in [b" ".as_slice(), b"\n", b"\r", b"\t", b"\x0C", b"\0"] {
+        let cmyk: &[&[u8]] = &[b"0", b"0", b"0", b"1", b"k", b"10", b"10", b"50", b"50", b"re", b"f"];
+        let mut doc = page(&cmyk.join(separator));
+        assert!(messages(&verify(&doc, Level::A2b)).contains(&cmyk_msg), "separator {separator:?}");
+        let r = convert(&mut doc, Level::A2b).unwrap();
+        assert!(declared(&doc).output_intents.is_empty(), "separator {separator:?}");
+        assert!(messages(&r.remaining).contains(&cmyk_msg), "separator {separator:?}");
+
+        // Gray and RGB still get the sRGB output intent.
+        for colour in [[b"0".as_slice(), b"g"].as_slice(), &[b"1", b"0", b"0", b"rg"]] {
+            let mut doc = page(&colour.join(separator));
+            let r = convert(&mut doc, Level::A2b).unwrap();
+            assert!(r.fixed.iter().any(|f| f.contains("output intent")), "separator {separator:?}: {:?}", r.fixed);
+            assert_eq!(declared(&doc).output_intents, ["sRGB IEC61966-2.1"], "separator {separator:?}");
+        }
+    }
+}

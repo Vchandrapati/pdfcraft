@@ -1,6 +1,6 @@
 [package]
 name = "pdfcraft-ocr"
-description = "Scan & OCR: recognise text in page images (ocrs) and write it as an invisible, searchable text layer"
+description = "Scan & OCR: recognise text with Tesseract Best and write an invisible, searchable text layer"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -11,7 +11,12 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+pdfcraft-content = { workspace = true }
+pdfcraft-cos = { workspace = true }
 pdfcraft-fonts = { workspace = true }
-ocrs = { version = "0.13.1", default-features = false, features = ["rten"] }
-rten = { version = "0.26.0", default-features = false, features = ["rten_format"] }
+unicode-bidi = "0.3"
 thiserror.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+png = "0.18"
+tempfile = "3"

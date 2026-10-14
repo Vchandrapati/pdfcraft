@@ -192,6 +192,17 @@ fn posters_tile_with_overlap() {
     assert!(layout(&[(200.0, 300.0)], &settings(vec![0], Layout::Poster { scale: 400.0, overlap: 400.0, cut_marks: false })).is_err());
 }
 
+/// Issue #1335: a scale so large that the tile counts saturate is refused with the sheet-limit
+/// error, not an overflow in counting the sheets.
+#[test]
+fn huge_posters_are_refused_at_the_sheet_limit() {
+    let refused = Err(PrintError::Invalid("the poster would need more than 1024 sheets".into()));
+    for scale in [100_000.0, 1e22, f64::MAX] {
+        let poster = settings(vec![0], Layout::Poster { scale, overlap: 18.0, cut_marks: true });
+        assert_eq!(layout(&[(200.0, 300.0)], &poster), refused, "scale {scale}");
+    }
+}
+
 #[test]
 fn imposed_pdf_has_the_sheets_and_honours_comments_and_forms() {
     let doc = fixture(3);

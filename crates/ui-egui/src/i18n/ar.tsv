@@ -93,7 +93,6 @@
 	Side panels	اللوحات الجانبية
 	Enable Acrobat JavaScript	تفعيل Acrobat JavaScript
 	OK	موافق
-	Join our Discord	انضم إلى خادمنا على Discord
 	Close	إغلاق
 	Next / previous match	التطابق التالي / السابق
 	Copy selected text	نسخ النص المحدد
@@ -159,17 +158,10 @@
 	Next page	الصفحة التالية
 	Previous page	الصفحة السابقة
 	Current page — type a page number or label (such as iv) and press Enter	الصفحة الحالية — اكتب رقم صفحة أو تسميتها (مثل iv) ثم اضغط Enter
-	Welcome to PdfCraft	مرحبًا بك في PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	منضدة عمل مفتوحة المصدر لملفات PDF — محلية وخاصة وقابلة للبرمجة.
-	Join the ArtCraft community	انضم إلى مجتمع ArtCraft
-	Get help, share feedback and follow development on Discord.	احصل على المساعدة وشارك ملاحظاتك وتابع التطوير على Discord.
-	Recommended tools	أدوات مقترحة
 	Use now	استخدم الآن
 	Open file	فتح ملف
 	Recent	الأخيرة
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	الملفات التي تفتحها في PdfCraft تظهر هنا. أفلت ملف PDF في أي مكان لفتحه.
-	Privacy	الخصوصية
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	يعمل PdfCraft دون اتصال. لا قياس عن بُعد ولا حساب ولا معالجة سحابية إلا إذا أضفت مزوّدًا.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	تعمل السكربتات في بيئة معزولة دون وصول إلى الملفات أو الشبكة. عند إيقاف JavaScript تبقى دوال Acrobat القياسية للتنسيق والتحقق والحساب تعمل.
 	Back to all tools	العودة إلى كل الأدوات
 	Close panel	إغلاق اللوحة
@@ -304,11 +296,6 @@
 	Split document…	تقسيم المستند…
 	Number pages…	ترقيم الصفحات…
 	Keyboard shortcuts	اختصارات لوحة المفاتيح
-	Join the ArtCraft Discord	انضم إلى خادم ArtCraft على Discord
-	PdfCraft web page	صفحة PdfCraft على الويب
-	PdfCraft on GitHub	PdfCraft على GitHub
-	ArtCraft website	موقع ArtCraft
-	Check for updates…	التحقق من التحديثات…
 	About PdfCraft	حول PdfCraft
 	Export a PDF	تصدير ملف PDF
 	Export to	تصدير إلى
@@ -757,16 +744,6 @@
 	Flip Vertical	قلب عمودي
 	Replace Image…	استبدال الصورة…
 	Save Image As…	حفظ الصورة باسم…
-	Check for updates	التحقق من التحديثات
-	No check has run yet.	لم يُجرَ أي تحقق بعد.
-	Checking for a newer version…	جارٍ التحقق من وجود إصدار أحدث…
-	PdfCraft {v} is available.	PdfCraft {v} متاح.
-	You have version {c}. Download the new version from its release page.	لديك الإصدار {c}. نزّل الإصدار الجديد من صفحة إصداره.
-	PdfCraft {c} is up to date.	PdfCraft {c} محدَّث.
-	Couldn't check for updates: {e}	تعذّر التحقق من التحديثات: {e}
-	You have version {c}. All releases are listed at {page}.	لديك الإصدار {c}. كل الإصدارات مدرجة في {page}.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	يسأل GitHub عن أحدث إصدار. لا يُنزَّل أو يُثبَّت شيء تلقائيًا.
-	Download	تنزيل
 	Later	لاحقًا
 	none	لا شيء
 	Declared conformance: {shown}	المطابقة المعلنة: {shown}
@@ -1389,7 +1366,6 @@
 	Discard	تجاهل
 	Version {v}	الإصدار {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	تطبيق PDF مفتوح المصدر مكتوب بلغة Rust بأسلوب الغرفة النظيفة. MIT OR Apache-2.0.
-	Part of	جزء من
 	Summarize Options	خيارات التلخيص
 	Choose a layout:	اختر تخطيطًا:
 	Comments only	التعليقات فقط
@@ -2306,3 +2282,35 @@ scroll speed	Fast	سريعة
 	Ink sensitivity	حساسية الحبر
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	لم يُعثر على توقيع داخل الإطار. حرّك الإطار فوق التوقيع أو ارفع حساسية الحبر.
 	Couldn't use the photo: {e}	تعذّر استخدام الصورة: {e}
+	The document or extraction settings changed. Run extraction again.	تغيّر المستند أو إعدادات الاستخراج. شغّل الاستخراج مرة أخرى.
+	Extract Tables	استخراج الجداول
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	راجع الخلايا المستخرجة قبل التصدير. يستخدم الاكتشاف التلقائي تباعد النص وقد لا يطابق تخطيط الجدول المقصود في المستند.
+	Region	المنطقة
+	Use the selected rectangle	استخدام المستطيل المحدد
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	حدد مستطيلاً باستخدام أداة «تحديد العمود» قبل فتح مربع الحوار هذا لتقييد منطقة الصفحة.
+	Column separators	فواصل الأعمدة
+	Automatic, or e.g. 180, 340	تلقائي، أو مثلاً 180، 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	اترك الفواصل فارغة للاكتشاف التلقائي. تُقاس المواضع بالنقاط بدءًا من أعلى يسار الصفحة المعروضة.
+	Run extraction	تشغيل الاستخراج
+	Detect tables	اكتشاف الجداول
+	Extracting…	جارٍ الاستخراج…
+	Settings changed. Run extraction again to refresh this preview.	تغيّرت الإعدادات. شغّل الاستخراج مرة أخرى لتحديث المعاينة.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	لا يوجد نص في هذه المنطقة. في الصفحات الممسوحة ضوئيًا، شغّل التعرّف على النص أولاً؛ وإلا فحدد منطقة تحتوي على نص.
+	No tables detected. Adjust the region or add separator positions and run again.	لم يتم اكتشاف جداول. عدّل المنطقة أو أضف مواضع الفواصل ثم شغّل الاستخراج مرة أخرى.
+	Table {n} · {rows} rows × {columns} columns	جدول {n} · {rows} صفوف × {columns} أعمدة
+	Table {n}	جدول {n}
+	Use selected table's separators for correction	استخدام فواصل الجدول المحدد للتصحيح
+	Export Excel	تصدير Excel
+	Export CSV	تصدير CSV
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	لا تعرض المعاينة {rows} صفوف و{cells} خلية؛ وتم تقصير {shortened} خلية طويلة. يتضمن التصدير الجدول كاملاً.
+	Run table extraction again before exporting this preview	شغّل استخراج الجداول مرة أخرى قبل تصدير هذه المعاينة
+	Table export stopped: {error}	توقف تصدير الجدول: {error}
+	Exported {name}	تم تصدير {name}
+	Couldn't save {name}: {error}	تعذّر حفظ {name}: {error}
+	Couldn't download {name}: {error}	تعذّر تنزيل {name}: {error}
+	Extract tables…	استخراج الجداول…
+	Tables (CSV / Excel)	الجداول (CSV / Excel)
+	of {n}	من {n}
+	Quick tools	أدوات سريعة
+	Merge	دمج
+	Reorder	إعادة ترتيب

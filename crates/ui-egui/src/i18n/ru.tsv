@@ -86,7 +86,6 @@
 	Flatten Fill & Sign when saving	Расплющить «Заполнить и подписать» при сохранении
 	Text, marks and signatures become part of the page. Other comments stay editable.	Текст, пометки и подписи становятся частью страницы. Остальные комментарии можно по-прежнему править.
 	OK	OK
-	Join our Discord	Присоединяйтесь к нашему Discord
 	Close	Закрыть
 	Next / previous match	Следующее / предыдущее совпадение
 	Copy selected text	Копировать выделенный текст
@@ -152,17 +151,10 @@
 	Next page	Следующая страница
 	Previous page	Предыдущая страница
 	Current page — type a page number or label (such as iv) and press Enter	Текущая страница — введите номер или метку страницы (например, iv) и нажмите Enter
-	Welcome to PdfCraft	Добро пожаловать в PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	Открытый PDF-редактор — локальный, приватный и программируемый.
-	Join the ArtCraft community	Присоединяйтесь к сообществу ArtCraft
-	Get help, share feedback and follow development on Discord.	Получайте помощь, делитесь отзывами и следите за разработкой в Discord.
-	Recommended tools	Рекомендуемые инструменты
 	Use now	Использовать сейчас
 	Open file	Открыть файл
 	Recent	Недавние
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Файлы, которые вы открываете в PdfCraft, появляются здесь. Перетащите PDF в любое место, чтобы открыть.
-	Privacy	Конфиденциальность
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft работает офлайн. Без телеметрии, аккаунтов и облачной обработки, если вы не добавите провайдера.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Скрипты выполняются в песочнице без доступа к файлам и сети. При отключённом JavaScript стандартные функции Acrobat форматирования, проверки и вычислений всё равно работают.
 	Back to all tools	Назад ко всем инструментам
 	Close panel	Закрыть панель
@@ -297,11 +289,6 @@
 	Split document…	Разделить документ…
 	Number pages…	Пронумеровать страницы…
 	Keyboard shortcuts	Горячие клавиши
-	Join the ArtCraft Discord	Присоединяйтесь к Discord ArtCraft
-	PdfCraft web page	Веб-страница PdfCraft
-	PdfCraft on GitHub	PdfCraft на GitHub
-	ArtCraft website	Веб-сайт ArtCraft
-	Check for updates…	Проверить обновления…
 	About PdfCraft	О программе PdfCraft
 	Export a PDF	Экспортировать PDF
 	Export to	Экспортировать в
@@ -751,16 +738,6 @@
 	Flip Vertical	Отразить по вертикали
 	Replace Image…	Заменить изображение…
 	Save Image As…	Сохранить изображение как…
-	Check for updates	Проверить обновления
-	No check has run yet.	Проверка ещё не выполнялась.
-	Checking for a newer version…	Проверка новой версии…
-	PdfCraft {v} is available.	Доступна PdfCraft {v}.
-	You have version {c}. Download the new version from its release page.	У вас версия {c}. Скачайте новую версию со страницы релизов.
-	PdfCraft {c} is up to date.	У вас последняя версия PdfCraft {c}.
-	Couldn't check for updates: {e}	Не удалось проверить обновления: {e}
-	You have version {c}. All releases are listed at {page}.	У вас версия {c}. Все релизы перечислены на {page}.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	Запрашивает у GitHub последний релиз. Ничего не скачивается и не устанавливается автоматически.
-	Download	Скачать
 	Later	Позже
 	none	нет
 	Declared conformance: {shown}	Заявленное соответствие: {shown}
@@ -1390,7 +1367,6 @@
 	Discard	Отклонить
 	Version {v}	Версия {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Открытое PDF-приложение с чистой комнатой, написанное на Rust. MIT OR Apache-2.0.
-	Part of	Часть
 	Summarize Options	Параметры суммирования
 	Choose a layout:	Выберите макет:
 	Comments only	Только комментарии
@@ -2198,3 +2174,35 @@ scroll speed	Fast	Высокая
 	Ink sensitivity	Чувствительность к чернилам
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	В рамке не найдена подпись. Наведите рамку на подпись или увеличьте чувствительность к чернилам.
 	Couldn't use the photo: {e}	Не удалось использовать фото: {e}
+	The document or extraction settings changed. Run extraction again.	Документ или настройки извлечения изменились. Запустите извлечение ещё раз.
+	Extract Tables	Извлечь таблицы
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Проверьте извлечённые ячейки перед экспортом. Автоматическое определение использует интервалы между текстом и может не соответствовать предполагаемой структуре таблицы в документе.
+	Region	Область
+	Use the selected rectangle	Использовать выделенный прямоугольник
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Чтобы ограничить область страницы, выделите прямоугольник инструментом «Выбор столбца» до открытия этого диалога.
+	Column separators	Разделители столбцов
+	Automatic, or e.g. 180, 340	Автоматически или, например, 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Оставьте поле разделителей пустым для автоматического определения. Позиции измеряются в пунктах от верхнего левого угла отображаемой страницы.
+	Run extraction	Запустить извлечение
+	Detect tables	Найти таблицы
+	Extracting…	Извлечение…
+	Settings changed. Run extraction again to refresh this preview.	Настройки изменились. Запустите извлечение ещё раз, чтобы обновить предпросмотр.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	В этой области нет текста. Для сканов сначала выполните распознавание текста, иначе выберите область с текстом.
+	No tables detected. Adjust the region or add separator positions and run again.	Таблицы не найдены. Измените область или добавьте позиции разделителей и запустите снова.
+	Table {n} · {rows} rows × {columns} columns	Таблица {n} · {rows} строк × {columns} столбцов
+	Table {n}	Таблица {n}
+	Use selected table's separators for correction	Использовать разделители выбранной таблицы для исправления
+	Export Excel	Экспортировать в Excel
+	Export CSV	Экспортировать в CSV
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	В предпросмотре пропущено строк: {rows}, ячеек: {cells}; длинных ячеек сокращено: {shortened}. При экспорте будет включена вся таблица.
+	Run table extraction again before exporting this preview	Запустите извлечение таблицы ещё раз перед экспортом этого предпросмотра
+	Table export stopped: {error}	Экспорт таблицы остановлен: {error}
+	Exported {name}	Экспортировано: {name}
+	Couldn't save {name}: {error}	Не удалось сохранить {name}: {error}
+	Couldn't download {name}: {error}	Не удалось скачать {name}: {error}
+	Extract tables…	Извлечь таблицы…
+	Tables (CSV / Excel)	Таблицы (CSV / Excel)
+	of {n}	из {n}
+	Quick tools	Быстрые инструменты
+	Merge	Объединить
+	Reorder	Изменить порядок

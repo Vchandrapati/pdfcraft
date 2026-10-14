@@ -17,13 +17,13 @@
 //! In verify mode nothing changes; glyphs and inline images that still overlap a region are
 //! counted.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
 use pdfcraft_content::{Matrix, Op, Pieces, contains, num, overlaps, serialize_ops, string};
 use pdfcraft_cos::{Dict, Document, ObjRef, Object, Stream};
 
-use crate::{Report, image};
+use crate::{Report, image, tags};
 use pdfcraft_fonts::pdf::Metrics;
 
 const MAX_DEPTH: usize = 12;
@@ -67,6 +67,7 @@ pub(crate) struct Output {
     /// Apply mode met vertical-writing text (which it cannot remove) while a redaction region was
     /// in force: the operation must fail closed rather than leave that text under the mark.
     pub vertical: bool,
+    pub tag_changes: Vec<(ObjRef, ObjRef, HashSet<i64>, HashSet<i64>)>,
 }
 
 pub(crate) struct Scope<'a> {
@@ -670,11 +671,12 @@ fn xobject(
             let res = own.clone().unwrap_or_else(|| resources.clone());
             let saved_fonts = std::mem::take(&mut scope.fonts);
             scope.depth += 1;
-            let inner = process(doc, scope, &[data], &res, fctm);
+            let inner = process(doc, scope, std::slice::from_ref(&data), &res, fctm);
             scope.depth -= 1;
             scope.fonts = saved_fonts;
             out.residue += inner.residue;
             out.vertical |= inner.vertical;
+            out.tag_changes.extend(inner.tag_changes);
             if scope.mode == Mode::Verify {
                 return None;
             }
@@ -687,7 +689,7 @@ fn xobject(
             // Rebuild the copy's /Resources whenever inner content gained or lost an XObject, so a
             // `Do` the copy no longer makes stops keeping the original image or form reachable.
             if !inner.xobjects.is_empty() || !inner.replaced.is_empty() {
-                let mut res = res;
+                let mut res = res.clone();
                 let mut xo = res_dict(doc, &res, b"XObject");
                 if let Some(d) = &new_data {
                     prune(&mut xo, &inner.replaced, std::slice::from_ref(d));
@@ -698,11 +700,13 @@ fn xobject(
                 res.set(b"XObject".to_vec(), Object::Dict(xo));
                 dict.set(b"Resources".to_vec(), Object::Dict(res));
             }
+            let (changed, empty) = tags::touched(doc, &res, &data, new_data.as_deref().unwrap_or(&data));
             let stream = match new_data {
                 Some(d) => Stream::flate(dict, &d),
                 None => Stream { dict, raw: s.raw.clone() },
             };
             let nr = doc.add(Object::Stream(stream));
+            out.tag_changes.push((r, nr, changed, empty));
             let n = fresh_name(scope, xobjects);
             xobjects.set(n.clone(), Object::Ref(nr));
             out.xobjects.push((n.clone(), nr));

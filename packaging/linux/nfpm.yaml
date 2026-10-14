@@ -14,7 +14,6 @@ section: graphics
 priority: optional
 maintainer: ${PDFCRAFT_MAINTAINER}
 vendor: Learning Machines LLC
-homepage: https://getartcraft.com/apps/pdfcraft
 license: MIT OR Apache-2.0
 description: |-
   Open-source, native PDF workbench: read, comment, fill and sign forms,
@@ -33,6 +32,7 @@ overrides:
       - libgcc-s1
       - libxkbcommon0
       - libvulkan1 | libegl1
+      - tesseract-ocr (>= 5.0)
     recommends:
       - cups-client
       - libwayland-client0
@@ -47,6 +47,7 @@ overrides:
     depends:
       - libxkbcommon
       - (vulkan-loader or libglvnd-egl)
+      - tesseract >= 5.0
     recommends:
       - cups-client
       - libwayland-client

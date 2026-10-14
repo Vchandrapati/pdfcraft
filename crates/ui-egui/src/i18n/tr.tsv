@@ -57,7 +57,6 @@
 	Flatten Fill & Sign when saving	Kaydederken Doldur ve İmzala'yı düzleştir
 	Text, marks and signatures become part of the page. Other comments stay editable.	Metin, işaretler ve imzalar sayfanın bir parçası olur. Diğer yorumlar düzenlenebilir kalır.
 	OK	Tamam
-	Join our Discord	Discord'umuza katılın
 	Close	Kapat
 	Next / previous match	Sonraki / önceki eşleşme
 	Copy selected text	Seçilen metni kopyala
@@ -117,17 +116,10 @@
 	Next page	Sonraki sayfa
 	Previous page	Önceki sayfa
 	Current page — type a page number or label (such as iv) and press Enter	Geçerli sayfa — bir sayfa numarası veya etiketi (örneğin iv) yazıp Enter'a basın
-	Welcome to PdfCraft	PdfCraft'a Hoş Geldiniz
-	An open-source PDF workbench — local, private, and scriptable.	Açık kaynaklı bir PDF çalışma alanı — yerel, gizli ve komut dosyalarıyla yönetilebilir.
-	Join the ArtCraft community	ArtCraft topluluğuna katılın
-	Get help, share feedback and follow development on Discord.	Discord'da yardım alın, geri bildirim paylaşın ve geliştirmeyi takip edin.
-	Recommended tools	Önerilen araçlar
 	Use now	Şimdi kullan
 	Open file	Dosya aç
 	Recent	Son kullanılanlar
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	PdfCraft'ta açtığınız dosyalar burada görünür. Açmak için bir PDF'i herhangi bir yere bırakın.
-	Privacy	Gizlilik
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft çevrimdışı çalışır. Bir sağlayıcı eklemediğiniz sürece telemetri yok, hesap yok ve bulut işleme yok.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Komut dosyaları dosya veya ağ erişimi olmadan yalıtılmış alanda (sandbox) çalışır. JavaScript kapalıyken bile Acrobat'ın standart biçimlendirme, doğrulama ve hesaplama işlevleri çalışmaya devam eder.
 	Back to all tools	Tüm araçlara geri dön
 	Close panel	Paneli kapat
@@ -262,11 +254,6 @@
 	Split document…	Belgeyi böl…
 	Number pages…	Sayfaları numaralandır…
 	Keyboard shortcuts	Klavye kısayolları
-	Join the ArtCraft Discord	ArtCraft Discord'una katıl
-	PdfCraft web page	PdfCraft web sayfası
-	PdfCraft on GitHub	GitHub'da PdfCraft
-	ArtCraft website	ArtCraft web sitesi
-	Check for updates…	Güncellemeleri denetle…
 	About PdfCraft	PdfCraft hakkında
 	Export a PDF	PDF'i dışa aktar
 	Export to	Şuraya aktar
@@ -713,16 +700,6 @@
 	Flip Vertical	Dikey Çevir
 	Replace Image…	Resmi Değiştir…
 	Save Image As…	Resmi Farklı Kaydet…
-	Check for updates	Güncellemeleri denetle
-	No check has run yet.	Henüz denetim yapılmadı.
-	Checking for a newer version…	Daha yeni bir sürüm denetleniyor…
-	PdfCraft {v} is available.	PdfCraft {v} kullanılabilir.
-	You have version {c}. Download the new version from its release page.	{c} sürümüne sahipsiniz. Yeni sürümü sürüm sayfasından indirin.
-	PdfCraft {c} is up to date.	PdfCraft {c} güncel.
-	Couldn't check for updates: {e}	Güncellemeler denetlenemedi: {e}
-	You have version {c}. All releases are listed at {page}.	{c} sürümüne sahipsiniz. Tüm sürümler {page} adresinde listelenmiştir.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	En son sürüm için GitHub'ı sorgular. Hiçbir şey otomatik olarak indirilmez veya kurulmaz.
-	Download	İndir
 	Later	Daha sonra
 	none	yok
 	Declared conformance: {shown}	Bildirilen uyumluluk: {shown}
@@ -1346,7 +1323,6 @@
 	Discard	Yoksay
 	Version {v}	Sürüm {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Rust ile yazılmış, temiz oda tekniğiyle geliştirilmiş açık kaynaklı bir PDF uygulaması. MIT VEYA Apache-2.0.
-	Part of	Şunun parçası:
 	Summarize Options	Özetleme Seçenekleri
 	Choose a layout:	Bir düzen seçin:
 	Comments only	Yalnızca yorumlar
@@ -2281,3 +2257,35 @@ scroll speed	Fast	Hızlı
 	Ink sensitivity	Mürekkep hassasiyeti
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	Çerçevede imza bulunamadı. Çerçeveyi imzanın üzerine taşıyın veya mürekkep hassasiyetini artırın.
 	Couldn't use the photo: {e}	Fotoğraf kullanılamadı: {e}
+	The document or extraction settings changed. Run extraction again.	Belge veya çıkarma ayarları değişti. Çıkarmayı yeniden çalıştırın.
+	Extract Tables	Tabloları Çıkar
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Dışa aktarmadan önce çıkarılan hücreleri gözden geçirin. Otomatik algılama metin aralıklarını kullanır ve belgenin amaçlanan tablo düzeniyle eşleşmeyebilir.
+	Region	Bölge
+	Use the selected rectangle	Seçili dikdörtgeni kullan
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Sayfa alanını sınırlamak için bu iletişim kutusunu açmadan önce Sütun Seç aracıyla bir dikdörtgen seçin.
+	Column separators	Sütun ayraçları
+	Automatic, or e.g. 180, 340	Otomatik veya ör. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Otomatik algılama için ayraçları boş bırakın. Konumlar, görüntülenen sayfanın sol üst köşesinden itibaren punto cinsindendir.
+	Run extraction	Çıkarmayı çalıştır
+	Detect tables	Tabloları algıla
+	Extracting…	Çıkarılıyor…
+	Settings changed. Run extraction again to refresh this preview.	Ayarlar değişti. Önizlemeyi yenilemek için çıkarmayı yeniden çalıştırın.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Bu bölgede metin yok. Taramalarda önce Metni Tanı'yı çalıştırın; aksi durumda metin içeren bir alan seçin.
+	No tables detected. Adjust the region or add separator positions and run again.	Tablo algılanmadı. Bölgeyi ayarlayın veya ayraç konumları ekleyip yeniden çalıştırın.
+	Table {n} · {rows} rows × {columns} columns	Tablo {n} · {rows} satır × {columns} sütun
+	Table {n}	Tablo {n}
+	Use selected table's separators for correction	Düzeltme için seçili tablonun ayraçlarını kullan
+	Export Excel	Excel'e Aktar
+	Export CSV	CSV'ye Aktar
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Önizlemede {rows} satır ve {cells} hücre gösterilmez; {shortened} uzun hücre kısaltılır. Dışa aktarma tüm tabloyu içerir.
+	Run table extraction again before exporting this preview	Bu önizlemeyi dışa aktarmadan önce tablo çıkarma işlemini yeniden çalıştırın
+	Table export stopped: {error}	Tablo dışa aktarma durduruldu: {error}
+	Exported {name}	{name} dışa aktarıldı
+	Couldn't save {name}: {error}	{name} kaydedilemedi: {error}
+	Couldn't download {name}: {error}	{name} indirilemedi: {error}
+	Extract tables…	Tabloları Çıkar…
+	Tables (CSV / Excel)	Tablolar (CSV / Excel)
+	of {n}	/ {n}
+	Quick tools	Hızlı araçlar
+	Merge	Birleştir
+	Reorder	Yeniden sırala

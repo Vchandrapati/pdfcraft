@@ -435,33 +435,14 @@ pub fn change_image(doc: &mut Document, page: usize, index: usize, change: &Imag
     let all = streams(doc, &p.dict);
     let (obj, data) = all.get(img.stream).cloned().ok_or_else(|| EditError::Invalid("the image stream is missing".into()))?;
     let mut ops = parse(&data).ops;
-    let original = ops.get(img.op).cloned().ok_or_else(|| EditError::Invalid("the image operation is missing".into()))?;
+    if ops.get(img.op).is_none() {
+        return Err(EditError::Invalid("the image operation is missing".into()));
+    }
     let mut resources = None;
-    let mut clip_move = None;
     let replacement: Vec<Op> = match change {
         ImageChange::Delete => Vec::new(),
         ImageChange::Transform(t) => {
-            if !t.iter().all(|v| v.is_finite()) {
-                return Err(EditError::Invalid("the image transform must be finite".into()));
-            }
-            // New CTM = placement × T; as a `cm` before the Do: M = P · T · P⁻¹.
-            let pm = Matrix(img.draw_matrix);
-            let inv = pm.invert().ok_or_else(|| EditError::Invalid("the image has no area".into()))?;
-            let m = pm.then(&Matrix(*t)).then(&inv);
-            if !m.0.iter().all(|v| v.is_finite()) {
-                return Err(EditError::Invalid("the image transform is too large".into()));
-            }
-            // `q re W n cm Do Q` clips only this image: move the clip with it instead of leaving it behind.
-            if let Some((at, cm)) = exclusive_clip(&ops, img.op) {
-                if let Some(c) = clip_matrix(Matrix(img.draw_matrix), cm, Matrix(*t)).filter(|c| c.0.iter().all(|v| v.is_finite())) {
-                    clip_move = Some((at, Op::new("cm", c.0.iter().map(|v| pdfcraft_content::num(*v)).collect())));
-                    vec![original]
-                } else {
-                    return Err(EditError::Invalid("the image transform is too large".into()));
-                }
-            } else {
-                vec![Op::new("q", vec![]), Op::new("cm", m.0.iter().map(|v| pdfcraft_content::num(*v)).collect()), original, Op::new("Q", vec![])]
-            }
+            return transform_image(doc, &p, &all, &img, *t);
         }
         ImageChange::Replace(r) => {
             if img.is_form {
@@ -479,9 +460,6 @@ pub fn change_image(doc: &mut Document, page: usize, index: usize, change: &Imag
         }
     };
     ops.splice(img.op..=img.op, replacement);
-    if let Some((at, cm)) = clip_move {
-        ops.insert(at, cm);
-    }
     let mut dict = match &*doc.resolve(&obj) {
         Object::Stream(s) => s.dict.clone(),
         _ => Dict::new(),
@@ -511,6 +489,140 @@ pub(crate) fn selectable_images(
         .enumerate()
         .filter(|(_, image)| !all.get(image.stream).and_then(|(o, _)| o.as_ref()).is_some_and(|r| excluded.contains(&r)))
         .collect())
+}
+
+/// Find the saved graphics-state scope containing just this image and its crop. Applying
+/// the transform before that scope moves the actual clipping path as well as the pixels.
+/// A shared clip must never be moved along with unrelated artwork or text.
+fn image_transform_scope(ops: &[Op], target: usize) -> Result<Option<(usize, usize, Matrix)>, EditError> {
+    struct Scope {
+        start: usize,
+        matrix: Matrix,
+        inherited_clip: bool,
+        inherited_path: bool,
+        selected: bool,
+        other_paint: bool,
+    }
+    let mut stack: Vec<Scope> = Vec::new();
+    let mut matrix = Matrix::IDENTITY;
+    let mut clipped = false;
+    let mut path = false;
+    let mut pending_clip = false;
+    let mut text = false;
+    let mut at_image = None;
+    let mut isolated = None;
+    for (index, op) in ops.iter().enumerate() {
+        match op.op.as_slice() {
+            b"q" => {
+                if stack.len() >= 256 {
+                    return Err(EditError::Invalid("the image graphics state is too deeply nested to transform".into()));
+                }
+                stack.push(Scope { start: index, matrix, inherited_clip: clipped, inherited_path: path, selected: false, other_paint: false });
+            }
+            b"Q" => {
+                if let Some(scope) = stack.pop() {
+                    if scope.selected && !scope.other_paint && !scope.inherited_clip && !scope.inherited_path {
+                        // Prefer the innermost scope that contains every active clipping path.
+                        isolated.get_or_insert((scope.start, index, scope.matrix));
+                    }
+                    matrix = scope.matrix;
+                    clipped = scope.inherited_clip;
+                }
+            }
+            b"cm" => {
+                if let Some(m) = op.nums::<6>() {
+                    matrix = Matrix(m).then(&matrix);
+                }
+            }
+            b"BT" => text = true,
+            b"ET" => text = false,
+            b"m" | b"l" | b"c" | b"v" | b"y" | b"re" => path = true,
+            b"W" | b"W*" => pending_clip = true,
+            _ => {}
+        }
+        if index == target {
+            if text {
+                return Err(EditError::Invalid("an image inside a text object cannot be transformed".into()));
+            }
+            at_image = Some((matrix, clipped));
+            for scope in &mut stack {
+                scope.selected = true;
+            }
+        } else if matches!(
+            op.op.as_slice(),
+            b"Do" | b"Tj" | b"TJ" | b"'" | b"\"" | b"sh" | b"BI" | b"S" | b"s" | b"f" | b"F" | b"f*" | b"B" | b"B*" | b"b" | b"b*"
+        ) {
+            for scope in &mut stack {
+                scope.other_paint = true;
+            }
+        }
+        if matches!(op.op.as_slice(), b"n" | b"S" | b"s" | b"f" | b"F" | b"f*" | b"B" | b"B*" | b"b" | b"b*") {
+            clipped |= pending_clip;
+            pending_clip = false;
+            path = false;
+        }
+    }
+    let (placement, clipped) = at_image.ok_or_else(|| EditError::Invalid("the image operation is missing".into()))?;
+    if !clipped {
+        return Ok(Some((target, target, placement)));
+    }
+    Ok(isolated)
+}
+
+fn transform_image(
+    doc: &mut Document,
+    page: &pdfcraft_model::Page,
+    streams: &[(Object, Vec<u8>)],
+    image: &PageImage,
+    transform: [f64; 6],
+) -> Result<(), EditError> {
+    if !transform.iter().all(|v| v.is_finite() && v.abs() <= 1e12) {
+        return Err(EditError::Invalid("the image transform must be finite and no larger than 1e12".into()));
+    }
+    let mut offset = 0_usize;
+    for (_, data) in streams.iter().take(image.stream) {
+        offset = offset
+            .checked_add(data.len())
+            .and_then(|n| n.checked_add(1))
+            .ok_or_else(|| EditError::Invalid("the image content is too large".into()))?;
+    }
+    let data = streams.get(image.stream).ok_or_else(|| EditError::Invalid("the image stream is missing".into()))?;
+    let op = parse(&data.1).ops.get(image.op).cloned().ok_or_else(|| EditError::Invalid("the image operation is missing".into()))?;
+    let span = offset.checked_add(op.span.start).ok_or_else(|| EditError::Invalid("the image content is too large".into()))?;
+    let pieces = pdfcraft_content::Pieces::join(&streams.iter().map(|(_, data)| data.as_slice()).collect::<Vec<_>>());
+    let ops = pieces.parse().ops;
+    let target = ops
+        .iter()
+        .position(|op| op.span.start == span && op.is("Do"))
+        .ok_or_else(|| EditError::Invalid("the image operation could not be located".into()))?;
+    // A private path crop moves with its image regardless of intervening state operators.
+    // Shared crops retain the existing fixed-clip behavior, preserving neighbouring paint.
+    let (start, end, placement) = image_transform_scope(&ops, target)?.unwrap_or((target, target, Matrix(image.draw_matrix)));
+    let inverse = placement.invert().ok_or_else(|| EditError::Invalid("the image has no area".into()))?;
+    let local = placement.then(&Matrix(transform)).then(&inverse);
+    if !local.0.iter().all(|v| v.is_finite() && v.abs() <= 1e12) {
+        return Err(EditError::Invalid("the image transform is too large".into()));
+    }
+    let changed = crate::text::splice(&pieces, &ops, |index| {
+        if index == start {
+            let mut out = vec![Op::new("q", vec![]), Op::new("cm", local.0.map(Object::Real).to_vec())];
+            if start == end {
+                out.extend(ops.get(index).cloned());
+                out.push(Op::new("Q", vec![]));
+                return (out, false);
+            }
+            (out, true)
+        } else if index == end {
+            let mut out: Vec<_> = ops.get(index).cloned().into_iter().collect();
+            out.push(Op::new("Q", vec![]));
+            (out, false)
+        } else {
+            (Vec::new(), true)
+        }
+    });
+    let contents = crate::text::rewritten_contents(doc, streams, changed);
+    doc.update_dict(page.obj, |d| d.set(b"Contents".to_vec(), contents))?;
+    Ok(())
 }
 
 /// Plan all transforms before changing a stream; indexes refer to the original inventory.

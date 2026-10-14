@@ -442,16 +442,6 @@
 	Flip Vertical	垂直翻转
 	Replace Image…	替换图像…
 	Save Image As…	图像另存为…
-	Check for updates	检查更新
-	No check has run yet.	尚未运行检查。
-	Checking for a newer version…	正在检查新版本…
-	PdfCraft {v} is available.	PdfCraft {v} 可用。
-	You have version {c}. Download the new version from its release page.	当前版本为 {c}。请从其发布页面下载新版本。
-	PdfCraft {c} is up to date.	PdfCraft {c} 已是最新。
-	Couldn't check for updates: {e}	无法检查更新：{e}
-	You have version {c}. All releases are listed at {page}.	当前版本为 {c}。所有版本列在 {page}。
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	向 GitHub 查询最新版本。不会自动下载或安装任何内容。
-	Download	下载
 	Later	稍后
 	none	无
 	Declared conformance: {shown}	声明的一致性：{shown}
@@ -1348,7 +1338,6 @@
 	Select all pages (Organize)	选择所有页面（组织页面）
 	Version {v}	版本{v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	用 Rust 从零编写的开源 PDF 应用。MIT OR Apache-2.0 许可。
-	Part of	隶属于
 	Summarize Options	汇总选项
 	Choose a layout:	选择布局：
 	Comments only	仅注释
@@ -1776,12 +1765,8 @@
 	Read	阅读
 	Convert	转换
 	E-Sign	电子签名
-	Welcome to PdfCraft	欢迎使用 PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	开源 PDF 工作台——本地、私密、可编写脚本。
-	Recommended tools	推荐工具
 	Use now	立即使用
 	Recent	最近
-	Privacy	隐私
 	Export to image…	导出为图像…
 	Reduce file size…	减小文件大小…
 	Optimize PDF…	优化 PDF…
@@ -1811,14 +1796,6 @@
 	Split document…	拆分文档…
 	Number pages…	页面编号…
 	Keyboard shortcuts	键盘快捷键
-	Join the ArtCraft Discord	加入 ArtCraft Discord
-	Join the ArtCraft community	加入 ArtCraft 社区
-	Get help, share feedback and follow development on Discord.	在 Discord 上获取帮助、分享反馈并关注开发动态。
-	Join our Discord	加入我们的 Discord
-	PdfCraft web page	PdfCraft 网页
-	PdfCraft on GitHub	GitHub 上的 PdfCraft
-	ArtCraft website	ArtCraft 官网
-	Check for updates…	检查更新…
 	About PdfCraft	关于 PdfCraft
 	JavaScript console…	JavaScript 控制台…
 	Document JavaScripts…	文档 JavaScript…
@@ -1830,7 +1807,6 @@
 	Prepare a form	准备表单
 	Digitally sign	数字签名
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	在 PdfCraft 中打开的文件会显示在这里。将 PDF 拖放到任意位置即可打开。
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft 可离线工作。无遥测、无账号，除非您自行添加服务商，否则无云端处理。
 
 	Measure distance	测量距离
 	Measure perimeter	测量周长
@@ -2249,3 +2225,35 @@ scroll speed	Fast	快
 	Ink sensitivity	墨迹灵敏度
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	框内未找到签名。请将框移到签名上，或提高墨迹灵敏度。
 	Couldn't use the photo: {e}	无法使用该照片：{e}
+	The document or extraction settings changed. Run extraction again.	文档或提取设置已更改。请重新提取。
+	Extract Tables	提取表格
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	导出前请检查提取的单元格。自动检测使用文本间距，可能与文档预期的表格布局不符。
+	Region	区域
+	Use the selected rectangle	使用所选矩形
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	打开此对话框前，请使用“列选择”选择一个矩形，以限制页面区域。
+	Column separators	列分隔符
+	Automatic, or e.g. 180, 340	自动，或例如 180、340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	分隔符留空时将自动检测。位置以显示页面左上角为原点，单位为点。
+	Run extraction	运行提取
+	Detect tables	检测表格
+	Extracting…	正在提取…
+	Settings changed. Run extraction again to refresh this preview.	设置已更改。请重新提取以刷新此预览。
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	此区域中没有文本。对于扫描件，请先运行“识别文本”；否则请选择包含文本的区域。
+	No tables detected. Adjust the region or add separator positions and run again.	未检测到表格。请调整区域或添加分隔位置，然后重新运行。
+	Table {n} · {rows} rows × {columns} columns	表格 {n} · {rows} 行 × {columns} 列
+	Table {n}	表格 {n}
+	Use selected table's separators for correction	使用所选表格的分隔位置进行修正
+	Export Excel	导出 Excel
+	Export CSV	导出 CSV
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	预览省略了 {rows} 行和 {cells} 个单元格；{shortened} 个较长的单元格已截短。导出时会包含完整表格。
+	Run table extraction again before exporting this preview	导出此预览前，请重新提取表格
+	Table export stopped: {error}	表格导出已停止：{error}
+	Exported {name}	已导出 {name}
+	Couldn't save {name}: {error}	无法保存 {name}：{error}
+	Couldn't download {name}: {error}	无法下载 {name}：{error}
+	Extract tables…	提取表格…
+	Tables (CSV / Excel)	表格 (CSV / Excel)
+	of {n}	 / {n}
+	Quick tools	快捷工具
+	Merge	合并
+	Reorder	重新排序

@@ -89,7 +89,6 @@
 	Side panels	Panele boczne
 	Enable Acrobat JavaScript	Włącz Acrobat JavaScript
 	OK	OK
-	Join our Discord	Dołącz do naszego Discorda
 	Close	Zamknij
 	Next / previous match	Następne / poprzednie dopasowanie
 	Copy selected text	Kopiuj zaznaczony tekst
@@ -155,17 +154,10 @@
 	Next page	Następna strona
 	Previous page	Poprzednia strona
 	Current page — type a page number or label (such as iv) and press Enter	Bieżąca strona — wpisz numer lub etykietę strony (np. iv) i naciśnij Enter
-	Welcome to PdfCraft	Witamy w PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	Otwarty zestaw narzędzi do PDF — lokalny, prywatny i obsługujący skrypty.
-	Join the ArtCraft community	Dołącz do społeczności ArtCraft
-	Get help, share feedback and follow development on Discord.	Uzyskaj pomoc, podziel się opinią i śledź rozwój na Discordzie.
-	Recommended tools	Polecane narzędzia
 	Use now	Użyj teraz
 	Open file	Otwórz plik
 	Recent	Ostatnie
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Pliki otwierane w PdfCraft pojawiają się tutaj. Upuść PDF w dowolnym miejscu, aby go otworzyć.
-	Privacy	Prywatność
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft działa offline. Bez telemetrii, konta i przetwarzania w chmurze, chyba że dodasz dostawcę.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Skrypty działają w piaskownicy bez dostępu do plików i sieci. Przy wyłączonym JavaScript standardowe funkcje formatowania, walidacji i obliczeń Acrobata nadal działają.
 	Back to all tools	Wróć do wszystkich narzędzi
 	Close panel	Zamknij panel
@@ -299,11 +291,6 @@
 	Split document…	Podziel dokument…
 	Number pages…	Ponumeruj strony…
 	Keyboard shortcuts	Skróty klawiaturowe
-	Join the ArtCraft Discord	Dołącz do Discorda ArtCraft
-	PdfCraft web page	Strona internetowa PdfCraft
-	PdfCraft on GitHub	PdfCraft na GitHubie
-	ArtCraft website	Strona internetowa ArtCraft
-	Check for updates…	Sprawdź aktualizacje…
 	About PdfCraft	O PdfCraft
 	Export a PDF	Eksportuj PDF
 	Export to	Eksportuj do
@@ -750,16 +737,6 @@
 	Flip Vertical	Odbij w pionie
 	Replace Image…	Zastąp obraz…
 	Save Image As…	Zapisz obraz jako…
-	Check for updates	Sprawdź aktualizacje
-	No check has run yet.	Nie sprawdzono jeszcze aktualizacji.
-	Checking for a newer version…	Sprawdzanie dostępności nowszej wersji…
-	PdfCraft {v} is available.	PdfCraft {v} jest dostępny.
-	You have version {c}. Download the new version from its release page.	Masz wersję {c}. Pobierz nową wersję ze strony wydania.
-	PdfCraft {c} is up to date.	PdfCraft {c} jest aktualny.
-	Couldn't check for updates: {e}	Nie można sprawdzić aktualizacji: {e}
-	You have version {c}. All releases are listed at {page}.	Masz wersję {c}. Wszystkie wydania są dostępne na {page}.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	Sprawdza najnowsze wydanie na GitHubie. Nic nie jest pobierane ani instalowane automatycznie.
-	Download	Pobierz
 	Later	Później
 	none	brak
 	Declared conformance: {shown}	Deklarowana zgodność: {shown}
@@ -1374,7 +1351,6 @@
 	Discard	Odrzuć
 	Version {v}	Wersja {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Otwarta aplikacja PDF napisana w Rust na podstawie niezależnej implementacji. MIT OR Apache-2.0.
-	Part of	Część
 	Summarize Options	Opcje podsumowania
 	Choose a layout:	Wybierz układ:
 	Comments only	Tylko komentarze
@@ -2265,3 +2241,35 @@ scroll speed	Fast	Szybka
 	Ink sensitivity	Czułość na atrament
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	W ramce nie znaleziono podpisu. Przesuń ramkę na podpis lub zwiększ czułość na atrament.
 	Couldn't use the photo: {e}	Nie można użyć zdjęcia: {e}
+	The document or extraction settings changed. Run extraction again.	Dokument lub ustawienia ekstrakcji uległy zmianie. Uruchom ekstrakcję ponownie.
+	Extract Tables	Wyodrębnij tabele
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Przed eksportem sprawdź wyodrębnione komórki. Automatyczne wykrywanie wykorzystuje odstępy między tekstem i może nie odpowiadać zamierzonemu układowi tabeli w dokumencie.
+	of {n}	z {n}
+	Region	Obszar
+	Use the selected rectangle	Użyj zaznaczonego prostokąta
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Przed otwarciem tego okna dialogowego zaznacz prostokąt za pomocą narzędzia Zaznaczanie kolumn, aby ograniczyć obszar strony.
+	Column separators	Separatory kolumn
+	Automatic, or e.g. 180, 340	Automatycznie lub np. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Pozostaw separatory puste, aby użyć automatycznego wykrywania. Pozycje są mierzone w punktach od lewego górnego rogu wyświetlanej strony.
+	Run extraction	Uruchom ekstrakcję
+	Detect tables	Wykryj tabele
+	Extracting…	Trwa ekstrakcja…
+	Settings changed. Run extraction again to refresh this preview.	Ustawienia uległy zmianie. Uruchom ekstrakcję ponownie, aby odświeżyć podgląd.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Brak tekstu w tym obszarze. W przypadku skanów najpierw uruchom rozpoznawanie tekstu; w przeciwnym razie zaznacz obszar zawierający tekst.
+	No tables detected. Adjust the region or add separator positions and run again.	Nie wykryto tabel. Dostosuj obszar lub dodaj pozycje separatorów i uruchom ponownie.
+	Use selected table's separators for correction	Użyj separatorów zaznaczonej tabeli do korekty
+	Export Excel	Eksportuj do programu Excel
+	Export CSV	Eksportuj do CSV
+	Table {n} · {rows} rows × {columns} columns	Tabela {n} · {rows} wierszy × {columns} kolumn
+	Table {n}	Tabela {n}
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Podgląd pomija {rows} wierszy i {cells} komórek oraz skraca {shortened} długich komórek. Eksport obejmuje całą tabelę.
+	Run table extraction again before exporting this preview	Przed wyeksportowaniem tego podglądu ponownie uruchom ekstrakcję tabel
+	Table export stopped: {error}	Eksport tabeli zatrzymany: {error}
+	Exported {name}	Wyeksportowano: {name}
+	Couldn't save {name}: {error}	Nie można zapisać {name}: {error}
+	Couldn't download {name}: {error}	Nie można pobrać {name}: {error}
+	Extract tables…	Wyodrębnij tabele…
+	Tables (CSV / Excel)	Tabele (CSV / Excel)
+	Quick tools	Szybkie narzędzia
+	Merge	Scal
+	Reorder	Zmień kolejność

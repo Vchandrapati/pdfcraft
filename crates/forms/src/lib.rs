@@ -430,12 +430,14 @@ fn actions_of(doc: &Document, d: &Dict, widgets: &[ObjRef]) -> af::Actions {
     out
 }
 
-fn values_of(doc: &Document, o: Option<&Object>) -> Vec<String> {
+fn values_of(doc: &Document, o: Option<&Object>, kind: FieldKind) -> Vec<String> {
     let Some(o) = o else { return Vec::new() };
+    // "Off" is a button's off state; in a text or choice field it is the value.
+    let button = matches!(kind, FieldKind::CheckBox | FieldKind::Radio);
     match &*doc.resolve(o) {
         Object::Array(a) => a.iter().filter_map(|x| text_of(&doc.resolve(x))).collect(),
         Object::Stream(s) => s.decoded().ok().map(|b| PdfString::literal(b).to_text()).into_iter().collect(),
-        other => text_of(other).filter(|s| s != "Off" && !s.is_empty()).into_iter().collect(),
+        other => text_of(other).filter(|s| !(button && s == "Off") && !s.is_empty()).into_iter().collect(),
     }
 }
 
@@ -818,8 +820,8 @@ fn walk(
         name: inh.name.clone(),
         obj: r,
         kind,
-        value: values_of(doc, inh.v.as_ref()),
-        default: values_of(doc, inh.dv.as_ref()),
+        value: values_of(doc, inh.v.as_ref(), kind),
+        default: values_of(doc, inh.dv.as_ref(), kind),
         flags: ff,
         max_len: inh.max_len,
         options,

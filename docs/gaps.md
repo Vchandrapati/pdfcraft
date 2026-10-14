@@ -1,6 +1,6 @@
 # Where PdfCraft falls short of Acrobat Pro
 
-> **Last reviewed:** 2026-10-12 · **Last updated:** 2026-10-12 · **Change:** minor (M12 side-by-side comparison and paired-page automation; readiness estimates unchanged) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
+> **Last reviewed:** 2026-10-13 · **Last updated:** 2026-10-13 · **Change:** minor (dedicated native/OCR table preview and CSV/XLSX export; reconstruction limits documented) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (gap 1 closed by #836; fixed issues removed from gaps 3, 6 and 16) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (document-font subset completion and curved/shared image clips in the contributor fork; gap 2: hayro patch counts after the native-gradient backport) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 
@@ -138,27 +138,31 @@ update the numbers.
   (`AGENTS.md` §4).
 - **Estimate:** 45–80 h (≈ 0.2–0.4 h per issue). **Doc:** this file.
 
-### 7. OCR reads only unaccented Latin
+### 7. OCR reads English only
 
-- **Missing:** every other script and accented Latin; editable-text output; deskew, rotation,
+- **Missing:** every other language and script; accented-language coverage; editable-text output; deskew, rotation,
   despeckle, background and camera clean-up; MRC compression; pluggable engines; OCR in the
   browser; scanner input.
-- **Evidence:** `ocr.ocr-languages` partial ("the models read only the Latin alphabet without
-  accents"); 19 of 26 OCR features planned; [#744](https://github.com/storytold/pdfcraft/issues/744)
-  (Dutch). Acrobat ships on-device recognition for dozens of languages.
+- **Evidence:** `ocr.ocr-languages` partial (the bundled `eng.traineddata` is English-only); 19 of
+  26 OCR features planned; [#744](https://github.com/storytold/pdfcraft/issues/744) (Dutch).
+  Tesseract 5 is a separately installed runtime prerequisite; the Flatpak does not bundle it.
+  Acrobat ships on-device recognition for dozens of languages.
 - **Impact:** scanned documents are a core Pro workflow outside English.
 - **Estimate:** 40–75 h, partly blocked on openly licensed models. **Doc:**
   [file-format-parity.md](file-format-parity.md).
 
 ### 8. Office export weak, Office import absent
 
-- **Missing:** Word export that keeps layout; Excel and PowerPoint export; creating PDFs from Office,
+- **Missing:** Word export that keeps layout; complex Excel table reconstruction and full PowerPoint export; creating PDFs from Office,
   HTML, web pages and PostScript; SVG/XML/EPS/PS/JPEG 2000 export.
 - **Evidence:** `create.export-docx` partial; the synthetic invoice regression for
   [#773](https://github.com/storytold/pdfcraft/issues/773) now covers absent inferred borders,
   floating watermark text and per-page section sizes. Exact font matching, vector rules and
   broader layout fidelity remain incomplete;
-  `create.export-xlsx`, `create.export-pptx`, `create.from-office`, `create.from-html` planned.
+  `create.export-xlsx` is now partial: [table extraction](table-extraction.md) previews and exports
+  selected native/OCR text tables as CSV or literal XLSX cells, with region/separator corrections.
+  Merged/multiline cells, raster rules and cross-page joins remain incomplete;
+  `create.export-pptx`, `create.from-office`, `create.from-html` remain separately tracked.
 - **Impact:** "Export PDF" and "Create PDF" are two of Acrobat's most used tools.
 - **Gate:** lossy or missing sub-cases of the convert-and-share workflow (partial, not blocking).
   First beta items: Create PDF from Office (LibreOffice sidecar, 10–20 h) and a Word export that
@@ -310,6 +314,8 @@ update the numbers.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-13 | minor | Table extraction preview and CSV/XLSX export; merged/multiline cells and cross-page reconstruction remain incomplete. Estimates unchanged. |
+| 2026-10-13 | minor | OCR model/runtime migration documented; the English-only Tesseract BEST model does not close the language-coverage gap. |
 | 2026-10-12 | minor | M12: side-by-side Compare workflow added; filters, ranges, automatic page matching and scanned comparison remain open. Estimates unchanged. |
 | 2026-10-11 | minor | Word invoice failure #773 has synthetic regression coverage; broader Office conversion remains gap 8. |
 | 2026-10-11 | minor | Contributor fork: mixed-style visual regions, source-font space reuse and a read-only textless background. Embedded sfnt source faces and Mac subset Unicode mappings keep edit baselines stable; live frames follow Apply/Save geometry as text grows or shrinks. Engine/tool/UI regressions and private all-page checks cover the changes; full matching font import, CFF, range styles, shaping and private Chinese typing checks added; legacy programs and general fidelity remain open; estimates unchanged |

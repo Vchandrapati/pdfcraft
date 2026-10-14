@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use pdfcraft_cos::{Document, SaveOptions, write_incremental};
+use pdfcraft_cos::{Document, SaveOptions, write_full, write_incremental};
 
 use super::*;
 
@@ -232,6 +232,34 @@ fn flattening_keeps_a_note_whose_appearance_is_missing() {
     assert!(!p.dict.contains(b"Annots"), "the note is gone once its icon is baked in");
     let flat = streams(&doc, 0).pop().unwrap();
     assert!(flat.contains("q 1 0 0 1 10 10 cm /PCFl0 Do Q"), "{flat}");
+}
+
+/// #1470: a form field whose widget is on no page (left behind by page extraction or combining)
+/// has nothing to draw, but flattening every form field still takes it out of `/AcroForm /Fields`,
+/// or other software keeps treating the flattened file as a form. A hidden widget on a page is
+/// left alone, as before.
+#[test]
+fn flattening_fields_drops_the_ones_on_no_page() {
+    let page = stream("", " ");
+    let mut doc = build(&[
+        "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R 6 0 R 7 0 R 8 0 R] >> >>",
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Resources << >> /Contents 4 0 R /Annots [5 0 R 7 0 R] >>",
+        &page,
+        "<< /Type /Annot /Subtype /Widget /FT /Tx /T (on_page) /Rect [10 10 150 40] /F 4 /AP << /N 10 0 R >> >>",
+        "<< /Type /Annot /Subtype /Widget /FT /Tx /T (orphan) /Rect [10 50 150 80] /F 4 /AP << /N 10 0 R >> >>",
+        "<< /Type /Annot /Subtype /Widget /FT /Tx /T (hidden) /Rect [10 90 150 120] /F 2 /AP << /N 10 0 R >> >>",
+        "<< /FT /Tx /T (parent) /Kids [9 0 R] >>",
+        "<< /Type /Annot /Subtype /Widget /Parent 8 0 R /Rect [10 130 150 160] /F 4 /AP << /N 10 0 R >> >>",
+        "<< /Type /XObject /Subtype /Form /BBox [0 0 140 30] /Length 0 >>\nstream\n\nendstream",
+    ]);
+    assert_eq!(flatten(&mut doc, &[0], false, true).unwrap(), 1, "only the field on the page is drawn");
+    let doc = reopen(&doc);
+    let root = doc.root().unwrap();
+    let af = doc.resolve(doc.get(root).as_dict().unwrap().get(b"AcroForm").unwrap());
+    let fields = doc.resolve(af.as_dict().unwrap().get(b"Fields").unwrap());
+    let left: Vec<pdfcraft_cos::ObjRef> = fields.as_array().unwrap().iter().filter_map(|f| f.as_ref()).collect();
+    assert_eq!(left, [pdfcraft_cos::ObjRef::new(7, 0)], "only the hidden field on the page stays");
 }
 
 /// Flattening never makes a `?` permanent: it refuses, changing nothing, a text box without an
@@ -1825,6 +1853,67 @@ fn a_line_drawn_twice_is_replaced_everywhere() {
 }
 
 #[test]
+fn a_paragraph_dragged_across_another_leaves_it_alone() {
+    // #1368: each drag is its own edit. Dropping Alpha on Bravo, then dragging it on, treated
+    // Bravo (now under Alpha) as a copy of Alpha and deleted it.
+    let mut doc = text_page("BT /F1 12 Tf 100 700 Td (Alpha line) Tj ET BT /F1 12 Tf 100 500 Td (Bravo line) Tj ET");
+    let down = text::BlockStyle { offset: Some([0.0, -200.0]), ..Default::default() };
+    text::rewrite_block(&mut doc, 0, 0, None, &down).unwrap();
+    let alpha = text::text_blocks(&doc, 0).unwrap().iter().position(|b| b.text == "Alpha line").unwrap();
+    text::rewrite_block(&mut doc, 0, alpha, None, &down).unwrap();
+    let doc = reopen(&doc);
+    let mut texts: Vec<_> = text::text_lines(&doc, 0).unwrap().into_iter().map(|l| l.text).collect();
+    texts.sort();
+    assert_eq!(texts, ["Alpha line", "Bravo line"]);
+}
+
+#[test]
+fn replacing_a_line_keeps_a_distinct_nearby_line() {
+    // 12 pt lines 6 pt apart: the glyph boxes overlap by more than half the smaller box,
+    // but the baselines are different lines (#1316).
+    let src = "BT /F1 12 Tf 1 0 0 1 72 700 Tm (Alpha) Tj 0 -6 Td (Beta) Tj ET";
+    let listed = |doc: &Document| text::text_lines(doc, 0).unwrap().into_iter().map(|l| l.text).collect::<Vec<_>>();
+    for paragraph in [false, true] {
+        let mut doc = text_page(src);
+        assert_eq!(listed(&doc), ["Alpha", "Beta"]);
+        assert_eq!(text::text_blocks(&doc, 0).unwrap().len(), 2);
+        if paragraph {
+            text::rewrite_block(&mut doc, 0, 0, Some("ALPHA"), &text::BlockStyle::default()).unwrap();
+        } else {
+            text::replace_line(&mut doc, 0, 0, "ALPHA").unwrap();
+        }
+        assert_eq!(listed(&doc), ["ALPHA", "Beta"]);
+        assert!(String::from_utf8_lossy(&page_content_bytes(&doc, 0)).contains("(Beta)"));
+        for bytes in [write_incremental(&doc, &SaveOptions::default()).unwrap(), write_full(&doc, &SaveOptions::default()).unwrap()] {
+            let back = Document::open(Arc::new(bytes)).unwrap();
+            assert!(back.repair_log().is_empty());
+            assert_eq!(listed(&back), ["ALPHA", "Beta"]);
+        }
+    }
+    // The same word on the next line is still a different line.
+    let mut same = text_page("BT /F1 12 Tf 1 0 0 1 72 700 Tm (Alpha) Tj 0 -6 Td (Alpha) Tj ET");
+    text::replace_line(&mut same, 0, 0, "ALPHA").unwrap();
+    assert_eq!(listed(&same), ["ALPHA", "Alpha"]);
+    // Ordinary leading, and a paragraph far enough to group apart, keep the neighbour.
+    let mut spaced = text_page("BT /F1 12 Tf 1 0 0 1 72 700 Tm (Alpha) Tj 0 -14.4 Td (Beta) Tj ET");
+    text::replace_line(&mut spaced, 0, 0, "ALPHA").unwrap();
+    assert_eq!(listed(&spaced), ["ALPHA", "Beta"]);
+    let mut apart = text_page("BT /F1 12 Tf 1 0 0 1 72 700 Tm (Alpha) Tj 0 -40 Td (Beta) Tj ET");
+    text::rewrite_block(&mut apart, 0, 0, Some("ALPHA"), &text::BlockStyle::default()).unwrap();
+    assert_eq!(listed(&apart), ["ALPHA", "Beta"]);
+    // A second copy at the same position is still one replacement.
+    for paragraph in [false, true] {
+        let mut duplicate = text_page("BT /F1 12 Tf 1 0 0 1 72 700 Tm (Alpha) Tj ET BT /F1 12 Tf 1 0 0 1 72 700 Tm (Alpha) Tj ET");
+        if paragraph {
+            text::rewrite_block(&mut duplicate, 0, 0, Some("ALPHA"), &text::BlockStyle::default()).unwrap();
+        } else {
+            text::replace_line(&mut duplicate, 0, 0, "ALPHA").unwrap();
+        }
+        assert_eq!(listed(&duplicate), ["ALPHA"]);
+    }
+}
+
+#[test]
 fn paragraphs_move_and_rewrap_to_a_new_width() {
     let para = "BT /F1 10 Tf 12 TL 100 700 Td (One two three four five six seven) Tj T* (eight nine ten eleven twelve) Tj ET";
     let close = |a: f64, b: f64| (a - b).abs() < 0.5;
@@ -2753,6 +2842,60 @@ fn group_move_budget_refusals_keep_the_original_page_selectable() {
     }
 }
 
+#[test]
+fn arabic_actual_text_keeps_typing_order_when_opened_for_editing() {
+    for logical in ["مرحبا بالعالم", "سَلَام 123 (PDF)", "English مرحبا ١٢٣", "שלום עולם", "Latin text"] {
+        let hex: String = logical.encode_utf16().map(|u| format!("{u:04X}")).collect();
+        let doc = text_page(&format!("/Span <</ActualText <FEFF{hex}>>> BDC BT /F1 12 Tf 72 700 Td (abcd) Tj (efgh) Tj ET EMC"));
+        for doc in [&doc, &reopen(&doc)] {
+            let lines = text::text_lines(doc, 0).unwrap();
+            assert_eq!(lines.len(), 1);
+            assert_eq!(lines[0].text, logical, "ActualText is already in typing order");
+            assert_eq!(text::text_blocks(doc, 0).unwrap()[0].editor_text, logical);
+        }
+    }
+}
+
+#[test]
+fn latin_ligature_actual_text_stays_on_its_line() {
+    // Word and Chrome wrap ligatures in ActualText spans mid-word ("ﬁ" drawn, "fi" meant).
+    let hex: String = "fi".encode_utf16().map(|u| format!("{u:04X}")).collect();
+    let doc = text_page(&format!("BT /F1 12 Tf 72 700 Td (de) Tj /Span <</ActualText <FEFF{hex}>>> BDC (X) Tj EMC (ned well) Tj ET"));
+    for doc in [&doc, &reopen(&doc)] {
+        let lines = text::text_lines(doc, 0).unwrap();
+        assert_eq!(lines.iter().map(|l| l.text.as_str()).collect::<Vec<_>>(), ["defined well"]);
+        assert_eq!(text::text_blocks(doc, 0).unwrap()[0].editor_text, "defined well");
+    }
+}
+
+#[test]
+fn actual_text_and_visual_rtl_glyphs_keep_their_own_reading_order() {
+    let hex: String = "שלום".encode_utf16().map(|u| format!("{u:04X}")).collect();
+    let doc = hebrew_page(&format!("BT /F1 12 Tf 72 700 Td (EDCBA) Tj /Span <</ActualText <FEFF{hex}>>> BDC (FGHD) Tj EMC (EDCBA) Tj ET"));
+    for doc in [&doc, &reopen(&doc)] {
+        let lines = text::text_lines(doc, 0).unwrap();
+        assert_eq!(lines.iter().map(|l| l.text.as_str()).collect::<Vec<_>>(), ["בדיוק", "שלום", "בדיוק"]);
+    }
+}
+
+#[test]
+fn replacing_arabic_actual_text_removes_the_whole_original_drawing() {
+    let logical = "مرحبا بالعالم";
+    let hex: String = logical.encode_utf16().map(|u| format!("{u:04X}")).collect();
+    let mut doc = text_page(&format!(
+        "/Span <</ActualText <FEFF{hex}>>> BDC BT /F1 12 Tf 72 700 Td (abcd) Tj (efgh) Tj ET EMC \
+         BT /F1 12 Tf 72 600 Td (Keep this line) Tj ET"
+    ));
+    assert_eq!(text::text_blocks(&doc, 0).unwrap()[0].editor_text, logical);
+    text::replace_block(&mut doc, 0, 0, "Replacement").unwrap();
+    let doc = reopen(&doc);
+    let lines = text::text_lines(&doc, 0).unwrap();
+    assert_eq!(lines.iter().map(|l| l.text.as_str()).collect::<Vec<_>>(), ["Replacement", "Keep this line"]);
+    let bytes = page_content_bytes(&doc, 0);
+    let content = String::from_utf8_lossy(&bytes);
+    assert!(!content.contains("ActualText") && !content.contains("(abcd)") && !content.contains("(efgh)"));
+}
+
 fn mixed_region_page() -> Document {
     let mut doc = text_page(
         "BT /F2 1 Tf 18 0 0 18 123 700 Tm (TITLE) Tj ET \
@@ -2946,11 +3089,7 @@ fn image_selection_bounds_respect_clips_and_restore_graphics_state() {
     images::change_image(&mut doc, 0, 0, &images::ImageChange::Transform(pdfcraft_content::Matrix::translate(offset[0], offset[1]).0)).unwrap();
     let reopened = reopen(&doc);
     let after = images::page_images(&reopened, 0).unwrap();
-    assert_eq!(
-        after[0].visible_rect,
-        Some([30.0, 50.0, 130.0, 130.0]),
-        "a clip outside the image's own `q re W n cm Do Q` stays where it is (#1049)"
-    );
+    assert_eq!(after[0].visible_rect, Some([42.0, 64.0, 142.0, 144.0]), "an exclusive crop moves with the image even across nested graphics states");
     for (a, b) in after[0].rect.iter().zip(before[0].rect.iter()).enumerate() {
         assert!((b.0 - b.1 - offset[a % 2]).abs() < 0.001);
     }
@@ -2978,7 +3117,7 @@ fn image_clip_path_and_graphics_state_continue_across_content_streams() {
     )
     .unwrap();
     let after = images::page_images(&reopen(&doc), 0).unwrap();
-    assert!(close(after[0].visible_rect.unwrap(), [20.0, 30.0, 60.0, 80.0]), "a clip split across streams stays where it is");
+    assert!(close(after[0].visible_rect.unwrap(), [20.0, 30.0, 80.0, 105.0]), "an exclusive crop scales with its image across streams");
     assert_eq!(after[1].matrix, images[1].matrix, "graphics state restored across stream boundaries");
 }
 
@@ -3027,6 +3166,35 @@ fn cropped_image_resizing_moves_private_clips_and_keeps_shared_ones() {
 }
 
 #[test]
+fn private_image_crop_with_intervening_state_resizes_across_streams() {
+    let variants: Vec<Vec<&[u8]>> = vec![
+        vec![b"q 1 0 0 1 10 20 cm 20 150 130 80 re W* n 0.5 g q 800 0 0 900 -300 -400 cm /Im0 Do Q Q BT /F1 12 Tf 30 130 Td (Caption) Tj ET"],
+        vec![b"q 1 0 0 1 10 20 cm 20 150 130 80 re W*", b"n 0.5 g q 800 0 0 900 -300 -400 cm /Im0 Do", b"Q Q BT /F1 12 Tf 30 130 Td (Caption) Tj ET"],
+    ];
+    for pieces in variants {
+        let mut doc = image_page();
+        let page = pdfcraft_model::pages(&doc)[0].obj;
+        let refs = pieces.iter().map(|b| Object::Ref(doc.add(Object::Stream(Stream::flate(Dict::new(), b))))).collect();
+        doc.update_dict(page, |d| d.set(b"Contents".to_vec(), Object::Array(refs))).unwrap();
+        let caption = text::text_lines(&doc, 0).unwrap();
+        for target in [[30.0, 170.0, 190.0, 270.0], [30.0, 170.0, 110.0, 220.0], [70.0, 210.0, 150.0, 260.0]] {
+            let before = images::page_images(&doc, 0).unwrap()[0].clone();
+            let transform = images::rect_to_rect(before.visible_rect.unwrap(), target);
+            images::change_image(&mut doc, 0, 0, &images::ImageChange::Transform(transform)).unwrap();
+            doc = reopen(&doc);
+            let after = images::page_images(&doc, 0).unwrap()[0].clone();
+            assert!(close(after.visible_rect.unwrap(), target), "the private crop follows the image without a literal operator pattern");
+            assert!(close(after.rect, pdfcraft_content::Matrix(transform).bbox(before.rect)));
+            assert_eq!(after.object, before.object);
+            assert_eq!(
+                text::text_lines(&doc, 0).unwrap().iter().map(|l| (&l.text, l.rect, l.baseline())).collect::<Vec<_>>(),
+                caption.iter().map(|l| (&l.text, l.rect, l.baseline())).collect::<Vec<_>>()
+            );
+        }
+    }
+}
+
+#[test]
 fn curved_image_clips_have_analytic_bounds_and_holes_do_not_capture_points() {
     let mut doc = image_page();
     let page = pdfcraft_model::pages(&doc)[0].obj;
@@ -3042,9 +3210,9 @@ fn curved_image_clips_have_analytic_bounds_and_holes_do_not_capture_points() {
     assert!(!images[1].contains([150.0, 150.0]), "even-odd hole");
     images::change_image(&mut doc, 0, 1, &images::ImageChange::Transform([1.2, 0.0, 0.0, 1.2, 10.0, 15.0])).unwrap();
     let after = images::page_images(&reopen(&doc), 0).unwrap();
-    // Only a rectangle in the image's own `q re W n cm Do Q` moves with it (#1049): these stay.
-    assert!(!after[1].contains([150.0, 150.0]), "the even-odd hole stays where it is");
-    assert!(after[1].contains([110.0, 110.0]));
+    assert!(!after[1].contains([190.0, 195.0]), "the transformed even-odd hole remains empty");
+    assert!(after[1].contains([142.0, 147.0]), "the transformed filled corner remains selectable");
+    assert_eq!(after[0].visible_rect, images[0].visible_rect, "the neighbouring curved clip stays put");
 }
 
 #[test]

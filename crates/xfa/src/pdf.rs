@@ -95,10 +95,7 @@ fn jpeg_info(data: &[u8]) -> Option<(u32, u32, u8, bool)> {
 
 /// Format a number for content streams.
 fn n(v: f64) -> String {
-    let v = if v.is_finite() { v } else { 0.0 };
-    let s = format!("{:.3}", if v.abs() < 5e-4 { 0.0 } else { v });
-    let s = s.trim_end_matches('0').trim_end_matches('.');
-    if s == "-0" { "0".into() } else { s.into() }
+    pdfcraft_content::number(v, 3)
 }
 
 fn rgb(c: [f64; 3]) -> String {

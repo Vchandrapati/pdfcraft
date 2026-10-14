@@ -38,6 +38,20 @@ fn path_arg() -> Value {
     json!({ "type": "string", "description": "A file path (relative to --root when set)." })
 }
 
+fn table_schema(export: bool) -> Value {
+    let mut properties = json!({
+        "doc": doc(), "page": { "type": "integer", "minimum": 1 },
+        "rect": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4, "description": "Optional region [x0,y0,x1,y1] in displayed points, top-left origin." },
+        "columns": { "type": "array", "items": { "type": "number" }, "maxItems": 127, "description": "Ordered internal x separators in displayed points; omit/empty for inference." },
+    });
+    if export {
+        properties["path"] = path_arg();
+        properties["table"] = json!({ "type": "integer", "minimum": 1 });
+        properties["format"] = json!({ "type": "string", "enum": ["csv", "xlsx"], "default": "csv" });
+    }
+    schema(properties, if export { &["doc", "page", "path"] } else { &["doc", "page"] })
+}
+
 fn point() -> Value {
     json!({ "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2, "description": "[x, y] in points from the top-left of the displayed page." })
 }
@@ -979,14 +993,14 @@ pub fn tools() -> Vec<ToolDef> {
             )),
         t("js_enabled", "JavaScript on or off", "Preferences ▸ JavaScript ▸ Enable Acrobat JavaScript: set it with `enabled`, or read it. With JavaScript off, field scripts other than Acrobat's AF calls don't run.")
             .with(schema(json!({ "enabled": { "type": "boolean" } }), &[])),
-        t("ocr_recognize", "Recognize text (OCR)", "Scan & OCR ▸ Recognize text: render pages, read the words in them and add them as invisible text over the page image, so scanned pages become searchable and selectable (a searchable image; the image is not changed). Pages that already have text are skipped unless skip_text_pages is false; then pictures on those pages are read too, and recognised words that the page's own text already has (an earlier OCR layer included) are left out and counted as already_on_page. Returns each page's recognised text, word count or why it was skipped. Needs the OCR models (ocr_status). Undoable as one step.")
+        t("ocr_recognize", "Recognize text (OCR)", "Scan & OCR ▸ Recognize text: render pages, read the words in them with Tesseract 5 and add them as invisible text over the page image, so scanned pages become searchable and selectable (a searchable image; the image is not changed). Uses the tessdata_best model for language (en English, ja Japanese, ar Arabic; ocr_status lists which are installed). Pages that already have text are skipped unless skip_text_pages is false; then pictures on those pages are read too, and recognised words that the page's own text already has (an earlier OCR layer included) are left out and counted as already_on_page. Returns each page's recognised text, word count or why it was skipped. Needs the Tesseract runtime and model (ocr_status). Undoable as one step.")
             .cmd("ocr.recognize")
             .with(schema(
                 json!({
                     "doc": doc(),
                     "pages": pages("to recognise (default: all)"),
                     "dpi": { "type": "number", "minimum": 72, "maximum": 600, "description": "Resolution pages are read at (default 300; a scanned page is read at most at its own resolution)." },
-                    "language": { "type": "string", "enum": ["en"], "description": "Document language (default en)." },
+                    "language": { "type": "string", "enum": ["en", "ja", "ar"], "description": "Document language (default en); its model must be installed (ocr_status)." },
                     "skip_text_pages": { "type": "boolean", "description": "Leave pages that already contain text alone (default true). false also reads pictures on such pages, without adding their text again." },
                 }),
                 &["doc"],
@@ -998,12 +1012,12 @@ pub fn tools() -> Vec<ToolDef> {
                     "paths": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
                     "folder": { "type": "string" },
                     "dpi": { "type": "number", "minimum": 72, "maximum": 600 },
-                    "language": { "type": "string", "enum": ["en"] },
+                    "language": { "type": "string", "enum": ["en", "ja", "ar"] },
                     "skip_text_pages": { "type": "boolean", "description": "Leave pages that already contain text alone (default true); see ocr_recognize." },
                 }),
                 &["paths", "folder"],
             )),
-        t("ocr_status", "OCR status", "Whether text recognition is available (its models are installed: release packages include them; a source build fetches them with `cargo xtask models`; PDFCRAFT_MODELS overrides), where it looks for them, and the languages it reads.")
+        t("ocr_status", "OCR status", "Whether text recognition is available, the Tesseract backend and English model, their discovered paths, any unavailable reason, model search folders, the supported languages and which of them have their model installed.")
             .ro()
             .cmd("ocr.recognize")
             .with(schema(json!({}), &[])),
@@ -1021,6 +1035,10 @@ pub fn tools() -> Vec<ToolDef> {
         t("doc_export_text", "Export text", "Write the reading-order text of pages to a .txt file (pages separated by form feeds).")
             .cmd("export.text")
             .with(schema(json!({ "doc": doc(), "path": { "type": "string" }, "pages": pages("to export (default: all)") }), &["doc", "path"])),
+        t("table_extract", "Extract tables", "Read-only table candidates from the current displayed text layer, including OCR text. Returns rect, internal column separator positions and rectangular rows for each table. Review results: text geometry can mistake columns of prose for tables; merged/multiline cells and cross-page joins are not inferred. Recognize image-only pages first. Supply rect to restrict the region, and columns to override automatic separators.")
+            .ro().cmd("export.tables").with(table_schema(false)),
+        t("table_export", "Export a table", "Re-extract and atomically write one selected table to CSV or XLSX within --root. Does not modify the PDF. table is a 1-based index from table_extract (default 1); use the same rect/columns. CSV quotes cells and prefixes spreadsheet formula triggers with an apostrophe. XLSX stores all cells as literal strings, preserving leading zeros and formula-like text.")
+            .with(table_schema(true)),
         t(
             "fill_sign_add",
             "Fill & Sign: type text or place a mark",

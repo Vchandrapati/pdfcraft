@@ -172,9 +172,7 @@ pub struct Context {
 }
 
 fn n(v: f64) -> String {
-    let s = format!("{:.3}", if v.abs() < 5e-4 { 0.0 } else { v });
-    let s = s.trim_end_matches('0').trim_end_matches('.');
-    if s == "-0" { "0".into() } else { s.into() }
+    pdfcraft_content::number(v, 3)
 }
 
 fn rgb(c: Rgb) -> String {
@@ -356,6 +354,22 @@ pub fn stamp(doc: &mut Document, page: usize, tag: &str, content: Vec<u8>) -> Re
     let all = page_list(doc);
     check(&[page], all.len())?;
     add_resources(doc, &all[page], None, Some(&content))?;
+    let p = page_list(doc).swap_remove(page);
+    place_tagged(doc, &p, tag, content, false)
+}
+
+/// Like [`stamp`], for content that brings its own fonts: `build` writes the content and adds the
+/// fonts it names to the page's font resources, which it is given (the OCR text layer).
+pub fn stamp_with(doc: &mut Document, page: usize, tag: &str, build: impl FnOnce(&mut Document, &mut Dict) -> Vec<u8>) -> Result<(), EditError> {
+    let all = page_list(doc);
+    check(&[page], all.len())?;
+    let p = &all[page];
+    let mut res = p.dict.get(b"Resources").map(|r| doc.resolve(r)).and_then(|r| r.as_dict().cloned()).unwrap_or_default();
+    let mut fonts = res.get(b"Font").map(|f| doc.resolve(f)).and_then(|f| f.as_dict().cloned()).unwrap_or_default();
+    let content = build(doc, &mut fonts);
+    res.set(b"Font".to_vec(), Object::Dict(fonts));
+    // The page gets its own (possibly copied) resources; shared dictionaries stay untouched.
+    doc.update_dict(p.obj, |d| d.set(b"Resources".to_vec(), Object::Dict(res)))?;
     let p = page_list(doc).swap_remove(page);
     place_tagged(doc, &p, tag, content, false)
 }

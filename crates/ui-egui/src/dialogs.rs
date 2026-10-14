@@ -19,7 +19,6 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
     password(app, ctx);
     save_prompt(app, ctx);
     link_prompt(app, ctx);
-    crate::updates::dialog(app, ctx);
     let Some(dialog) = app.dialog else {
         app.props_draft = None;
         app.view_draft = None;
@@ -51,6 +50,8 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
     let mut boxes_now = false;
     let mut marks_now = false;
     let mut export_now = false;
+    let mut tables_now = false;
+    let mut table_export_now = None;
     let mut props_now = false;
     let mut field_props_now = false;
     let mut bulk_field_props_now = false;
@@ -76,6 +77,7 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
         ui.set_width(match dialog {
             Dialog::Properties(_) => 640.0,
             Dialog::Print => 820.0,
+            Dialog::ExtractTables => 720.0,
             Dialog::FieldProps | Dialog::BulkFieldProps => 600.0,
             Dialog::About => 780.0,
             _ => 520.0,
@@ -926,6 +928,13 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                 close = apply || cancel;
                 return;
             }
+            Dialog::ExtractTables => {
+                let (run, export, cancel) = crate::table_ui::body(ui, app, &t);
+                tables_now = run;
+                table_export_now = export;
+                close = cancel;
+                return;
+            }
             Dialog::Marks(kind) => {
                 ui.set_width(720.0);
                 let (apply, cancel) = crate::marks_ui::body(ui, app, &t, kind);
@@ -1095,7 +1104,6 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                     2 => crate::credits::models_ui(ui),
                     _ => {
                         ui.horizontal(|ui| {
-                            widgets::artcraft_mark(ui, 40.0);
                             ui.vertical(|ui| {
                                 ui.label(egui::RichText::new("PdfCraft").font(theme::semibold(20.0)));
                                 ui.label(crate::i18n::fmt(tl!("Version {v}"), &[("v", env!("CARGO_PKG_VERSION"))]));
@@ -1110,22 +1118,14 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                             .color(t.text_muted)
                             .small(),
                         );
-                        ui.add_space(12.0);
-                        ui.horizontal(|ui| {
-                            ui.label(egui::RichText::new(tl!("Part of")).color(t.text_muted));
-                            widgets::artcraft_logo(ui, 16.0);
-                        });
-                        ui.add_space(6.0);
-                        if let Some(cmd) = widgets::community_links(ui) {
-                            link_command = Some(cmd);
-                        }
                     }
                 }
             }
         }
         ui.add_space(16.0);
         let changed = draft_changes(app).is_some_and(|c| !c.is_empty());
-        ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+        // The modal can retain a taller previous body. Anchor actions to its bottom edge.
+        ui.with_layout(Layout::right_to_left(Align::Max), |ui| {
             if dialog == Dialog::Recovery {
                 if widgets::pill_button(ui, tl!("Recover"), true).clicked() {
                     recover = Some(true);
@@ -1274,6 +1274,12 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
     }
     if export_now && let Dialog::Export(kind) = dialog {
         app.start_export(kind);
+    }
+    if tables_now {
+        app.start_table_extraction();
+    }
+    if let Some(format) = table_export_now {
+        app.export_selected_table(format);
     }
     if marks_now && let (Dialog::Marks(kind), Some((_, id))) = (dialog, app.active_ids()) {
         let count = app.session.get(id).map(|d| d.info.pages.len()).unwrap_or(0);

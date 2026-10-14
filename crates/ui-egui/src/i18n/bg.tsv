@@ -436,16 +436,6 @@
 	Flip Vertical	Обърни вертикално
 	Replace Image…	Замени изображението…
 	Save Image As…	Запиши изображението като…
-	Check for updates	Провери за актуализации
-	No check has run yet.	Още не е извършвана проверка.
-	Checking for a newer version…	Проверка за по-нова версия…
-	PdfCraft {v} is available.	Налична е PdfCraft {v}.
-	You have version {c}. Download the new version from its release page.	Имате версия {c}. Изтеглете новата версия от страницата на изданието.
-	PdfCraft {c} is up to date.	PdfCraft {c} е актуална.
-	Couldn't check for updates: {e}	Неуспешна проверка за актуализации: {e}
-	You have version {c}. All releases are listed at {page}.	Имате версия {c}. Всички издания са изброени на {page}.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	Запитва GitHub за най-новото издание. Нищо не се изтегля и не се инсталира автоматично.
-	Download	Изтегли
 	Later	По-късно
 	none	няма
 	Declared conformance: {shown}	Декларирано съответствие: {shown}
@@ -1341,7 +1331,6 @@
 	Select all pages (Organize)	Избери всички страници (Организиране)
 	Version {v}	Версия {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Независимо разработено PDF приложение с отворен код, написано на Rust. MIT OR Apache-2.0.
-	Part of	Част от
 	Summarize Options	Опции за обобщение
 	Choose a layout:	Изберете оформление:
 	Comments only	Само коментари
@@ -1769,12 +1758,8 @@
 	Read	Четене
 	Convert	Конвертиране
 	E-Sign	Е-подпис
-	Welcome to PdfCraft	Добре дошли в PdfCraft
-	An open-source PDF workbench — local, private, and scriptable.	PDF работна среда с отворен код — локална, поверителна и програмируема.
-	Recommended tools	Препоръчани инструменти
 	Use now	Използвай сега
 	Recent	Последни
-	Privacy	Поверителност
 	Export to image…	Експортирай като изображение…
 	Reduce file size…	Намали размера на файла…
 	Optimize PDF…	Оптимизирай PDF…
@@ -1804,14 +1789,6 @@
 	Split document…	Раздели документа…
 	Number pages…	Номерирай страниците…
 	Keyboard shortcuts	Клавишни комбинации
-	Join the ArtCraft Discord	Присъедини се към ArtCraft в Discord
-	Join the ArtCraft community	Присъедини се към общността на ArtCraft
-	Get help, share feedback and follow development on Discord.	Получете помощ, споделете мнение и следете разработката в Discord.
-	Join our Discord	Присъедини се към нашия Discord
-	PdfCraft web page	Уебстраница на PdfCraft
-	PdfCraft on GitHub	PdfCraft в GitHub
-	ArtCraft website	Уебсайт на ArtCraft
-	Check for updates…	Провери за актуализации…
 	About PdfCraft	За PdfCraft
 	JavaScript console…	JavaScript конзола…
 	Document JavaScripts…	JavaScript на документа…
@@ -1823,7 +1800,6 @@
 	Prepare a form	Подготви формуляр
 	Digitally sign	Подпиши цифрово
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Файловете, които отваряте в PdfCraft, се показват тук. Пуснете PDF файл където и да е, за да го отворите.
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft работи офлайн. Без телеметрия, без акаунт и без обработка в облака, освен ако не добавите доставчик.
 	Measure distance	Измери разстояние
 	Measure perimeter	Измери периметър
 	Measure area	Измери площ
@@ -2248,3 +2224,35 @@ scroll speed	Fast	Висока
 	Ink sensitivity	Чувствителност към мастило
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	В рамката не е открит подпис. Преместете рамката върху подписа или увеличете чувствителността към мастило.
 	Couldn't use the photo: {e}	Снимката не може да се използва: {e}
+	The document or extraction settings changed. Run extraction again.	Документът или настройките за извличане са променени. Стартирайте извличането отново.
+	Extract Tables	Извличане на таблици
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Проверете извлечените клетки преди експортиране. Автоматичното откриване използва разстоянията между текста и може да не съвпада с предвиденото оформление на таблицата в документа.
+	of {n}	от {n}
+	Region	Област
+	Use the selected rectangle	Използване на избрания правоъгълник
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Преди да отворите този прозорец, изберете правоъгълник с инструмента „Избор на колона“, за да ограничите областта на страницата.
+	Column separators	Разделители на колони
+	Automatic, or e.g. 180, 340	Автоматично или напр. 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Оставете разделителите празни за автоматично откриване. Позициите се измерват в точки от горния ляв ъгъл на показаната страница.
+	Run extraction	Стартиране на извличането
+	Detect tables	Откриване на таблици
+	Extracting…	Извличане…
+	Settings changed. Run extraction again to refresh this preview.	Настройките са променени. Стартирайте извличането отново, за да обновите този преглед.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Няма текст в тази област. При сканирани документи първо използвайте Разпознаване на текст; в противен случай изберете област, съдържаща текст.
+	No tables detected. Adjust the region or add separator positions and run again.	Не са открити таблици. Променете областта или добавете позиции на разделителите и опитайте отново.
+	Use selected table's separators for correction	Използване на разделителите на избраната таблица за корекция
+	Export Excel	Експортиране в Excel
+	Export CSV	Експортиране в CSV
+	Table {n} · {rows} rows × {columns} columns	Таблица {n} · {rows} реда × {columns} колони
+	Table {n}	Таблица {n}
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Прегледът пропуска {rows} реда и {cells} клетки и съкращава {shortened} дълги клетки. Експортът включва цялата таблица.
+	Run table extraction again before exporting this preview	Стартирайте извличането на таблици отново, преди да експортирате този преглед
+	Table export stopped: {error}	Експортирането на таблицата е спряно: {error}
+	Exported {name}	Експортирано: {name}
+	Couldn't save {name}: {error}	{name} не може да бъде записан: {error}
+	Couldn't download {name}: {error}	{name} не може да бъде изтеглен: {error}
+	Extract tables…	Извличане на таблици…
+	Tables (CSV / Excel)	Таблици (CSV / Excel)
+	Quick tools	Бързи инструменти
+	Merge	Обединяване
+	Reorder	Пренареждане

@@ -101,7 +101,7 @@ pub use parse::{measure, parse};
 pub use pdf::{CLICK_KEY, LAYOUT_KEY, SOM_KEY, existing_layout};
 pub use script::{
     FormNode, LiveForm, MAX_FORM_NODES, NodeKind, OVERRIDES_KEY, Overrides, ScriptEvent, apply_overrides, data_of, fields_by_som, form_tree,
-    has_scripts, overrides, rerender, set_overrides, template_of,
+    has_scripts, overrides, refresh_value, rerender, set_overrides, template_of,
 };
 
 #[derive(Debug, thiserror::Error)]

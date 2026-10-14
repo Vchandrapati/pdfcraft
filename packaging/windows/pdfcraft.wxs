@@ -34,9 +34,6 @@
          Add/Remove Programs show a blank icon (#57). -->
     <Icon Id="PdfcraftIcon.ico" SourceFile="$(var.IconPath)" />
     <Property Id="ARPPRODUCTICON" Value="PdfcraftIcon.ico" />
-    <Property Id="ARPURLINFOABOUT" Value="https://getartcraft.com/apps/pdfcraft" />
-    <Property Id="ARPURLUPDATEINFO" Value="https://getartcraft.com/apps/pdfcraft" />
-    <Property Id="ARPHELPLINK" Value="https://discord.gg/artcraft" />
     <!-- Desktop shortcut (#143): on by default, a checkbox in the full-UI welcome dialog, and
          INSTALLDESKTOPSHORTCUT=0 on the msiexec command line for unattended installs. Secure, so the
          choice made in the (unelevated) UI reaches the elevated install. -->
@@ -173,9 +170,7 @@
       </Component>
     </ComponentGroup>
 
-    <!-- OCR models (#103), with their licences and ATTRIBUTION.txt, in models\ beside pdfcraft.exe
-         where the app looks for them: every file `cargo xtask models` fetched (package.ps1), one
-         component each, so new models ship without naming them here. -->
+    <!-- English Tesseract model, its licence and ATTRIBUTION.txt in models\ beside pdfcraft.exe. -->
     <ComponentGroup Id="PdfcraftModels" Directory="ModelsFolder">
       <Files Include="$(var.ModelsDir)\*" />
     </ComponentGroup>

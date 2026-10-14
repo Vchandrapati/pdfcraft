@@ -598,8 +598,10 @@ impl Metrics {
                     match w.get(i + 1).map(|o| doc.resolve(o)) {
                         Some(a) if a.as_array().is_some() => {
                             for (k, x) in a.as_array().into_iter().flatten().enumerate() {
+                                // A run past the last CID ends there: wrapping would give CID 0 its width.
+                                let Some(cid) = u32::try_from(k).ok().and_then(|k| c0.checked_add(k)) else { break };
                                 if let Some(v) = doc.resolve(x).as_f64() {
-                                    m.cid_widths.insert(c0 + k as u32, v);
+                                    m.cid_widths.insert(cid, v);
                                 }
                             }
                             i += 2;
@@ -737,6 +739,10 @@ impl Metrics {
         if self.composite {
             let cid = self.cid(code);
             return self.cid_widths.contains_key(&cid) || self.cid_ranges.iter().any(|(a, b, _)| cid >= *a && cid <= *b) || !self.subset;
+        }
+        // Simple fonts show one-byte codes; a larger one (from /Differences) would be written as its last byte.
+        if code > 0xFF {
+            return false;
         }
         match code.checked_sub(self.first).and_then(|i| self.widths.get(i as usize)) {
             Some(w) => *w > 0.0 || code == 32,
@@ -1196,6 +1202,22 @@ mod tests {
         assert_eq!(m.encode("Ω").as_deref(), Some(&b"B"[..]));
     }
 
+    /// A `/Differences` code past 255 can't be written in one byte, so it encodes nothing
+    /// instead of its last byte (300 would come out as 44, a comma).
+    #[test]
+    fn differences_codes_past_one_byte_are_not_encoded() {
+        let euro_at = |code: i64| {
+            let mut doc = Document::new_empty();
+            let mut enc = Dict::new();
+            enc.set(b"Differences".to_vec(), Object::Array(vec![Object::Int(code), Object::name("Euro")]));
+            let f = font(&mut doc, vec![("Subtype", Object::name("Type1")), ("BaseFont", Object::name("Custom")), ("Encoding", Object::Dict(enc))]);
+            Metrics::from_dict(&doc, &f)
+        };
+        let m = euro_at(200);
+        assert_eq!((m.encode("€").as_deref(), m.decode(b"\xc8").as_str()), (Some(&b"\xc8"[..]), "€"));
+        assert_eq!(euro_at(300).encode("€"), None);
+    }
+
     #[test]
     fn subset_fonts_only_encode_the_glyphs_they_have() {
         let mut doc = Document::new_empty();
@@ -1253,6 +1275,31 @@ mod tests {
         assert_eq!(m.decode(&[0, 0x24, 0, 0x25, 0, 3, 0, 0x30, 0, 0x31, 0, 0x10]), "AB Hié");
         assert_eq!(m.encode("Hi A").as_deref(), Some(&[0, 0x30, 0, 0x31, 0, 3, 0, 0x24][..]));
         assert_eq!(m.encode("Z"), None);
+    }
+
+    /// A `/W` run that starts at the last CID stops there instead of overflowing onto CID 0.
+    #[test]
+    fn composite_width_run_past_the_last_cid_is_dropped() {
+        let widths = |first: i64| {
+            let mut doc = Document::new_empty();
+            let mut desc = Dict::new();
+            desc.set(b"Subtype".to_vec(), Object::name("CIDFontType2"));
+            desc.set(b"DW".to_vec(), Object::Int(1000));
+            desc.set(b"W".to_vec(), Object::Array(vec![Object::Int(first), Object::Array(vec![Object::Int(100), Object::Int(200)])]));
+            let f = font(
+                &mut doc,
+                vec![
+                    ("Subtype", Object::name("Type0")),
+                    ("Encoding", Object::name("Identity-H")),
+                    ("DescendantFonts", Object::Array(vec![Object::Dict(desc)])),
+                ],
+            );
+            Metrics::from_dict(&doc, &f)
+        };
+        let ordinary = widths(0);
+        assert_eq!((ordinary.width(0), ordinary.width(1)), (0.1, 0.2));
+        let last = widths(i64::from(u32::MAX));
+        assert_eq!((last.width(0), last.width(u32::MAX)), (1.0, 0.1));
     }
 
     #[test]

@@ -1,0 +1,18 @@
+[package]
+name = "craft-print"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "System PDF print spooler: CUPS and Windows (owned copy of storytold/craft-libs crates/print)"
+
+[lints]
+workspace = true
+
+[target.'cfg(windows)'.dependencies]
+tempfile = "3"
+
+[dev-dependencies]
+tempfile = "3"
+serde_json = "1"

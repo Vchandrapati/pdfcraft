@@ -64,7 +64,7 @@ pdfcraft-cli run    --script steps.json [--root DIR]      [{\"tool\": \"doc_open
     "\
 pdfcraft-cli ui     --control FILE <method> [key=value …] [--out shot.png]
                                                            drive a running app started with --control FILE
-help and feedback: https://discord.gg/artcraft"
+"
 );
 
 fn main() -> ExitCode {
@@ -142,15 +142,13 @@ fn stdout_line(line: std::fmt::Arguments<'_>) -> Result<(), CliError> {
 
 fn version() -> Result<(), CliError> {
     stdout_line(format_args!("pdfcraft-cli {}", env!("CARGO_PKG_VERSION")))?;
-    stdout_line(format_args!("Discord: {}  (help and feedback)", pdfcraft_engine::links::DISCORD))?;
-    stdout_line(format_args!("Web:     {}", pdfcraft_engine::links::APP_PAGE))?;
-    stdout_line(format_args!("Source:  {}", pdfcraft_engine::links::GITHUB))?;
     Ok(())
 }
 
 /// Audit a document for faux redactions. Prints the findings as JSON; fails when any are
 /// found so scripts and CI can gate on it, and when the audit itself cannot run.
 fn audit(args: &[String]) -> Result<(), CliError> {
+    validate_options("audit", args, AUDIT_OPTIONS)?;
     let path = *positional(args).first().ok_or("audit: missing file")?;
     let bytes = read(path)?;
     let doc = pdfcraft_cos::Document::open_with_password(bytes, flag(args, "--password")).map_err(|e| format!("{path}: {e}"))?;
@@ -213,6 +211,7 @@ fn validate_options(command: &str, args: &[String], specs: &[OptionSpec]) -> Res
 }
 
 const INFO_OPTIONS: &[OptionSpec] = &[OptionSpec { name: "--password", takes_value: true }];
+const AUDIT_OPTIONS: &[OptionSpec] = &[OptionSpec { name: "--password", takes_value: true }];
 const TEXT_OPTIONS: &[OptionSpec] = &[OptionSpec { name: "--page", takes_value: true }, OptionSpec { name: "--password", takes_value: true }];
 const COMBINE_OPTIONS: &[OptionSpec] = &[OptionSpec { name: "--out", takes_value: true }];
 const EXTRACT_OPTIONS: &[OptionSpec] = &[
@@ -426,6 +425,17 @@ fn edit(args: &[String]) -> Result<(), CliError> {
     let mut session = Session::new();
     let id = session.open(path, Some(path.to_string()), read(path)?, password).map_err(|e| e.to_string())?;
     for e in edits {
+        // A destination past the end must fail like `page_move` / `page_insert_blank` do, not
+        // silently become an append (#1330). Checked per edit: earlier edits change the count.
+        let n = session.get(id).map_or(0, |d| d.info.pages.len());
+        let destination = match &e {
+            Edit::MovePages { to, .. } => Some(("--move target", *to)),
+            Edit::InsertBlankPage { at, .. } => Some(("--insert-blank", *at)),
+            _ => None,
+        };
+        if let Some((option, at)) = destination.filter(|(_, at)| *at > n) {
+            return Err(format!("{option} {} is past the end: it must be between 1 and {} (the document has {n} pages)", at + 1, n + 1).into());
+        }
         session.apply(id, e).map_err(|e| e.to_string())?;
     }
     let bytes = if full { session.save_full_bytes(id) } else { session.save_bytes(id) }.map_err(|e| e.to_string())?;

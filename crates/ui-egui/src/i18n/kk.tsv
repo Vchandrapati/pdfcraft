@@ -67,7 +67,6 @@
 	Side panels	Бүйірлік панельдер
 	Enable Acrobat JavaScript	Acrobat JavaScript-ті қосу
 	OK	ОК
-	Join our Discord	Discord-қа қосылыңыз
 	Close	Жабу
 	Next / previous match	Келесі / алдыңғы сәйкестік
 	Copy selected text	Таңдалған мәтінді көшіру
@@ -120,17 +119,10 @@
 	Next page	Келесі бет
 	Previous page	Алдыңғы бет
 	Current page — type a page number or label (such as iv) and press Enter	Ағымдағы бет — бет нөмірін немесе белгісін (мысалы, iv) теріңіз де, Enter пернесін басыңыз
-	Welcome to PdfCraft	PdfCraft-ге қош келдіңіз
-	An open-source PDF workbench — local, private, and scriptable.	Ашық бастапқы кодты PDF жұмыс орны — жергілікті, жеке әрі скрипттерді қолдайтын.
-	Join the ArtCraft community	ArtCraft қауымдастығына қосылыңыз
-	Get help, share feedback and follow development on Discord.	Көмек алыңыз, пікір бөлісіңіз және Discord-тағы әзірлеуді қадағалаңыз.
-	Recommended tools	Ұсынылған құралдар
 	Use now	Дәл қазір пайдалану
 	Open file	Файлды ашу
 	Recent	Соңғы
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	PdfCraft-те ашқан файлдарыңыз осында көрсетіледі. PDF файлын ашу үшін оны кез келген жерге апарып тастаңыз.
-	Privacy	Жекелік
-	PdfCraft works offline. No telemetry, no account, and no cloud processing unless you add a provider.	PdfCraft офлайн жұмыс істейді. Провайдер қоспағаныңызша телеметрия да, тіркелгі де, бұлтта өңдеу де жоқ.
 	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Скрипттер файлға да, желіге де қатынасы жоқ құмсалғышта орындалады. JavaScript өшірулі тұрса да, Acrobat-тың стандартты пішімдеу, тексеру және есептеу функциялары әлі де жұмыс істейді.
 	Back to all tools	Барлық құралдарға оралу
 	Close panel	Панельді жабу
@@ -264,11 +256,6 @@
 	Split document…	Құжатты бөлу…
 	Number pages…	Беттерді нөмірлеу…
 	Keyboard shortcuts	Пернетақта тіркесімдері
-	Join the ArtCraft Discord	ArtCraft Discord-ына қосылыңыз
-	PdfCraft web page	PdfCraft веб-сайты
-	PdfCraft on GitHub	GitHub-тағы PdfCraft
-	ArtCraft website	ArtCraft веб-сайты
-	Check for updates…	Жаңартуларды тексеру…
 	About PdfCraft	PdfCraft туралы
 	Export a PDF	PDF экспорттау
 	Export to	Мынаған экспорттау
@@ -714,16 +701,6 @@
 	Flip Vertical	Тікке аудару
 	Replace Image…	Суретті ауыстыру…
 	Save Image As…	Суретті басқаша сақтау…
-	Check for updates	Жаңартуларды тексеру
-	No check has run yet.	Тексеру әлі жүргізілген жоқ.
-	Checking for a newer version…	Жаңа нұсқа бар ма екені тексерілуде…
-	PdfCraft {v} is available.	PdfCraft {v} қолжетімді.
-	You have version {c}. Download the new version from its release page.	Сізде {c} нұсқасы бар. Жаңа нұсқаны шығарылым бетінен жүктеп алыңыз.
-	PdfCraft {c} is up to date.	PdfCraft {c} нұсқасы ең соңғы.
-	Couldn't check for updates: {e}	Жаңартуларды тексеру мүмкін болмады: {e}
-	You have version {c}. All releases are listed at {page}.	Сізде {c} нұсқасы бар. Барлық шығарылымдар {page} бетінде көрсетілген.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	GitHub-тан соңғы шығарылымды сұрайды. Ештеңе автоматты түрде жүктелмейді немесе орнатылмайды.
-	Download	Жүктеп алу
 	Later	Кейінірек
 	none	жоқ
 	Declared conformance: {shown}	Жарияланған сәйкестік: {shown}
@@ -1330,7 +1307,6 @@
 	Discard	Елемеу
 	Version {v}	Нұсқа {v}
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Rust тілінде жазылған, clean-room әдісімен әзірленген ашық бастапқы кодты PDF қосымшасы. MIT OR Apache-2.0.
-	Part of	Бөлігі
 	Summarize Options	Қорытындылау параметрлері
 	Choose a layout:	Макетті таңдаңыз:
 	Comments only	Тек түсініктемелер
@@ -2283,3 +2259,35 @@ scroll speed	Fast	Жылдам
 	Ink sensitivity	Сия сезімталдығы
 	No signature was found in the frame. Move the frame over the signature or raise the ink sensitivity.	Жақтауда қолтаңба табылмады. Жақтауды қолтаңбаның үстіне жылжытыңыз немесе сия сезімталдығын арттырыңыз.
 	Couldn't use the photo: {e}	Суретті пайдалану мүмкін болмады: {e}
+	The document or extraction settings changed. Run extraction again.	Құжат немесе шығарып алу параметрлері өзгерді. Шығарып алуды қайта іске қосыңыз.
+	Extract Tables	Кестелерді шығарып алу
+	Review the extracted cells before exporting. Automatic detection uses text spacing and may not match the document's intended table layout.	Экспорттау алдында шығарылған ұяшықтарды қарап шығыңыз. Автоматты анықтау мәтін аралықтарын пайдаланады және құжаттағы кестенің көзделген орналасуына сәйкес келмеуі мүмкін.
+	Region	Аймақ
+	Use the selected rectangle	Таңдалған тік төртбұрышты пайдалану
+	Select a rectangle with Column Select before opening this dialog to limit the page area.	Бет аймағын шектеу үшін осы диалогты ашпас бұрын «Бағанды таңдау» құралымен тік төртбұрышты таңдаңыз.
+	Column separators	Баған бөлгіштері
+	Automatic, or e.g. 180, 340	Автоматты немесе мысалы, 180, 340
+	Leave separators empty for automatic detection. Positions are measured from the displayed page's top-left in points.	Автоматты анықтау үшін бөлгіштерді бос қалдырыңыз. Орындар көрсетілген беттің жоғарғы сол жақ бұрышынан бастап пунктпен өлшенеді.
+	Run extraction	Шығарып алуды іске қосу
+	Detect tables	Кестелерді анықтау
+	Extracting…	Шығарылуда…
+	Settings changed. Run extraction again to refresh this preview.	Параметрлер өзгерді. Алдын ала қарауды жаңарту үшін шығарып алуды қайта іске қосыңыз.
+	No text in this region. For scans, run Recognize Text first; otherwise select an area containing text.	Бұл аймақта мәтін жоқ. Сканерленген құжаттар үшін алдымен мәтінді тануды іске қосыңыз; әйтпесе мәтіні бар аймақты таңдаңыз.
+	No tables detected. Adjust the region or add separator positions and run again.	Кестелер анықталмады. Аймақты өзгертіңіз немесе бөлгіш орындарын қосып, қайта іске қосыңыз.
+	Table {n} · {rows} rows × {columns} columns	Кесте {n} · {rows} жол × {columns} баған
+	Table {n}	Кесте {n}
+	Use selected table's separators for correction	Таңдалған кестенің бөлгіштерін түзету үшін пайдалану
+	Export Excel	Excel форматына экспорттау
+	Export CSV	CSV форматына экспорттау
+	Preview omits {rows} rows and {cells} cells; it shortens {shortened} long cells. Export includes the full table.	Алдын ала қарауда {rows} жол және {cells} ұяшық көрсетілмейді; ұзын ұяшықтардың {shortened} данасы қысқартылады. Экспортта толық кесте болады.
+	Run table extraction again before exporting this preview	Осы алдын ала қарауды экспорттамас бұрын кестені қайта шығарып алыңыз
+	Table export stopped: {error}	Кестені экспорттау тоқтатылды: {error}
+	Exported {name}	Экспортталды: {name}
+	Couldn't save {name}: {error}	{name} сақтау мүмкін болмады: {error}
+	Couldn't download {name}: {error}	{name} жүктеп алу мүмкін болмады: {error}
+	Extract tables…	Кестелерді шығарып алу…
+	Tables (CSV / Excel)	Кестелер (CSV / Excel)
+	of {n}	 / {n}
+	Quick tools	Жылдам құралдар
+	Merge	Біріктіру
+	Reorder	Ретін өзгерту

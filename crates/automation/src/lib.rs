@@ -30,7 +30,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use pdfcraft_engine::{CombineSource, DocId, Document, Edit, Session, commands};
-use pdfcraft_platform::staging::{StagingName, create_staging, staging_suffixes};
+use pdfcraft_platform::staging::{StagingName, staging_suffixes};
 use pdfcraft_render::{PageRenderer, PageText, RenderConfig, RenderRequest, RequestKind};
 use serde_json::{Value, json};
 
@@ -655,6 +655,7 @@ impl Automation {
                 summary(self.session.get(new).ok_or_else(|| failed("the document vanished"))?)
             }
             "doc_export_images" | "doc_export_text" | "doc_export_all_images" => self.export(name, &a)?,
+            "table_extract" | "table_export" => self.tables(name, &a)?,
             "doc_header_footer" | "doc_watermark" | "doc_background" | "doc_remove_marks" => self.marks(name, &a)?,
             "doc_unprotect" => {
                 let mut out = self.apply(&a, Edit::RemoveProtection)?;
@@ -857,10 +858,13 @@ impl Automation {
             self.apply(a, Edit::FlattenFillSign)?;
         }
         let bytes = if full { self.session.save_full_bytes(id) } else { self.session.save_bytes(id) }.map_err(failed)?;
+        // A save that adds or removes encryption, or must not keep the old revision (Sanitize,
+        // redaction), is rewritten in full even when an incremental save was asked for.
+        let incremental = !full && bytes.starts_with(&self.doc(a)?.saved_bytes());
         write_atomic(&target, &bytes)?;
         let path = target.to_string_lossy().into_owned();
         self.session.mark_saved(id, bytes.clone(), Some(path.clone())).map_err(failed)?;
-        Ok(json!({ "path": path, "bytes": bytes.len(), "incremental": !full, "document": summary(self.doc(a)?) }))
+        Ok(json!({ "path": path, "bytes": bytes.len(), "incremental": incremental, "document": summary(self.doc(a)?) }))
     }
 
     fn doc_revisions(&mut self, a: &Args) -> Result<Value> {
@@ -1151,6 +1155,59 @@ impl Automation {
             }
         };
         self.apply(a, edit)
+    }
+
+    fn tables(&mut self, tool: &str, a: &Args) -> Result<Value> {
+        let doc = self.doc_to_copy(a)?;
+        let page = self.page(a)?;
+        let numbers = |key: &str| -> Result<Option<Vec<f32>>> {
+            a.get(key)
+                .map(|v| {
+                    let values = v.as_array().ok_or_else(|| Args::wrong(key, "an array of numbers"))?;
+                    if values.len() > 127 {
+                        return Err(Args::wrong(key, "at most 127 numbers"));
+                    }
+                    values
+                        .iter()
+                        .map(|n| {
+                            n.as_f64()
+                                .filter(|n| n.is_finite() && n.abs() <= f64::from(f32::MAX))
+                                .map(|n| n as f32)
+                                .ok_or_else(|| Args::wrong(key, "finite coordinates"))
+                        })
+                        .collect()
+                })
+                .transpose()
+        };
+        let rect =
+            numbers("rect")?.map(|r| <[f32; 4]>::try_from(r).map_err(|_| Args::wrong("rect", "four coordinates [x0,y0,x1,y1]"))).transpose()?;
+        let options = pdfcraft_engine::tables::TableOptions { rect, columns: numbers("columns")?.unwrap_or_default() };
+        let result = pdfcraft_engine::export::Exporter::new(doc).tables(page, &options).map_err(failed)?;
+        if tool == "table_extract" {
+            let tables: Vec<Value> = result
+                .tables
+                .iter()
+                .enumerate()
+                .map(|(i, t)| json!({ "table": i + 1, "rect": t.rect, "columns": t.columns, "rows": t.rows }))
+                .collect();
+            return Ok(json!({ "page": page + 1, "has_text": result.has_text, "tables": tables,
+                "note": "Review inferred cells before exporting. Image-only pages require OCR first. Merged cells, multiline cells and cross-page joins are not inferred." }));
+        }
+        let index = a.opt_int("table")?.unwrap_or(1);
+        let selected = usize::try_from(index).ok().and_then(|i| i.checked_sub(1)).and_then(|i| result.tables.get(i)).ok_or_else(|| {
+            failed(format!("table {index} does not exist; use table_extract to inspect the {} detected tables", result.tables.len()))
+        })?;
+        let path = self.resolve(a.str("path")?, true)?;
+        let format = a.opt_str("format")?.unwrap_or("csv");
+        let bytes = match format {
+            "csv" => selected.csv().into_bytes(),
+            "xlsx" => selected.xlsx().map_err(failed)?,
+            _ => return Err(Args::wrong("format", "csv or xlsx")),
+        };
+        write_atomic(&path, &bytes)?;
+        Ok(
+            json!({ "path": path.to_string_lossy(), "page": page + 1, "table": index, "rows": selected.rows.len(), "columns": selected.columns.len() + 1, "bytes": bytes.len(), "format": format }),
+        )
     }
 
     fn export(&mut self, tool: &str, a: &Args) -> Result<Value> {
@@ -2233,30 +2290,18 @@ fn write_atomic(path: &Path, bytes: &[u8]) -> Result<()> {
 
 /// [`write_atomic`], trying the staging names that `suffixes` give.
 fn write_atomic_with(path: &Path, bytes: &[u8], suffixes: impl IntoIterator<Item = u64>) -> Result<()> {
-    use std::io::Write;
     // A folder can't be replaced, and staging beside it could land outside the root: "." names
     // the root itself, whose parent isn't ours to write in.
     if path.is_dir() {
         return Err(failed(format!("{}: is a folder, not a file", path.display())));
     }
-    let dir = path.parent().filter(|p| !p.as_os_str().is_empty()).unwrap_or(Path::new("."));
-    let name = path.file_name().ok_or_else(|| failed(format!("{}: not a file path", path.display())))?;
-    std::fs::create_dir_all(dir).map_err(|e| failed(format!("{}: {e}", dir.display())))?;
-    let (tmp, file) =
-        create_staging(dir, &name.to_string_lossy(), StagingName::SuffixThenTag, suffixes).map_err(|e| failed(format!("{}: {e}", dir.display())))?;
-    // Closed at the end of the block, before the rename.
-    let written = {
-        let mut file = file;
-        file.write_all(bytes)
-    };
-    if let Err(e) = written {
-        let _ = std::fs::remove_file(&tmp);
-        return Err(failed(format!("{}: {e}", tmp.display())));
+    if path.file_name().is_none() {
+        return Err(failed(format!("{}: not a file path", path.display())));
     }
-    std::fs::rename(&tmp, path).map_err(|e| {
-        let _ = std::fs::remove_file(&tmp);
-        failed(format!("{}: {e}", path.display()))
-    })
+    let dir = path.parent().filter(|p| !p.as_os_str().is_empty()).unwrap_or(Path::new("."));
+    std::fs::create_dir_all(dir).map_err(|e| failed(format!("{}: {e}", dir.display())))?;
+    pdfcraft_platform::staging::write_atomic(path, bytes, StagingName::SuffixThenTag, suffixes)
+        .map_err(|e| failed(format!("{}: {e}", path.display())))
 }
 
 #[cfg(test)]

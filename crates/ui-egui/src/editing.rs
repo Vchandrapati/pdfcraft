@@ -2,7 +2,7 @@
 //! "save changes?" prompt when closing a tab or quitting with unsaved edits.
 
 use pdfcraft_engine::Edit;
-use pdfcraft_platform::staging::{StagingName, create_staging, staging_suffixes};
+use pdfcraft_platform::staging::{StagingName, staging_suffixes};
 
 use crate::PdfCraftApp;
 
@@ -43,13 +43,14 @@ impl PdfCraftApp {
                 let info = &doc.info;
                 let view = &mut self.views[i];
                 view.signature_drag.committed(&edit, doc.edit_generation());
+                view.move_background.committed(&edit, doc.edit_generation());
                 if let Some(page) = comment_page(&edit).or_else(|| content_page(&edit)) {
                     // Comment and content edits change one page: keep every other raster.
                     view.page_changed(page);
                 } else if let Some(form_before) = form_before
                     && doc.info.pages.len() == page_count_before
                     && doc.xfa.is_some() == had_xfa
-                    && !doc.xfa.is_some()
+                    && doc.xfa.is_none()
                     && is_form_edit(&edit)
                 {
                     let mut changed_pages = std::collections::BTreeSet::new();
@@ -922,24 +923,7 @@ pub fn write_atomically(path: &str, bytes: &[u8]) -> std::io::Result<()> {
 
 /// [`write_atomically`], trying the staging names that `suffixes` give.
 fn write_atomically_with(path: &str, bytes: &[u8], suffixes: impl IntoIterator<Item = u64>) -> std::io::Result<()> {
-    use std::io::Write;
-    let target = std::path::Path::new(path);
-    let dir = target.parent().filter(|d| !d.as_os_str().is_empty()).unwrap_or(std::path::Path::new("."));
-    let name = target.file_name().and_then(|n| n.to_str()).unwrap_or("save");
-    let (tmp, f) = create_staging(dir, name, StagingName::TagThenSuffix, suffixes)?;
-    let result = (|| {
-        // Closed at the end of the block, before the rename.
-        {
-            let mut f = f;
-            f.write_all(bytes)?;
-            f.sync_all()?;
-        }
-        std::fs::rename(&tmp, target)
-    })();
-    if result.is_err() {
-        let _ = std::fs::remove_file(&tmp);
-    }
-    result
+    pdfcraft_platform::staging::write_atomic(std::path::Path::new(path), bytes, StagingName::TagThenSuffix, suffixes)
 }
 
 #[cfg(not(target_arch = "wasm32"))]

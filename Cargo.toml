@@ -12,10 +12,10 @@ rust-version = "1.95"
 repository = "https://github.com/storytold/pdfcraft"
 
 [workspace.dependencies]
-# Shared frontend components; engines remain independent of egui.
-craft-ui = { git = "https://github.com/storytold/craft-libs", version = "0.1.0", rev = "5c874d51eeb3de70e735c8ce87a59a7dedd47675", features = ["serde"] }
-# Shared system spooler; document composition remains in pdfcraft-print.
-craft-print = { git = "https://github.com/storytold/craft-libs", version = "0.1.0", rev = "d991bf6792f8ade99c51358bf3c1d902c8cd96b5" }
+# Shared frontend components (owned copy, crates/craft-ui); engines remain independent of egui.
+craft-ui = { path = "crates/craft-ui", version = "0.1.0", features = ["serde"] }
+# System print spooler (owned copy, crates/craft-print); document composition remains in pdfcraft-print.
+craft-print = { path = "crates/craft-print", version = "0.1.0" }
 # internal
 pdfcraft-geom = { path = "crates/geom", version = "0.6.0" }
 pdfcraft-filters = { path = "crates/filters", version = "0.6.0" }
@@ -52,7 +52,6 @@ pdfcraft-automation = { path = "crates/automation", version = "0.6.0", default-f
 # pdf
 hayro = "0.7.1"
 hayro-syntax = "0.7.2"
-lopdf = "0.45"
 flate2 = { version = "1.1", default-features = false, features = ["rust_backend"] }
 weezl = "0.2"
 
@@ -90,6 +89,17 @@ opt-level = 2
 debug = "line-tables-only"
 
 [profile.dev]
+# Unoptimised for the fastest compiles; dependencies stay at opt-level 2 above (built once and
+# cached by sccache), so rendering and decoding run at usable speed.
+opt-level = 0
+# File and line numbers in panics and backtraces, without full debug info: the UI test
+# binaries' PDBs were hundreds of MB each, slowing links and filling the disk.
+debug = "line-tables-only"
+
+# The script engine's nesting limits (256 levels, so a hostile PDF script stops with an error
+# before it exhausts the stack) assume optimised stack frames; unoptimised, the 1 MiB stack
+# test overflowed first.
+[profile.dev.package.pdfcraft-js]
 opt-level = 1
 
 [profile.low-disk]
@@ -107,6 +117,5 @@ hayro-interpret = { path = "vendor/hayro-interpret" }
 hayro = { path = "vendor/hayro" }
 hayro-syntax = { path = "vendor/hayro-syntax" }
 hayro-jbig2 = { path = "vendor/hayro-jbig2" }
-lopdf = { path = "vendor/lopdf" }
 winit = { path = "vendor/winit" }
 egui-wgpu = { path = "vendor/egui-wgpu" }
