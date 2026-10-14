@@ -12,6 +12,15 @@ use pdfcraft_cos::{Dict, Lexer, Object, PdfString, serialize};
 #[cfg(test)]
 mod tests;
 
+/// `v` as a content-stream number with at most `decimals` (≥ 1) decimal places: trailing zeros
+/// and a bare point dropped, no `-0`, and a NaN or infinity written as 0 (neither is valid PDF).
+pub fn number(v: f64, decimals: usize) -> String {
+    let v = if v.is_finite() { v } else { 0.0 };
+    let s = format!("{v:.*}", decimals.max(1));
+    let s = s.trim_end_matches('0').trim_end_matches('.');
+    if s == "-0" { "0".into() } else { s.into() }
+}
+
 /// One operator with its operands.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Op {

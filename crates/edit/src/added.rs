@@ -631,18 +631,10 @@ fn type3_shaped(doc: &mut Document, clusters: &[&ShapedCluster], outlines: &Hash
         differences.push(Object::name(&glyph));
         widths.push(Object::Real((c.advance * 1000.0).round()));
         if !c.text.is_empty() {
-            let hex: String = c.text.encode_utf16().map(|u| format!("{u:04X}")).collect();
-            to_unicode.push(format!("<{code:02X}> <{hex}>\n"));
+            to_unicode.push((code, c.text.as_str()));
         }
     }
-    let mut cmap = String::from(
-        "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CMapType 2 def\n1 begincodespacerange\n<01> <FF>\nendcodespacerange\n",
-    );
-    // A CMap block holds at most 100 entries.
-    for block in to_unicode.chunks(100) {
-        cmap.push_str(&format!("{} beginbfchar\n{}endbfchar\n", block.len(), block.concat()));
-    }
-    cmap.push_str("endcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n");
+    let cmap = pdfcraft_fonts::simple_to_unicode(to_unicode);
     let cmap = doc.add(Object::Stream(Stream::flate(Dict::new(), cmap.as_bytes())));
     // The face's family when every glyph comes from one script; without the face, the script's
     // name (as Arabic items were always named).

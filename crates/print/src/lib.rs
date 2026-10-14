@@ -499,9 +499,7 @@ pub fn layout(sizes: &[(f64, f64)], settings: &Settings) -> Result<Vec<Sheet>, P
 }
 
 fn n(v: f64) -> String {
-    let s = format!("{v:.4}");
-    let s = s.trim_end_matches('0').trim_end_matches('.');
-    if s == "-0" { "0".into() } else { s.into() }
+    pdfcraft_content::number(v, 4)
 }
 
 fn decoded_contents(doc: &Document, page: &Dict) -> Vec<u8> {

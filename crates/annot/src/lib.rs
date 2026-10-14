@@ -1430,9 +1430,7 @@ pub fn with_missing_appearances_cached(doc: &Document, cache: &mut AppearanceCac
 
 /// Format a number for content streams and DA strings.
 pub(crate) fn n(v: f64) -> String {
-    let s = format!("{:.3}", if v.abs() < 5e-4 { 0.0 } else { v });
-    let s = s.trim_end_matches('0').trim_end_matches('.');
-    if s == "-0" { "0".into() } else { s.into() }
+    pdfcraft_content::number(v, 3)
 }
 
 // ── edits ───────────────────────────────────────────────────────────────────────────────────

@@ -1120,12 +1120,6 @@ fn proportional(ch: char, glyph: &pdfcraft_fonts::GlyphOutline) -> (f64, f64) {
     (SIDE_BEARING - glyph.bbox[0], ink + 2.0 * SIDE_BEARING)
 }
 
-fn unicode_hex(ch: char) -> String {
-    let mut units = [0u16; 2];
-    let encoded = ch.encode_utf16(&mut units);
-    encoded.iter().map(|u| format!("{u:04X}")).collect()
-}
-
 /// This build has no Japanese face to draw replacement text with.
 fn no_japanese_font() -> EditError {
     EditError::Invalid(
@@ -1229,10 +1223,7 @@ fn add_type3_font(doc: &mut Document, fonts_res: &mut Dict, face: &CraftFont, he
     let mut charprocs = Dict::new();
     let mut widths = Vec::with_capacity(last_char);
     let mut differences = vec![Object::Int(1)];
-    let mut cmap = String::from(
-        "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CMapType 2 def\n1 begincodespacerange\n<01> <FF>\nendcodespacerange\n",
-    );
-    cmap.push_str(&format!("{last_char} beginbfchar\n"));
+    let mut to_unicode = Vec::with_capacity(last_char);
     for glyph in glyphs {
         let glyph_name = format!("g{:02X}", glyph.code);
         let mut pd = Dict::new();
@@ -1241,9 +1232,9 @@ fn add_type3_font(doc: &mut Document, fonts_res: &mut Dict, face: &CraftFont, he
         charprocs.set(glyph_name.as_bytes().to_vec(), Object::Ref(proc_ref));
         differences.push(Object::name(&glyph_name));
         widths.push(Object::Real((glyph.width * 1000.0).round()));
-        cmap.push_str(&format!("<{:02X}> <{}>\n", glyph.code, unicode_hex(glyph.ch)));
+        to_unicode.push((usize::from(glyph.code), glyph.ch.to_string()));
     }
-    cmap.push_str("endbfchar\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n");
+    let cmap = pdfcraft_fonts::simple_to_unicode(to_unicode.iter().map(|(code, text)| (*code, text.as_str())));
     let mut cmap_dict = Dict::new();
     cmap_dict.set(b"Length".to_vec(), cmap.len() as i64);
     let cmap_ref = doc.add(Object::Stream(Stream::from_raw(cmap_dict, cmap.into_bytes())));

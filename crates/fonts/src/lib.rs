@@ -111,6 +111,49 @@ pub fn wrap_with(text: &str, size: f64, width: f64, measure: impl Fn(&str, f64) 
 ///
 /// Codes 0x80–0x9F come from the same table the text extractor decodes with, so encoding and
 /// decoding agree (Š š Ž ž Œ œ Ÿ ƒ † ‡ ˆ ˜ ‰ ‹ › as well as quotes, dashes, € and ™).
+/// A `/ToUnicode` CMap for a font with one-byte codes: each `(code, text)` maps the code to its
+/// text, written as UTF-16BE (a surrogate pair beyond the BMP). Entries go in `bfchar` blocks of
+/// at most 100, the most one block may hold (ISO 32000-2 §9.10.3).
+pub fn simple_to_unicode<'a>(entries: impl IntoIterator<Item = (usize, &'a str)>) -> String {
+    let lines: Vec<String> = entries
+        .into_iter()
+        .map(|(code, text)| {
+            let hex: String = text.encode_utf16().map(|u| format!("{u:04X}")).collect();
+            format!(
+                "<{code:02X}> <{hex}>
+"
+            )
+        })
+        .collect();
+    let mut cmap = String::from(
+        "/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+/CMapType 2 def
+1 begincodespacerange
+<01> <FF>
+endcodespacerange
+",
+    );
+    for block in lines.chunks(100) {
+        cmap.push_str(&format!(
+            "{} beginbfchar
+{}endbfchar
+",
+            block.len(),
+            block.concat()
+        ));
+    }
+    cmap.push_str(
+        "endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+",
+    );
+    cmap
+}
+
 pub fn win_ansi_byte(c: char) -> Option<u8> {
     match c {
         '\u{20}'..='\u{7e}' | '\u{a0}'..='\u{ff}' => u8::try_from(u32::from(c)).ok(),
@@ -261,6 +304,18 @@ pub fn literal(bytes: &[u8]) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn to_unicode_maps_split_into_blocks_of_at_most_100() {
+        let texts: Vec<String> = (0..255u32).map(|i| char::from_u32(0x4E00 + i).unwrap().to_string()).collect();
+        let cmap = simple_to_unicode(texts.iter().enumerate().map(|(i, t)| (i + 1, t.as_str())));
+        assert_eq!(cmap.matches("beginbfchar").count(), 3);
+        assert!(cmap.contains("100 beginbfchar") && cmap.contains("55 beginbfchar"), "{cmap}");
+        assert!(cmap.contains("<01> <4E00>") && cmap.contains("<FF> <4EFE>"), "{cmap}");
+        // Beyond the BMP: a surrogate pair; several characters: their UTF-16 in order.
+        let cmap = simple_to_unicode([(1, "😀"), (2, "ffi")]);
+        assert!(cmap.contains("<01> <D83DDE00>") && cmap.contains("<02> <006600660069>"), "{cmap}");
+    }
 
     #[test]
     fn win_ansi_encodability_matches_the_encoder() {

@@ -277,13 +277,9 @@ fn ink_extent(text: &str) -> (f64, f64) {
 }
 /// One-byte codes 1–255 per font; a page with more distinct characters gets more fonts.
 const CODES_PER_FONT: usize = 255;
-/// A `beginbfchar` block holds at most 100 entries (ISO 32000-2 §9.10.3).
-const BFCHAR_BLOCK: usize = 100;
 
 fn num(v: f64) -> String {
-    let s = format!("{:.4}", if v.abs() < 1e-9 { 0.0 } else { v });
-    let s = s.trim_end_matches('0').trim_end_matches('.');
-    if s == "-0" { "0".into() } else { s.into() }
+    pdfcraft_content::number(v, 4)
 }
 
 /// A character's advance in the invisible font, in thousandths of an em: full width for CJK,
@@ -384,32 +380,21 @@ fn add_font(doc: &mut Document, fonts: &mut Dict, chars: &[char]) -> String {
     let mut charprocs = Dict::new();
     let mut differences = vec![Object::Int(1)];
     let mut widths = Vec::with_capacity(chars.len());
-    let mut cmap = String::from(
-        "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n\
-         /CMapName /PdfCraft-OCR-UCS def\n/CMapType 2 def\n1 begincodespacerange\n<01> <FF>\nendcodespacerange\n",
-    );
-    for (block, group) in chars.chunks(BFCHAR_BLOCK).enumerate() {
-        cmap.push_str(&format!("{} beginbfchar\n", group.len()));
-        for (i, &c) in group.iter().enumerate() {
-            let code = block * BFCHAR_BLOCK + i + 1;
-            let glyph = format!("g{code:02X}");
-            let width = advance(c);
-            // Glyphs of one width share one empty procedure.
-            let proc = procs
-                .entry(width)
-                .or_insert_with(|| {
-                    Object::Ref(doc.add(Object::Stream(Stream::from_raw(Dict::new(), format!("{width} 0 0 0 0 0 d1\n").into_bytes()))))
-                })
-                .clone();
-            charprocs.set(glyph.as_bytes().to_vec(), proc);
-            differences.push(Object::name(&glyph));
-            widths.push(Object::Int(width));
-            let utf16: String = c.encode_utf16(&mut [0; 2]).iter().map(|u| format!("{u:04X}")).collect();
-            cmap.push_str(&format!("<{code:02X}> <{utf16}>\n"));
-        }
-        cmap.push_str("endbfchar\n");
+    for (i, &c) in chars.iter().enumerate() {
+        let code = i + 1;
+        let glyph = format!("g{code:02X}");
+        let width = advance(c);
+        // Glyphs of one width share one empty procedure.
+        let proc = procs
+            .entry(width)
+            .or_insert_with(|| Object::Ref(doc.add(Object::Stream(Stream::from_raw(Dict::new(), format!("{width} 0 0 0 0 0 d1\n").into_bytes())))))
+            .clone();
+        charprocs.set(glyph.as_bytes().to_vec(), proc);
+        differences.push(Object::name(&glyph));
+        widths.push(Object::Int(width));
     }
-    cmap.push_str("endcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n");
+    let texts: Vec<String> = chars.iter().map(char::to_string).collect();
+    let cmap = pdfcraft_fonts::simple_to_unicode(texts.iter().enumerate().map(|(i, text)| (i + 1, text.as_str())));
     let to_unicode = doc.add(Object::Stream(Stream::flate(Dict::new(), cmap.as_bytes())));
 
     let mut encoding = Dict::new();

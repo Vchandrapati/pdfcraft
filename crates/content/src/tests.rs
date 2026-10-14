@@ -118,3 +118,14 @@ fn pieces_parse_as_one_stream_and_splice_back() {
     assert_eq!(out.len(), 3);
     assert!(Pieces::join::<&[u8]>(&[]).splice([(0..1, b"x".to_vec())]).is_empty());
 }
+
+#[test]
+fn numbers_are_short_and_valid_pdf() {
+    assert_eq!(crate::number(1.23456, 3), "1.235");
+    assert_eq!(crate::number(100.0, 3), "100");
+    assert_eq!(crate::number(2.5, 4), "2.5");
+    assert_eq!(crate::number(-0.0004, 3), "0", "no -0");
+    assert_eq!(crate::number(0.00004, 4), "0");
+    assert_eq!(crate::number(f64::NAN, 3), "0");
+    assert_eq!(crate::number(f64::INFINITY, 4), "0");
+}

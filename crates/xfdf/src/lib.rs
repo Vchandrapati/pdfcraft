@@ -206,9 +206,7 @@ fn esc(s: &str) -> String {
 }
 
 fn n(v: f64) -> String {
-    let s = format!("{v:.4}");
-    let s = s.trim_end_matches('0').trim_end_matches('.');
-    if s == "-0" { "0".into() } else { s.into() }
+    pdfcraft_content::number(v, 4)
 }
 
 fn hex(c: &[f64]) -> Option<String> {

@@ -3532,6 +3532,7 @@ name = "pdfcraft-annot"
 version = "0.6.0"
 dependencies = [
  "hayro-syntax",
+ "pdfcraft-content",
  "pdfcraft-cos",
  "pdfcraft-fonts",
  "pdfcraft-model",
@@ -3759,6 +3760,7 @@ dependencies = [
 name = "pdfcraft-ocr"
 version = "0.6.0"
 dependencies = [
+ "pdfcraft-content",
  "pdfcraft-cos",
  "pdfcraft-fonts",
  "png 0.18.1",
@@ -3941,6 +3943,7 @@ version = "0.6.0"
 dependencies = [
  "base64",
  "image",
+ "pdfcraft-content",
  "pdfcraft-cos",
  "pdfcraft-fonts",
  "png 0.18.1",
@@ -3954,6 +3957,7 @@ name = "pdfcraft-xfdf"
 version = "0.6.0"
 dependencies = [
  "pdfcraft-annot",
+ "pdfcraft-content",
  "pdfcraft-cos",
  "pdfcraft-forms",
  "pdfcraft-model",
