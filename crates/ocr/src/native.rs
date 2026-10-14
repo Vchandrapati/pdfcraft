@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command, ExitStatus, Stdio};
 use std::time::{Duration, Instant};
 
-use super::{Line, Models, OcrError, Word};
+use super::{Line, OcrError, Word};
 
 const MAX_PIXELS: usize = 100_000_000;
 const MAX_TSV_BYTES: u64 = 32 * 1024 * 1024;
@@ -161,7 +161,16 @@ fn color(pixels: &[u8], width: u32, height: u32) -> Result<png::ColorType, OcrEr
     Err(failed("OCR pixels must be a complete grey, RGB or RGBA image"))
 }
 
-pub(super) fn recognize(executable: &Path, models: &Models, pixels: &[u8], width: u32, height: u32, dpi: u32) -> Result<Vec<Line>, OcrError> {
+/// Read `pixels` with the `language` model (Tesseract's name, such as `jpn`) from `model_dir`.
+pub(super) fn recognize(
+    executable: &Path,
+    model_dir: &Path,
+    language: &str,
+    pixels: &[u8],
+    width: u32,
+    height: u32,
+    dpi: u32,
+) -> Result<Vec<Line>, OcrError> {
     let color = color(pixels, width, height)?;
     if !(72..=600).contains(&dpi) {
         return Err(failed("OCR resolution must be between 72 and 600 dpi"));
@@ -177,13 +186,12 @@ pub(super) fn recognize(executable: &Path, models: &Models, pixels: &[u8], width
         writer.write_image_data(pixels).map_err(failed)?;
         writer.finish().map_err(failed)?;
     }
-    let model_dir = models.recognition.parent().filter(|p| !p.as_os_str().is_empty()).unwrap_or(Path::new("."));
     let mut cmd = command(executable);
     cmd.arg(&input)
         .arg("stdout")
         .arg("--tessdata-dir")
         .arg(model_dir)
-        .args(["-l", "eng", "--oem", "1", "--psm", "3", "--dpi"])
+        .args(["-l", language, "--oem", "1", "--psm", "3", "--dpi"])
         .arg(dpi.to_string())
         // Set the output variable directly: no tessdata/configs/tsv installation is required.
         .args(["-c", "tessedit_create_tsv=1"]);
@@ -226,10 +234,6 @@ fn parse_tsv(text: &str, width: u32, height: u32) -> Result<Vec<Line>, OcrError>
         if text.chars().any(|c| c.is_control()) {
             return Err(failed("Tesseract returned control characters in a word"));
         }
-        // The current PDF layer uses WinAnsi: never silently turn a recognised character into '?'.
-        if let Some(c) = pdfcraft_fonts::first_undrawable(text) {
-            return Err(failed(pdfcraft_fonts::undrawable_message("the OCR text layer", c)));
-        }
         let (left, top, w, h) = (number(6)?, number(7)?, number(8)?, number(9)?);
         let right = left.checked_add(w).filter(|n| *n <= width).ok_or_else(|| failed("Tesseract word box is outside the image"))?;
         let bottom = top.checked_add(h).filter(|n| *n <= height).ok_or_else(|| failed("Tesseract word box is outside the image"))?;
@@ -265,12 +269,21 @@ mod tests {
     }
 
     #[test]
-    fn malformed_tsv_and_unsupported_text_fail_clearly() {
-        for row in ["broken", "5\t1\t1\t1\t1\t1\t4294967295\t0\t2\t15\t90\tHello", "5\t1\t1\t1\t1\t1\t0\t0\t20\t10\t90\t☃"] {
+    fn malformed_tsv_and_control_characters_fail_clearly() {
+        for row in ["broken", "5\t1\t1\t1\t1\t1\t4294967295\t0\t2\t15\t90\tHello", "5\t1\t1\t1\t1\t1\t0\t0\t20\t10\t90\ta\u{7}b"] {
             assert!(parse_tsv(&format!("{HEADER}{row}"), 400, 200).is_err());
         }
         assert!(parse_tsv("not a TSV header", 400, 200).is_err());
         assert!(parse_tsv(HEADER, 400, 200).unwrap().is_empty());
+    }
+
+    /// Any script Tesseract reads is kept: the text layer is no longer limited to WinAnsi.
+    #[test]
+    fn non_latin_words_are_kept() {
+        let rows =
+            "5\t1\t1\t1\t1\t1\t10\t20\t40\t15\t90\t日本語\n5\t1\t1\t1\t1\t2\t60\t20\t50\t15\t90\tمرحبا\n5\t1\t1\t1\t1\t3\t120\t20\t20\t15\t90\t☃\n";
+        let lines = parse_tsv(&format!("{HEADER}{rows}"), 400, 200).unwrap();
+        assert_eq!(lines.iter().map(Line::text).collect::<Vec<_>>(), ["日本語 مرحبا ☃"]);
     }
 
     #[test]

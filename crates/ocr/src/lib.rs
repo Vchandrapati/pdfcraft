@@ -1,28 +1,42 @@
 //! pdfcraft-ocr — Scan & OCR ▸ Recognize text (L4).
 //!
-//! Recognition runs a local Tesseract 5 process with the pinned English `tessdata_best` model
+//! Recognition runs a local Tesseract 5 process with the pinned `tessdata_best` models
 //! (Apache-2.0, fetched by `cargo xtask models`; see ATTRIBUTION.toml). No network is used for OCR.
 //! The caller renders a page to pixels;
 //! [`Ocr::recognize`] finds the words in them, and [`text_layer`] turns words placed in user space
 //! into page content: invisible text (rendering mode 3) over each word, so the page becomes a
 //! searchable image (Acrobat's "Searchable Image (Exact)": the image is left untouched).
 //!
-//! Desktop only: browser builds cannot launch Tesseract. The searchable text layer uses WinAnsi.
+//! Desktop only: browser builds cannot launch Tesseract. The text layer uses generated Type 3
+//! fonts whose glyphs draw nothing, so it can carry any character Tesseract reads.
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+
+use pdfcraft_cos::{Dict, Document, Object, Stream};
 
 #[cfg(not(target_arch = "wasm32"))]
 mod native;
 
 pub use pdfcraft_fonts::helvetica_width;
 
-/// The English Best model, pinned in ATTRIBUTION.toml.
+/// The English Best model, pinned in ATTRIBUTION.toml. It is required; the others are optional.
 pub const RECOGNITION_MODEL: &str = "eng.traineddata";
 
-/// The installed language choices (ISO 639-1).
-pub const LANGUAGES: &[(&str, &str)] = &[("en", "English")];
+/// The language choices (ISO 639-1 code, name); [`Models::has_language`] says which are installed.
+pub const LANGUAGES: &[(&str, &str)] = &[("en", "English"), ("ja", "Japanese"), ("ar", "Arabic")];
+
+/// Tesseract's name for each of [`LANGUAGES`]: its model is `<name>.traineddata`.
+fn tesseract_name(language: &str) -> Option<&'static str> {
+    match language {
+        "en" => Some("eng"),
+        "ja" => Some("jpn"),
+        "ar" => Some("ara"),
+        _ => None,
+    }
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum OcrError {
@@ -32,6 +46,9 @@ pub enum OcrError {
     NoModels,
     #[error("Tesseract 5 is not installed: install it, or set PDFCRAFT_TESSERACT to its executable")]
     NoRuntime,
+    /// A language whose model isn't in the models folder (or one PdfCraft doesn't offer).
+    #[error("the {0} text recognition model ({1}) is not installed: put it in the models folder (cargo xtask models fetches it)")]
+    NoLanguage(String, String),
     #[error("loading {0}: {1}")]
     Load(String, String),
     #[error("text recognition failed: {0}")]
@@ -40,7 +57,7 @@ pub enum OcrError {
     EmptyImage,
 }
 
-/// Where the English Best model is.
+/// Where the English Best model is; the other languages' models sit beside it.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Models {
     pub recognition: PathBuf,
@@ -51,6 +68,27 @@ impl Models {
     pub fn in_dir(dir: &Path) -> Option<Models> {
         let m = Models { recognition: dir.join(RECOGNITION_MODEL) };
         m.recognition.is_file().then_some(m)
+    }
+
+    /// The folder that holds the models.
+    pub fn dir(&self) -> &Path {
+        self.recognition.parent().filter(|p| !p.as_os_str().is_empty()).unwrap_or(Path::new("."))
+    }
+
+    /// The model file for `language` (a [`LANGUAGES`] code), if it is installed.
+    pub fn language(&self, language: &str) -> Option<PathBuf> {
+        let path = self.dir().join(format!("{}.traineddata", tesseract_name(language)?));
+        path.is_file().then_some(path)
+    }
+
+    /// Whether the model for `language` is installed.
+    pub fn has_language(&self, language: &str) -> bool {
+        self.language(language).is_some()
+    }
+
+    /// The [`LANGUAGES`] whose models are installed (English first).
+    pub fn installed_languages(&self) -> Vec<(&'static str, &'static str)> {
+        LANGUAGES.iter().copied().filter(|(code, _)| self.has_language(code)).collect()
     }
 
     /// Look for the models: `$PDFCRAFT_MODELS`, then where the release packages install them
@@ -166,20 +204,26 @@ impl Ocr {
         Self::unavailable_reason().is_none()
     }
 
-    /// Recognise the text in an RGBA (or RGB, or grey) image, `width` × `height` pixels.
+    /// Recognise the English text in an RGBA (or RGB, or grey) image, `width` × `height` pixels.
     pub fn recognize(&self, pixels: &[u8], width: u32, height: u32) -> Result<Vec<Line>, OcrError> {
-        self.recognize_at_dpi(pixels, width, height, 300)
+        self.recognize_at_dpi(pixels, width, height, 300, "en")
     }
 
-    /// Recognise at the actual raster resolution; this matters for low-resolution scans.
-    pub fn recognize_at_dpi(&self, pixels: &[u8], width: u32, height: u32, dpi: u32) -> Result<Vec<Line>, OcrError> {
+    /// Recognise text in `language` (a [`LANGUAGES`] code) at the actual raster resolution; the
+    /// resolution matters for low-resolution scans.
+    pub fn recognize_at_dpi(&self, pixels: &[u8], width: u32, height: u32, dpi: u32, language: &str) -> Result<Vec<Line>, OcrError> {
+        let name = LANGUAGES.iter().find(|l| l.0 == language).map_or(language, |l| l.1);
+        let tesseract = tesseract_name(language).ok_or_else(|| OcrError::NoLanguage(name.into(), format!("{language}.traineddata")))?;
         #[cfg(not(target_arch = "wasm32"))]
         {
-            native::recognize(&self.executable, &self.models, pixels, width, height, dpi)
+            if !self.models.has_language(language) {
+                return Err(OcrError::NoLanguage(name.into(), format!("{tesseract}.traineddata")));
+            }
+            native::recognize(&self.executable, self.models.dir(), tesseract, pixels, width, height, dpi)
         }
         #[cfg(target_arch = "wasm32")]
         {
-            let _ = (pixels, width, height, dpi);
+            let _ = (pixels, width, height, dpi, tesseract);
             Err(OcrError::Recognize("Tesseract OCR requires the desktop application".into()))
         }
     }
@@ -207,9 +251,14 @@ impl PlacedWord {
     }
 }
 
-/// Helvetica's ascender and descender (em fractions): a word box spans about this much.
-const BOX_EM: f64 = 0.93;
-const DESCENT: f64 = 0.21;
+/// The invisible font's glyph box, in thousandths of an em (its `/FontBBox` and descriptor):
+/// a word box spans ascent to descent, so text fitted to it selects exactly that box.
+const ASCENT: i64 = 720;
+const DESCENT: i64 = -210;
+/// One-byte codes 1–255 per font; a page with more distinct characters gets more fonts.
+const CODES_PER_FONT: usize = 255;
+/// A `beginbfchar` block holds at most 100 entries (ISO 32000-2 §9.10.3).
+const BFCHAR_BLOCK: usize = 100;
 
 fn num(v: f64) -> String {
     let s = format!("{:.4}", if v.abs() < 1e-9 { 0.0 } else { v });
@@ -217,30 +266,166 @@ fn num(v: f64) -> String {
     if s == "-0" { "0".into() } else { s.into() }
 }
 
-/// Page content that writes `words` as invisible text in `/PCHelv` (standard Helvetica,
-/// WinAnsiEncoding), each word stretched to its box so selection and search highlight the
-/// right place. Marked content `/OCR` so it can be told apart from the page's own text.
-pub fn text_layer(words: &[PlacedWord]) -> Vec<u8> {
-    let mut out = b"/OCR BMC\nBT\n3 Tr\n/PCHelv 1 Tf\n".to_vec();
+/// A character's advance in the invisible font, in thousandths of an em: full width for CJK,
+/// Helvetica-like proportions otherwise, so a selection inside a word lands near its letters.
+fn advance(c: char) -> i64 {
+    (pdfcraft_fonts::cjk_width(c.encode_utf8(&mut [0; 4]), 1000.0).round() as i64).max(1)
+}
+
+/// `text` in the order its characters appear left to right. Right-to-left words (Arabic) are
+/// reversed, as PDF producers write them; extractors apply the bidi algorithm to read them back.
+fn visual_order(text: &str) -> String {
+    let info = unicode_bidi::BidiInfo::new(text, None);
+    match info.paragraphs.first() {
+        Some(paragraph) if info.has_rtl() => info.reorder_line(paragraph, paragraph.range.clone()).into_owned(),
+        _ => text.to_owned(),
+    }
+}
+
+/// Writes `words` as invisible page text: the returned content, plus the fonts it names, added to
+/// `fonts` (the page's font resources) under names not already there. Each word is stretched to
+/// its box so selection and search highlight the right place, and the content is marked `/OCR`
+/// so it can be told apart from the page's own text.
+///
+/// The fonts are generated Type 3 fonts whose glyphs draw nothing, with a `/ToUnicode` map, so
+/// any character Tesseract reads (Japanese, Arabic, symbols) is searchable and copyable.
+pub fn text_layer(doc: &mut Document, fonts: &mut Dict, words: &[PlacedWord]) -> Vec<u8> {
+    // Each distinct character gets (font, code), in order of first appearance.
+    let mut codes: HashMap<char, (usize, u8)> = HashMap::new();
+    let mut sets: Vec<Vec<char>> = Vec::new();
+    let mut placed = Vec::with_capacity(words.len());
     for w in words {
-        let width = helvetica_width(&w.text, 1.0);
+        let text = visual_order(&w.text);
+        let width: i64 = text.chars().map(advance).sum();
         let height = w.up[0].hypot(w.up[1]);
-        if width <= 0.0 || height <= 0.0 {
+        if width <= 0 || height.is_nan() || height <= 0.0 {
             continue;
         }
+        for c in text.chars() {
+            if codes.contains_key(&c) {
+                continue;
+            }
+            if sets.last().is_none_or(|s| s.len() >= CODES_PER_FONT) {
+                sets.push(Vec::new());
+            }
+            let font = sets.len() - 1;
+            if let Some(set) = sets.last_mut() {
+                set.push(c);
+                // At most CODES_PER_FONT (255) characters per set, so the code fits a byte.
+                codes.insert(c, (font, set.len() as u8));
+            }
+        }
+        placed.push((w, text, width as f64 / 1000.0));
+    }
+    let names: Vec<String> = sets.iter().map(|set| add_font(doc, fonts, set)).collect();
+
+    let mut out = b"/OCR BMC\nBT\n3 Tr\n".to_vec();
+    let box_em = (ASCENT - DESCENT) as f64 / 1000.0;
+    let descent = -DESCENT as f64 / 1000.0;
+    // The font stays selected across words (Tm doesn't reset it), so Tf is written only on a change.
+    let mut current = None;
+    for (w, text, width) in placed {
         // The em square: its height spans the box; its width is stretched to fit the word.
-        let em = [w.up[0] / BOX_EM, w.up[1] / BOX_EM];
+        let em = [w.up[0] / box_em, w.up[1] / box_em];
         let ax = [w.across[0] / width, w.across[1] / width];
-        let o = [w.origin[0] + em[0] * DESCENT, w.origin[1] + em[1] * DESCENT];
+        let o = [w.origin[0] + em[0] * descent, w.origin[1] + em[1] * descent];
         let m = [ax[0], ax[1], em[0], em[1], o[0], o[1]];
         let nums: Vec<String> = m.iter().map(|v| num(*v)).collect();
         out.extend_from_slice(nums.join(" ").as_bytes());
-        out.extend_from_slice(b" Tm ");
-        out.extend(pdfcraft_fonts::literal(&pdfcraft_fonts::win_ansi(&w.text)));
-        out.extend_from_slice(b" Tj\n");
+        out.extend_from_slice(b" Tm");
+        // One Tj per run of characters in the same font.
+        let mut run = String::new();
+        for c in text.chars() {
+            let Some(&(font, code)) = codes.get(&c) else { continue };
+            if current != Some(font) {
+                if !run.is_empty() {
+                    out.extend_from_slice(format!(" <{run}> Tj").as_bytes());
+                    run.clear();
+                }
+                let name = names.get(font).map_or("PCOcr", String::as_str);
+                out.extend_from_slice(format!(" /{name} 1 Tf").as_bytes());
+                current = Some(font);
+            }
+            run.push_str(&format!("{code:02X}"));
+        }
+        if !run.is_empty() {
+            out.extend_from_slice(format!(" <{run}> Tj").as_bytes());
+        }
+        out.push(b'\n');
     }
     out.extend_from_slice(b"ET\nEMC\n");
     out
+}
+
+/// Adds a Type 3 font whose codes 1 to `chars.len()` stand for `chars` and draw nothing, and
+/// returns its resource name (`PCOcr`, `PCOcr1`, ...: the first one `fonts` doesn't have).
+fn add_font(doc: &mut Document, fonts: &mut Dict, chars: &[char]) -> String {
+    let mut procs: HashMap<i64, Object> = HashMap::new();
+    let mut charprocs = Dict::new();
+    let mut differences = vec![Object::Int(1)];
+    let mut widths = Vec::with_capacity(chars.len());
+    let mut cmap = String::from(
+        "/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n\
+         /CMapName /PdfCraft-OCR-UCS def\n/CMapType 2 def\n1 begincodespacerange\n<01> <FF>\nendcodespacerange\n",
+    );
+    for (block, group) in chars.chunks(BFCHAR_BLOCK).enumerate() {
+        cmap.push_str(&format!("{} beginbfchar\n", group.len()));
+        for (i, &c) in group.iter().enumerate() {
+            let code = block * BFCHAR_BLOCK + i + 1;
+            let glyph = format!("g{code:02X}");
+            let width = advance(c);
+            // Glyphs of one width share one empty procedure.
+            let proc = procs
+                .entry(width)
+                .or_insert_with(|| {
+                    Object::Ref(doc.add(Object::Stream(Stream::from_raw(Dict::new(), format!("{width} 0 0 0 0 0 d1\n").into_bytes()))))
+                })
+                .clone();
+            charprocs.set(glyph.as_bytes().to_vec(), proc);
+            differences.push(Object::name(&glyph));
+            widths.push(Object::Int(width));
+            let utf16: String = c.encode_utf16(&mut [0; 2]).iter().map(|u| format!("{u:04X}")).collect();
+            cmap.push_str(&format!("<{code:02X}> <{utf16}>\n"));
+        }
+        cmap.push_str("endbfchar\n");
+    }
+    cmap.push_str("endcmap\nCMapName currentdict /CMap defineresource pop\nend\nend\n");
+    let to_unicode = doc.add(Object::Stream(Stream::flate(Dict::new(), cmap.as_bytes())));
+
+    let mut encoding = Dict::new();
+    encoding.set(b"Type".to_vec(), Object::name("Encoding"));
+    encoding.set(b"Differences".to_vec(), Object::Array(differences));
+    let mut descriptor = Dict::new();
+    descriptor.set(b"Type".to_vec(), Object::name("FontDescriptor"));
+    descriptor.set(b"FontName".to_vec(), Object::name("PdfCraftOCR"));
+    descriptor.set(b"Flags".to_vec(), Object::Int(4));
+    descriptor.set(b"ItalicAngle".to_vec(), Object::Int(0));
+    descriptor.set(b"Ascent".to_vec(), Object::Int(ASCENT));
+    descriptor.set(b"Descent".to_vec(), Object::Int(DESCENT));
+    let mut font = Dict::new();
+    font.set(b"Type".to_vec(), Object::name("Font"));
+    font.set(b"Subtype".to_vec(), Object::name("Type3"));
+    font.set(b"FontDescriptor".to_vec(), Object::Ref(doc.add(Object::Dict(descriptor))));
+    font.set(b"FontBBox".to_vec(), Object::Array(vec![Object::Int(0), Object::Int(DESCENT), Object::Int(1000), Object::Int(ASCENT)]));
+    font.set(
+        b"FontMatrix".to_vec(),
+        Object::Array(vec![Object::Real(0.001), Object::Int(0), Object::Int(0), Object::Real(0.001), Object::Int(0), Object::Int(0)]),
+    );
+    font.set(b"FirstChar".to_vec(), Object::Int(1));
+    font.set(b"LastChar".to_vec(), Object::Int(chars.len() as i64));
+    font.set(b"Widths".to_vec(), Object::Array(widths));
+    font.set(b"Encoding".to_vec(), Object::Dict(encoding));
+    font.set(b"CharProcs".to_vec(), Object::Dict(charprocs));
+    font.set(b"Resources".to_vec(), Object::Dict(Dict::new()));
+    font.set(b"ToUnicode".to_vec(), Object::Ref(to_unicode));
+    let mut name = String::from("PCOcr");
+    let mut suffix = 0usize;
+    while fonts.contains(name.as_bytes()) {
+        suffix = suffix.saturating_add(1);
+        name = format!("PCOcr{suffix}");
+    }
+    fonts.set(name.as_bytes().to_vec(), Object::Dict(font));
+    name
 }
 
 #[cfg(test)]
@@ -260,11 +445,52 @@ mod tests {
     #[test]
     fn text_layer_is_invisible_text_fitted_to_each_box() {
         let w = PlacedWord { text: "Hi".into(), origin: [10.0, 20.0], across: [30.0, 0.0], up: [0.0, 9.3] };
-        let s = String::from_utf8(text_layer(&[w])).unwrap();
-        assert!(s.contains("3 Tr") && s.contains("/PCHelv 1 Tf"), "{s}");
+        let (mut doc, mut fonts) = (Document::new_empty(), Dict::new());
+        let s = String::from_utf8(text_layer(&mut doc, &mut fonts, &[w])).unwrap();
+        assert!(s.contains("3 Tr"), "{s}");
         let width = helvetica_width("Hi", 1.0);
-        assert!(s.contains(&format!("{} 0 0 10 10 22.1 Tm (Hi) Tj", num(30.0 / width))), "{s}");
+        assert!(s.contains(&format!("{} 0 0 10 10 22.1 Tm /PCOcr 1 Tf <0102> Tj", num(30.0 / width))), "{s}");
         assert!(s.starts_with("/OCR BMC") && s.ends_with("EMC\n"));
+        let font = fonts.get(b"PCOcr").and_then(Object::as_dict).unwrap();
+        assert_eq!(font.name(b"Subtype"), Some(&b"Type3"[..]));
+    }
+
+    /// The ToUnicode map of resource font `name`.
+    fn to_unicode(doc: &Document, fonts: &Dict, name: &str) -> String {
+        let font = fonts.get(name.as_bytes()).and_then(Object::as_dict).unwrap();
+        match &*doc.resolve(font.get(b"ToUnicode").unwrap()) {
+            Object::Stream(s) => String::from_utf8(s.decoded().unwrap()).unwrap(),
+            other => panic!("ToUnicode is {other:?}"),
+        }
+    }
+
+    #[test]
+    fn any_script_is_mapped_back_to_its_characters() {
+        let word = |text: &str| PlacedWord { text: text.into(), origin: [0.0, 0.0], across: [40.0, 0.0], up: [0.0, 10.0] };
+        let (mut doc, mut fonts) = (Document::new_empty(), Dict::new());
+        let s = String::from_utf8(text_layer(&mut doc, &mut fonts, &[word("日本"), word("مرحبا"), word("😀")])).unwrap();
+        let cmap = to_unicode(&doc, &fonts, "PCOcr");
+        assert!(cmap.contains("<01> <65E5>") && cmap.contains("<02> <672C>"), "{cmap}");
+        // Arabic is written in visual order: its last letter (alef) comes first on the page.
+        assert!(cmap.contains("<03> <0627>") && cmap.contains("<07> <0645>"), "{cmap}");
+        // Beyond the BMP: a UTF-16 surrogate pair.
+        assert!(cmap.contains("<08> <D83DDE00>"), "{cmap}");
+        assert!(s.contains("<0102> Tj") && s.contains("<0304050607> Tj") && s.contains("<08> Tj"), "{s}");
+    }
+
+    #[test]
+    fn many_characters_spill_into_more_fonts_with_free_names() {
+        let text: String = (0..300).map(|i| char::from_u32(0x4E00 + i).unwrap()).collect();
+        let w = PlacedWord { text, origin: [0.0, 0.0], across: [500.0, 0.0], up: [0.0, 10.0] };
+        let (mut doc, mut fonts) = (Document::new_empty(), Dict::new());
+        // A font the page already has keeps its name.
+        fonts.set(b"PCOcr".to_vec(), Object::Int(0));
+        let s = String::from_utf8(text_layer(&mut doc, &mut fonts, &[w])).unwrap();
+        assert!(s.contains("/PCOcr1 1 Tf") && s.contains("/PCOcr2 1 Tf"), "{s}");
+        assert_eq!(fonts.get(b"PCOcr"), Some(&Object::Int(0)));
+        assert!(to_unicode(&doc, &fonts, "PCOcr2").contains("<2D> <4F2B>"), "the 300th character is code 45 of the second font");
+        // 255 entries are split into blocks of at most 100.
+        assert_eq!(to_unicode(&doc, &fonts, "PCOcr1").matches("beginbfchar").count(), 3);
     }
 
     #[test]

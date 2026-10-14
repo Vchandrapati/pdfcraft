@@ -294,7 +294,6 @@
 	Split document…	Розділити документ…
 	Number pages…	Пронумерувати сторінки…
 	Keyboard shortcuts	Клавіатурні скорочення
-	Check for updates…	Перевірити оновлення…
 	About PdfCraft	Про PdfCraft
 	Export a PDF	Експортувати PDF
 	Export to	Експортувати в
@@ -743,16 +742,6 @@
 	Flip Vertical	Віддзеркалити вертикально
 	Replace Image…	Замінити зображення…
 	Save Image As…	Зберегти зображення як…
-	Check for updates	Перевірити оновлення
-	No check has run yet.	Перевірку ще не виконано.
-	Checking for a newer version…	Перевірка наявності новішої версії…
-	PdfCraft {v} is available.	Доступна версія PdfCraft {v}.
-	You have version {c}. Download the new version from its release page.	У вас версія {c}. Завантажте нову версію зі сторінки випуску.
-	PdfCraft {c} is up to date.	Ваша версія PdfCraft {c} актуальна.
-	Couldn't check for updates: {e}	Не вдалося перевірити оновлення: {e}
-	You have version {c}. All releases are listed at {page}.	У вас версія {c}. Усі випуски наведено на {page}.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	Запитує в GitHub найновіший випуск. Нічого не завантажується й не встановлюється автоматично.
-	Download	Завантажити
 	Later	Пізніше
 	none	немає
 	Declared conformance: {shown}	Заявлена відповідність: {shown}

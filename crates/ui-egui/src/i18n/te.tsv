@@ -273,7 +273,6 @@ comment menu	Edit	సవరించు
 	Split document…	పత్రాన్ని విభజించు…
 	Number pages…	పేజీలకు సంఖ్యలు వేయి…
 	Keyboard shortcuts	కీబోర్డ్ షార్ట్‌కట్‌లు
-	Check for updates…	అప్‌డేట్‌ల కోసం తనిఖీ చేయి…
 	About PdfCraft	PdfCraft గురించి
 	Export a PDF	PDFను ఎగుమతి చేయి
 	Export to	ఎగుమతి ఫార్మాట్
@@ -720,16 +719,6 @@ comment menu	Edit	సవరించు
 	Flip Vertical	నిలువుగా తిరగేయి
 	Replace Image…	చిత్రాన్ని భర్తీ చేయి…
 	Save Image As…	చిత్రాన్ని ఫైల్‌గా సేవ్ చేయి…
-	Check for updates	అప్‌డేట్‌ల కోసం తనిఖీ చేయి
-	No check has run yet.	ఇంకా తనిఖీ జరగలేదు.
-	Checking for a newer version…	కొత్త వెర్షన్ కోసం తనిఖీ చేస్తోంది…
-	PdfCraft {v} is available.	PdfCraft {v} అందుబాటులో ఉంది.
-	You have version {c}. Download the new version from its release page.	మీ వద్ద వెర్షన్ {c} ఉంది. కొత్త వెర్షన్‌ను దాని విడుదల పేజీ నుండి డౌన్‌లోడ్ చేసుకోండి.
-	PdfCraft {c} is up to date.	PdfCraft {c} తాజా వెర్షన్.
-	Couldn't check for updates: {e}	అప్‌డేట్‌ల కోసం తనిఖీ చేయడం సాధ్యం కాలేదు: {e}
-	You have version {c}. All releases are listed at {page}.	మీ వద్ద వెర్షన్ {c} ఉంది. అన్ని విడుదలల జాబితా: {page}.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	తాజా విడుదల గురించి GitHubను అడుగుతుంది. ఏదీ ఆటోమేటిక్‌గా డౌన్‌లోడ్ లేదా ఇన్‌స్టాల్ చేయబడదు.
-	Download	డౌన్‌లోడ్ చేయి
 	Later	తర్వాత
 	none	ఏదీ లేదు
 	Declared conformance: {shown}	ప్రకటించిన అనుగుణ్యత: {shown}

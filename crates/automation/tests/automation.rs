@@ -3580,7 +3580,9 @@ fn ocr_tools_make_a_scan_searchable() {
     let dir = workdir("ocr");
     let mut a = auto(&dir);
     let status = ok(&mut a, "ocr_status", json!({}));
-    assert_eq!(status["languages"][0]["code"], "en");
+    let codes: Vec<_> = status["languages"].as_array().unwrap().iter().map(|l| l["code"].as_str().unwrap()).collect();
+    assert_eq!(codes, ["en", "ja", "ar"]);
+    assert_eq!(status["languages"][0]["installed"], status["model_available"]);
     assert_eq!(status["backend"], "tesseract");
     assert_eq!(status["model"], "tessdata_best/eng");
     assert_eq!(status["available"], status["model_available"] == true && status["runtime_available"] == true);

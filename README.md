@@ -347,7 +347,7 @@ cargo xtask demo-pdf                              # build the showcase PDF used 
 cargo xtask screenshots                           # regenerate every screenshot in this README
 ```
 
-Scan & OCR includes the English Tesseract BEST model and requires Tesseract 5 installed separately.
+Scan & OCR uses the Tesseract BEST models for English, Japanese and Arabic (`cargo xtask models`) and requires Tesseract 5 installed separately.
 Debian/RPM packages declare the engine dependency; other desktop packages need it on `PATH` or set
 `PDFCRAFT_TESSERACT`. The current Flatpak and web builds cannot run the native OCR executable. See
 [the OCR runtime notes](docs/development.md#ocr-runtime).

@@ -278,7 +278,7 @@ mod tests {
     fn the_default_filter_shows_pdfcraft_info_and_other_crates_warnings() {
         let f = Filter::parse(DEFAULT_FILTER);
         assert_eq!(f.level_for("pdfcraft"), LevelFilter::Info);
-        assert_eq!(f.level_for("pdfcraft::updates"), LevelFilter::Info);
+        assert_eq!(f.level_for("pdfcraft::single_instance"), LevelFilter::Info);
         assert_eq!(f.level_for("pdfcraft_ui_egui::recovery"), LevelFilter::Info);
         assert_eq!(f.level_for("pdfcraft_render::raster"), LevelFilter::Info);
         assert_eq!(f.level_for("wgpu_core::device"), LevelFilter::Warn);

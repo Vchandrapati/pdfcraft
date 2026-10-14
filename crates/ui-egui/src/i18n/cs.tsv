@@ -114,7 +114,6 @@
 	Split document…	Rozdělit dokument…
 	Number pages…	Očíslovat stránky…
 	Keyboard shortcuts	Klávesové zkratky
-	Check for updates…	Zkontrolovat aktualizace…
 	About PdfCraft	O aplikaci PdfCraft
 	Auto	Automaticky
 	Continuous scrolling	Plynulé posouvání
@@ -820,16 +819,6 @@ key	Space	Mezerník
 	Flip Vertical	Převrátit svisle
 	Replace Image…	Nahradit obrázek…
 	Save Image As…	Uložit obrázek jako…
-	Check for updates	Zkontrolovat aktualizace
-	No check has run yet.	Kontrola zatím neproběhla.
-	Checking for a newer version…	Hledání novější verze…
-	PdfCraft {v} is available.	Je k dispozici PdfCraft {v}.
-	You have version {c}. Download the new version from its release page.	Máte verzi {c}. Novou verzi si stáhněte z její stránky s vydáním.
-	PdfCraft {c} is up to date.	PdfCraft {c} je aktuální.
-	Couldn't check for updates: {e}	Aktualizace nelze zkontrolovat: {e}
-	You have version {c}. All releases are listed at {page}.	Máte verzi {c}. Všechna vydání najdete na {page}.
-	Asks GitHub for the latest release. Nothing is downloaded or installed automatically.	Zjistí na GitHubu nejnovější vydání. Nic se automaticky nestahuje ani neinstaluje.
-	Download	Stáhnout
 	Later	Později
 	none	žádná
 	Declared conformance: {shown}	Deklarovaná shoda: {shown}

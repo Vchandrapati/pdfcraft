@@ -2357,12 +2357,8 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
     let mut hover_text: Option<(Pos2, String)> = None;
     // A dialog, save prompt or palette covers the page. Hover tips are drawn above those
     // windows, so a comment under the pointer would otherwise float over the dialog.
-    let page_covered = app.dialog.is_some()
-        || app.close_request.is_some()
-        || app.palette_open
-        || app.password_prompt.is_some()
-        || app.pending_link.is_some()
-        || app.updates.open;
+    let page_covered =
+        app.dialog.is_some() || app.close_request.is_some() || app.palette_open || app.password_prompt.is_some() || app.pending_link.is_some();
     let mut clicked_link: Option<LinkTarget> = None;
     let mut canvas_action: Option<comments::CanvasAction> = None;
     let mut field_menu: Option<FieldMenu> = None;

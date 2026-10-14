@@ -140,7 +140,7 @@ impl OcrJob {
             }
             let scale = shot.width as f32 / info.width.max(1e-3);
             let dpi = (scale * 72.0).round().clamp(72.0, 600.0) as u32;
-            let lines = match ocr.recognize_at_dpi(&shot.rgba, shot.width, shot.height, dpi) {
+            let lines = match ocr.recognize_at_dpi(&shot.rgba, shot.width, shot.height, dpi, &self.settings.language) {
                 Ok(l) => l,
                 Err(e) => {
                     out.push(failed(&e.to_string()));
@@ -270,6 +270,27 @@ mod tests {
         assert!(covered([131.0, 52.0, 170.0, 61.0], &glyphs) < ALREADY_ON_PAGE);
         // A page without text has nothing to cover a word.
         assert_eq!(covered([100.5, 52.0, 134.0, 61.0], &[]), 0.0);
+    }
+
+    /// The text layer carries any script: Japanese, Arabic (read back in logical order) and
+    /// characters beyond the BMP extract as recognised, after a save, and alongside a second
+    /// layer added to the same page later.
+    #[test]
+    fn non_latin_ocr_text_extracts_in_reading_order() {
+        use crate::export::Exporter;
+        let word = |x: f64, y: f64, text: &str| PlacedWord { text: text.into(), origin: [x, y], across: [60.0, 0.0], up: [0.0, 14.0] };
+        let mut session = Session::new();
+        let bytes = session.create_blank(300.0, 200.0, 1).unwrap();
+        let id = session.open("scan.pdf", None, bytes, None).unwrap();
+        session.apply(id, Edit::AddOcrText { page: 0, words: vec![word(20.0, 150.0, "日本語"), word(150.0, 150.0, "مرحبا")] }).unwrap();
+        session.apply(id, Edit::AddOcrText { page: 0, words: vec![word(20.0, 100.0, "Café"), word(150.0, 100.0, "😀")] }).unwrap();
+        let text = Exporter::new(session.get(id).unwrap()).text(0).unwrap();
+        for expected in ["日本語", "مرحبا", "Café", "😀"] {
+            assert!(text.contains(expected), "{expected:?} missing from {text:?}");
+        }
+        let saved = session.save_bytes(id).unwrap();
+        let reopened = session.open("saved.pdf", None, saved, None).unwrap();
+        assert_eq!(Exporter::new(session.get(reopened).unwrap()).text(0).unwrap(), text);
     }
 
     #[test]

@@ -324,9 +324,13 @@ impl Automation {
     pub(crate) fn ocr_status(&self) -> Result<Value> {
         use pdfcraft_engine::ocr;
         let dirs: Vec<String> = ocr::Models::search_dirs().iter().map(|d| d.to_string_lossy().into_owned()).collect();
-        let recognition_model = ocr::Models::find().map(|models| models.recognition.to_string_lossy().into_owned());
+        let models = ocr::Models::find();
+        let recognition_model = models.as_ref().map(|models| models.recognition.to_string_lossy().into_owned());
         let executable = ocr::Ocr::executable_path().map(|path| path.to_string_lossy().into_owned());
-        let langs: Vec<Value> = ocr::LANGUAGES.iter().map(|(c, n)| json!({ "code": c, "name": n })).collect();
+        let langs: Vec<Value> = ocr::LANGUAGES
+            .iter()
+            .map(|(c, n)| json!({ "code": c, "name": n, "installed": models.as_ref().is_some_and(|m| m.has_language(c)) }))
+            .collect();
         Ok(json!({
             "available": ocr::available(),
             "backend": "tesseract",

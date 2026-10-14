@@ -19,7 +19,6 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
     password(app, ctx);
     save_prompt(app, ctx);
     link_prompt(app, ctx);
-    crate::updates::dialog(app, ctx);
     let Some(dialog) = app.dialog else {
         app.props_draft = None;
         app.view_draft = None;

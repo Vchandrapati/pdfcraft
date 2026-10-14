@@ -16,5 +16,4 @@ mod protect;
 mod redact;
 mod text_select;
 mod theme;
-mod updates;
 mod xfa;

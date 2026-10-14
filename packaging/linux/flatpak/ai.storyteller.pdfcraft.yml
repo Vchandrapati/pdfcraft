@@ -33,8 +33,7 @@ finish-args:
   # passed by path (the command line, Open Recent, "Save" next to the original) work there.
   - --filesystem=xdg-documents
   - --filesystem=xdg-download
-  # Deliberately not granted: network (Flatpak installs update through flatpak, so Help ▸ Check
-  # for updates reports that GitHub is unreachable; the optional --control channel listens on
+  # Deliberately not granted: network (the optional --control channel listens on
   # 127.0.0.1 inside the sandbox) and home/host filesystem access. No CUPS socket either: printing
   # runs the `lp` command (crates/print), which the freedesktop runtime doesn't ship, so Print
   # reports that the spooler is unavailable until it goes through the print portal.

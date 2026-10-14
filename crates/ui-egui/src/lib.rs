@@ -121,7 +121,6 @@ pub mod scroll_speed;
 mod system_fonts;
 pub mod theme;
 pub mod ui_scale;
-pub mod updates;
 mod wheel_pager;
 mod widgets;
 
@@ -482,9 +481,6 @@ pub struct PdfCraftApp {
     /// Preferences: bake Fill & Sign marks into the page when saving. Off, so a normal save stays editable.
     pub flatten_fill_sign_on_save: bool,
     pub dialog: Option<Dialog>,
-    /// How to ask for the latest release (the desktop app sets it; see `updates`).
-    pub update_source: Option<updates::UpdateSource>,
-    pub(crate) updates: updates::Updates,
     /// Lists the Print dialog's printers in the background (the desktop app sets it; see
     /// [`PrinterSource`]).
     pub printer_source: Option<PrinterSource>,
@@ -803,8 +799,6 @@ impl PdfCraftApp {
             ui_scale_applied: None,
             flatten_fill_sign_on_save: false,
             dialog: None,
-            update_source: None,
-            updates: updates::Updates::default(),
             printer_source: None,
             print_tasks: print_ui::PrintTasks::default(),
             palette_open: false,
@@ -1368,7 +1362,6 @@ impl PdfCraftApp {
             || self.password_prompt.is_some()
             || self.unlock_prompt.is_some()
             || self.pending_link.is_some()
-            || self.updates.open
     }
 
     /// Enable the UI control channel on `ctx` (opt-in; see [`control`]). Returns a client that
@@ -2391,7 +2384,6 @@ impl eframe::App for PdfCraftApp {
                 report(dirty);
             }
         }
-        self.poll_updates();
         self.poll_print();
         // Shortcuts deferred last frame: the text field has taken that frame's typing since.
         let deferred = std::mem::take(&mut self.deferred_commands);

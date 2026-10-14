@@ -280,7 +280,7 @@ Every asset PdfCraft includes, bundles or uses to build its published material, 
 | `hayro-cmap` 0.1.0 | `assets/cmaps.brotli` | Adobe CMap resources (predefined CJK CMaps) (non-visual data, AGENTS.md §1.1) | Adobe | BSD-3-Clause | https://github.com/adobe-type-tools/cmap-resources (via hayro-cmap) | Character-code mapping tables required to read CJK PDFs. Non-visual data, allowed by AGENTS.md §1.1 |
 | `hayro-interpret` 0.7.0 | `src/font/generated/metrics.rs` | Standard-14 font metrics and encodings (as Rust tables) (non-visual data, AGENTS.md §1.1) | Adobe (Core 14 AFM metrics, PDF specification encodings); tables by The Hayro Authors | MIT OR Apache-2.0 | ISO 32000-2 Annex D; Adobe Core14 AFM files (via vendored hayro-interpret) | Glyph widths and encodings for non-embedded standard fonts. Non-visual data, allowed by AGENTS.md §1.1 |
 
-## Downloaded at build time (21)
+## Downloaded at build time (23)
 
 Fonts are fetched by `cargo xtask demo-pdf` into `target/demo-fonts/`, OCR models by `cargo xtask models` into `assets/models/`; each is verified by SHA-256 and never committed.
 
@@ -306,7 +306,9 @@ Fonts are fetched by `cargo xtask demo-pdf` into `target/demo-fonts/`, OCR model
 | `NotoColorEmoji-Regular.ttf` | Noto Color Emoji | Google Inc. | OFL-1.1 | https://github.com/google/fonts/tree/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/notocoloremoji | Showcase PDF (cargo xtask demo-pdf) |
 | `Inter[opsz,wght].ttf` | Inter (variable) | The Inter Project Authors (Rasmus Andersson) | OFL-1.1 | https://github.com/google/fonts/tree/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/inter | Showcase PDF (cargo xtask demo-pdf) |
 | `Inter-Italic[opsz,wght].ttf` | Inter Italic (variable) | The Inter Project Authors (Rasmus Andersson) | OFL-1.1 | https://github.com/google/fonts/tree/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/inter | Showcase PDF (cargo xtask demo-pdf) |
-| `eng.traineddata` | Tesseract BEST English OCR model | Tesseract OCR contributors | Apache-2.0 | https://github.com/tesseract-ocr/tessdata_best/tree/e12c65a915945e4c28e237a9b52bc4a8f39a0cec | Scan & OCR: English-only Tesseract 5 BEST recognition model (cargo xtask models) |
+| `eng.traineddata` | Tesseract BEST English OCR model | Tesseract OCR contributors | Apache-2.0 | https://github.com/tesseract-ocr/tessdata_best/tree/e12c65a915945e4c28e237a9b52bc4a8f39a0cec | Scan & OCR: English Tesseract 5 BEST recognition model, required for OCR (cargo xtask models) |
+| `jpn.traineddata` | Tesseract BEST Japanese OCR model | Tesseract OCR contributors | Apache-2.0 | https://github.com/tesseract-ocr/tessdata_best/tree/e12c65a915945e4c28e237a9b52bc4a8f39a0cec | Scan & OCR: optional Japanese (horizontal) Tesseract 5 BEST recognition model (cargo xtask models) |
+| `ara.traineddata` | Tesseract BEST Arabic OCR model | Tesseract OCR contributors | Apache-2.0 | https://github.com/tesseract-ocr/tessdata_best/tree/e12c65a915945e4c28e237a9b52bc4a8f39a0cec | Scan & OCR: optional Arabic Tesseract 5 BEST recognition model (cargo xtask models) |
 
 ## Optional build inputs (1)
 

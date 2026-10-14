@@ -7,7 +7,7 @@ one table as CSV or Excel (`.xlsx`). It reads unsaved edits and the current disp
 extracting or exporting adds no table-related edit or undo step. As with other exports, pending
 form-field typing is committed before extraction so the output includes the value you entered.
 
-For a scan, run **Recognize text** first. That operation uses the English Tesseract Best model
+For a scan, run **Recognize text** first. That operation uses the Tesseract Best model for the chosen language
 and adds the searchable text layer. Table extraction reads that layer without running OCR again.
 Native text PDFs do not need Tesseract.
 

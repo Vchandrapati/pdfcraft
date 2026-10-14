@@ -182,15 +182,22 @@ driver's shader compilation, and explicit `PDFCRAFT_RENDERER=wgpu` still disable
 | `PDFCRAFT_RENDERER` | `gl` starts with OpenGL (glow) and never loads wgpu; `wgpu` reports a wgpu failure instead of retrying with OpenGL; unset, wgpu is retried with OpenGL when it can't start (see [Renderer fallback](#renderer-fallback)) |
 | `CRAFT_FONTS_DIR` | Build time: a [craft-fonts](https://github.com/storytold/craft-fonts) checkout to embed (Japanese fonts) |
 | `PDFCRAFT_SYSTEM_FONTS` | `0` stops the desktop app from using an installed font for characters its embedded fonts lack (`cargo xtask screenshots` sets it) |
-| `PDFCRAFT_MODELS` | Strict override for OCR model lookup; the directory must contain `eng.traineddata` |
+| `PDFCRAFT_MODELS` | Strict override for OCR model lookup; the directory must contain `eng.traineddata` (and `jpn`/`ara` for those languages) |
 | `PDFCRAFT_TESSERACT` | Strict override for the path to the Tesseract 5 executable used for OCR |
 
 ## OCR runtime
 
-PdfCraft packages one English Tesseract BEST model, `eng.traineddata`, pinned to commit
-[`e12c65a`](https://github.com/tesseract-ocr/tessdata_best/tree/e12c65a915945e4c28e237a9b52bc4a8f39a0cec).
-The model is Apache-2.0 licensed and is fetched with its licence by `cargo xtask models`. It does
-not provide other languages.
+PdfCraft uses Tesseract BEST models pinned to commit
+[`e12c65a`](https://github.com/tesseract-ocr/tessdata_best/tree/e12c65a915945e4c28e237a9b52bc4a8f39a0cec):
+English (`eng.traineddata`, required), Japanese (`jpn.traineddata`, horizontal text) and Arabic
+(`ara.traineddata`). The models are Apache-2.0 licensed and are fetched with their licence by
+`cargo xtask models`. The Recognize Text dialog offers a language only when its model is
+installed; `ocr_status` reports which are.
+
+The searchable text layer is written with generated Type 3 fonts whose glyphs draw nothing, each
+with a ToUnicode map, so any character Tesseract recognises (CJK, Arabic, symbols, characters
+beyond the BMP) can be searched, selected and copied. Right-to-left words are written in visual
+order, as other PDF producers do. Vertical Japanese (`jpn_vert`) is not offered yet.
 
 Install Tesseract 5 separately and make `tesseract` available on `PATH`, or set
 `PDFCRAFT_TESSERACT` to its executable. Windows installers are linked from the
