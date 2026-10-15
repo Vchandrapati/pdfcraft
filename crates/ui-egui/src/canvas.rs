@@ -42,8 +42,25 @@ const PRINT_TAG: u64 = 1 << 60;
 const THUMB_W: f32 = 240.0;
 const THUMB_H: f32 = 320.0;
 const THUMB_BYTES: usize = 24 * 1024 * 1024;
+/// Most and least memory kept for off-screen page rasters and tiles. Within those bounds the
+/// allowance follows the canvas: [`PAGE_SCREENS`] and [`TILE_SCREENS`] screenfuls of it at its
+/// device resolution, so a laptop window keeps far less than a 4K display needs.
 const PAGE_BYTES: usize = 128 * 1024 * 1024;
 const TILE_BYTES: usize = 128 * 1024 * 1024;
+const MIN_PREFETCH_BYTES: usize = 32 * 1024 * 1024;
+/// The screenful before and after the one shown.
+const PAGE_SCREENS: f32 = 2.0;
+const TILE_SCREENS: f32 = 1.5;
+
+/// `screens` screenfuls of a `w` x `h`-point canvas at `ppp` device pixels per point, within
+/// [`MIN_PREFETCH_BYTES`]..=`max`. Before the canvas has been drawn (no size yet) it is `max`.
+fn screen_budget(w: f32, h: f32, ppp: f32, screens: f32, max: usize) -> usize {
+    let bytes = w * ppp * h * ppp * 4.0 * screens;
+    if !(bytes.is_finite() && bytes > 0.0) {
+        return max;
+    }
+    (bytes as usize).clamp(MIN_PREFETCH_BYTES, max)
+}
 const UPLOAD_BYTES_PER_FRAME: usize = 16 * 1024 * 1024;
 const RESULTS_PER_FRAME: usize = 8;
 /// A defensive ceiling for unusually large viewports / n-up previews.
@@ -384,6 +401,8 @@ pub struct DocView {
     screen_xforms: Vec<(usize, PageXform)>,
     /// The scroll viewport on screen last frame.
     viewport_screen: Rect,
+    /// Device pixels per point at the last render queue (sizes the prefetch allowances).
+    budget_ppp: f32,
     /// Pending zoom anchor: page, fractional position (also in gutters), and viewport offset.
     zoom_anchor: Option<(usize, f32, f32, Vec2)>,
     /// The page view has been shown, so its scroll offset in egui's memory is this document's.
@@ -676,6 +695,7 @@ impl DocView {
             page_heights: info.pages.iter().map(|p| p.height).collect(),
             screen_rects: Vec::new(),
             screen_xforms: Vec::new(),
+            budget_ppp: 1.0,
             viewport_screen: Rect::NOTHING,
             zoom_anchor: None,
             shown: false,
@@ -1439,7 +1459,28 @@ impl DocView {
 
     /// Admit current demand within explicit byte limits. Cached and pending surfaces share
     /// the allowance, so an evicted page can be requested again without a permanent done set.
+    /// Off-screen page rasters kept beside the ones on screen (see [`screen_budget`]). Until the
+    /// view has been drawn its canvas size is a placeholder, so the full allowance applies.
+    fn page_budget(&self) -> usize {
+        if !self.shown {
+            return PAGE_BYTES;
+        }
+        screen_budget(self.viewport_w, self.viewport_h, self.budget_ppp, PAGE_SCREENS, PAGE_BYTES)
+    }
+
+    /// Off-screen tiles kept beside the ones on screen (see [`screen_budget`]).
+    fn tile_budget(&self) -> usize {
+        if !self.shown {
+            return TILE_BYTES;
+        }
+        screen_budget(self.viewport_w, self.viewport_h, self.budget_ppp, TILE_SCREENS, TILE_BYTES)
+    }
+
     fn prepare_render_queue(&mut self, info: &DocInfo, ppp: f32) -> Vec<RenderRequest> {
+        if ppp.is_finite() && ppp > 0.0 {
+            self.budget_ppp = ppp;
+        }
+        let (page_budget, tile_budget) = (self.page_budget(), self.tile_budget());
         let requests = std::mem::take(&mut self.frame_queue);
         let mut queue = Vec::new();
         let mut pages = HashSet::new();
@@ -1469,7 +1510,7 @@ impl DocView {
                 // (`tile_side`), so grid indices would need the scale to decode.
                 let key = (req.page, req.tag, tile.x, tile.y);
                 let bytes = rgba_bytes(tile.w as usize, tile.h as usize);
-                if (!visible && tile_bytes.saturating_add(bytes) > TILE_BYTES) || !tiles.insert(key) {
+                if (!visible && tile_bytes.saturating_add(bytes) > tile_budget) || !tiles.insert(key) {
                     continue;
                 }
                 tile_bytes = tile_bytes.saturating_add(bytes);
@@ -1479,7 +1520,7 @@ impl DocView {
                 }
             } else {
                 let bytes = rgba_bytes(device_pixels(p.width, req.scale) as usize, device_pixels(p.height, req.scale) as usize);
-                if (!visible && (page_bytes.saturating_add(bytes) > PAGE_BYTES || pages.len() >= MAX_CACHED_PAGES)) || !pages.insert(req.page) {
+                if (!visible && (page_bytes.saturating_add(bytes) > page_budget || pages.len() >= MAX_CACHED_PAGES)) || !pages.insert(req.page) {
                     continue;
                 }
                 page_bytes = page_bytes.saturating_add(bytes);
@@ -1495,7 +1536,7 @@ impl DocView {
         let mut kept = pages.len();
         for page in undemanded {
             let bytes = self.pages.get(&page).map_or(0, |p| texture_bytes(&p.tex));
-            if kept < MAX_CACHED_PAGES && page_bytes.saturating_add(bytes) <= PAGE_BYTES {
+            if kept < MAX_CACHED_PAGES && page_bytes.saturating_add(bytes) <= page_budget {
                 page_bytes = page_bytes.saturating_add(bytes);
                 kept += 1;
                 pages.insert(page);
@@ -1692,10 +1733,11 @@ impl DocView {
             let key = (req.page, req.tag, t.x, t.y);
             self.tiles.remove(&key);
             let retained = self.tiles.values().fold(0usize, |n, tex| n.saturating_add(texture_bytes(tex)));
-            visible || bytes <= TILE_BYTES.saturating_sub(retained)
+            visible || bytes <= self.tile_budget().saturating_sub(retained)
         } else {
             let thumb = req.tag & THUMB_TAG != 0;
-            let (cache, limit) = if thumb { (&mut self.thumbs, THUMB_BYTES) } else { (&mut self.pages, PAGE_BYTES) };
+            let limit = if thumb { THUMB_BYTES } else { self.page_budget() };
+            let cache = if thumb { &mut self.thumbs } else { &mut self.pages };
             cache.remove(&req.page);
             let mut retained = cache.values().fold(0usize, |n, p| n.saturating_add(texture_bytes(&p.tex)));
             // A zoom/DPI change can temporarily retain larger stale images than the new
@@ -4766,6 +4808,32 @@ trailer << /Root 1 0 R >>
             .collect();
         assert_eq!(v.prepare_render_queue(&info, 1.0).len(), 32);
         assert!(!v.admit_texture(RenderRequest::default(), PAGE_BYTES + 1));
+    }
+
+    #[test]
+    fn the_prefetch_allowance_follows_the_canvas() {
+        // No canvas yet (headless, before the first frame): the former fixed allowance.
+        assert_eq!(screen_budget(0.0, 0.0, 1.0, PAGE_SCREENS, PAGE_BYTES), PAGE_BYTES);
+        assert_eq!(screen_budget(f32::NAN, 600.0, 1.0, PAGE_SCREENS, PAGE_BYTES), PAGE_BYTES);
+        // A small window keeps the floor; a 1500 x 950-point canvas at 250% two screenfuls;
+        // a huge one no more than the former allowance.
+        assert_eq!(screen_budget(800.0, 600.0, 1.0, PAGE_SCREENS, PAGE_BYTES), MIN_PREFETCH_BYTES);
+        let laptop = screen_budget(1500.0, 950.0, 2.5, PAGE_SCREENS, PAGE_BYTES);
+        assert_eq!(laptop, (1500.0f32 * 2.5 * 950.0 * 2.5 * 4.0 * 2.0) as usize);
+        assert!(laptop < PAGE_BYTES);
+        assert_eq!(screen_budget(8000.0, 4000.0, 3.0, PAGE_SCREENS, PAGE_BYTES), PAGE_BYTES);
+        // The view uses its canvas: a small one admits fewer prefetched pages than headless does.
+        let info = thumbnail_info(40);
+        let mut v = DocView::new(DocId(1), &info, ViewDefaults::default());
+        v.shown = true;
+        v.viewport_w = 800.0;
+        v.viewport_h = 600.0;
+        v.frame_queue = (0..40).map(|page| RenderRequest { page, scale: 1.0, tag: 1000, ..Default::default() }).collect();
+        let small = v.prepare_render_queue(&info, 1.0).len();
+        let mut headless = DocView::new(DocId(1), &info, ViewDefaults::default());
+        headless.frame_queue = (0..40).map(|page| RenderRequest { page, scale: 1.0, tag: 1000, ..Default::default() }).collect();
+        assert!(small < headless.prepare_render_queue(&info, 1.0).len());
+        assert!(!v.admit_texture(RenderRequest::default(), MIN_PREFETCH_BYTES + 1), "beyond a small canvas's allowance");
     }
 
     #[test]
