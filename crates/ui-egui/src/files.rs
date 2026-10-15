@@ -523,11 +523,6 @@ impl PdfCraftApp {
         self.dialog = Some(crate::Dialog::ReplacePages);
     }
 
-    /// Insert all pages of a file after the organize selection (or the current page).
-    pub fn insert_pages_from(&mut self, name: &str, bytes: Vec<u8>) {
-        self.insert_files(vec![(name.to_string(), bytes)]);
-    }
-
     /// Insert the pages of `files` (PDFs, images, text), in order, at the gap a "+" in the page
     /// grid chose, or else after the selection (or the current page); then select them.
     pub fn insert_files(&mut self, files: Vec<(String, Vec<u8>)>) {

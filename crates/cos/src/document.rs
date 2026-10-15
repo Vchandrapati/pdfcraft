@@ -972,12 +972,6 @@ impl Document {
         numbers
     }
 
-    /// Rebase this document on bytes written by the writer (after a save): edits become part of
-    /// the file and the overlay is cleared, so the next incremental save appends only new edits.
-    pub fn reopen_after_save(&self, bytes: Arc<Vec<u8>>) -> Result<Self, CosError> {
-        Document::open(bytes)
-    }
-
     // ── cross-reference parsing ─────────────────────────────────────────────────────────────
 
     fn root_is_catalog(&self) -> bool {

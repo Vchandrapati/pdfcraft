@@ -1356,19 +1356,6 @@ pub fn run_xfa(script: &str, event: &XfaEvent, doc: &XfaDoc, root: &XfaNode, lim
     run_here(script, event, doc, root.clone(), limits, &|| {})
 }
 
-/// [`run_xfa`] with a time limit: a script still running `timeout` after the engine is ready
-/// (loops inside nested function calls can run for hours within the engine's per-frame loop
-/// limit) is left on its thread, which ends when the engine's own limits stop it, and an
-/// outcome with `abandoned` set comes back at once. In the browser build there are no
-/// threads: the script runs to its limits.
-pub fn run_xfa_within(script: &str, event: &XfaEvent, doc: &XfaDoc, root: XfaNode, limits: Limits, timeout: std::time::Duration) -> XfaOutcome {
-    if let Some(why) = refuse(script) {
-        return XfaOutcome { error: Some(why), ..Default::default() };
-    }
-    let (script, event, doc) = (script.to_string(), event.clone(), doc.clone());
-    run_within("pdfcraft-xfa-js", timeout, move |started| run_here(&script, &event, &doc, root, limits, started))
-}
-
 /// Longest the script engine may take to be ready for a script (its thread and context, and
 /// for the first script in a process the engine's own set-up) before the script is abandoned.
 /// It doesn't count against the script's time: on a busy machine the start alone can take

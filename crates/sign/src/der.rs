@@ -320,11 +320,6 @@ impl Time {
         Some(t)
     }
 
-    /// As a PDF date in UTC (`D:YYYYMMDDHHmmSSZ`).
-    pub fn to_pdf(&self) -> String {
-        format!("D:{:04}{:02}{:02}{:02}{:02}{:02}Z", self.year, self.month, self.day, self.hour, self.minute, self.second)
-    }
-
     /// Seconds since 1970-01-01 (proleptic Gregorian).
     pub fn unix(&self) -> i64 {
         let (y, m) = if self.month <= 2 { (self.year as i64 - 1, self.month as i64 + 9) } else { (self.year as i64, self.month as i64 - 3) };

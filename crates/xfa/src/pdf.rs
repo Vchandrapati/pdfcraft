@@ -9,7 +9,6 @@ use pdfcraft_fonts::{literal, win_ansi};
 
 use crate::XfaError;
 use crate::layout::{Action, BorderShape, Form, Item, Page, Widget, WidgetKind};
-use crate::model::Rect;
 use crate::text::{Face, Family};
 
 /// Private key on generated fields: the template's SOM path, so data can be put back.
@@ -796,9 +795,4 @@ pub fn existing_layout(doc: &Document) -> Option<crate::Report> {
         template_bytes: 0,
         warnings,
     })
-}
-
-/// The rectangle of a widget in PDF user space (for tests).
-pub fn pdf_rect(r: Rect, page_height: f64) -> [f64; 4] {
-    [r.x, page_height - r.bottom(), r.right(), page_height - r.y]
 }
