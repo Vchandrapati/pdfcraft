@@ -9,3 +9,9 @@ fail-fast = false
 retries = 1
 # Flag tests slower than a minute; stop one that hangs past five.
 slow-timeout = { period = "60s", terminate-after = 5 }
+
+# The XFA recalculation budgets are timed: run them with the machine to themselves, or a busy
+# parallel run makes them miss the budget the user would get.
+[[profile.default.overrides]]
+filter = "test(/hundreds_of_xfa_calculations/)"
+threads-required = "num-cpus"
