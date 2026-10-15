@@ -25,7 +25,7 @@ PdfCraft is a clean-room, open-source, Rust-native PDF application. It runs nati
   - No `unsafe` (`unsafe_code = "forbid"`).
   - Every crash fix gets a synthetic regression test. See `AGENTS.md` §4.
 - **Rust only** in the product and build (`xtask`). No handwritten JS/TS.
-- **Quality gates** before every commit: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `cargo test --workspace` and `cargo xtask wasm` (all run by `cargo xtask ci`).
+- **Quality gates** before every commit: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, the tests (`cargo nextest run --workspace` plus `cargo test --workspace --doc`; plain `cargo test --workspace` without nextest) and `cargo xtask wasm`, all run by `cargo xtask ci`.
 - **Commits:** one focused change per commit, with a short descriptive message. Commit only green states. End messages with the attribution line required by the environment.
 
 ## Engineering Principles

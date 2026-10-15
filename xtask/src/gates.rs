@@ -99,7 +99,7 @@ pub fn ci(_: &[String]) -> anyhow::Result<()> {
     let steps: Vec<Step> = vec![
         ("fmt", Box::new(|| run_args(&["fmt", "--all", "--", "--check"]))),
         ("clippy", Box::new(|| run_args(&["clippy", "--workspace", "--all-targets", "--", "-D", "warnings"]))),
-        ("test", Box::new(|| run_args(&["test", "--workspace"]))),
+        ("test", Box::new(test)),
         ("layers", Box::new(|| layers(&[]))),
         ("wasm", Box::new(|| wasm(&[]))),
         ("assets", Box::new(|| crate::assets::run(&[]))),
@@ -114,6 +114,19 @@ pub fn ci(_: &[String]) -> anyhow::Result<()> {
     }
     println!("\nCI: all {} steps passed", steps.len());
     Ok(())
+}
+
+/// The workspace tests: with cargo-nextest when it's installed (every test in its own process,
+/// scheduled across all test binaries; `.config/nextest.toml`), then the doc tests, which nextest
+/// doesn't run. Without it, `cargo test`.
+fn test() -> anyhow::Result<()> {
+    let nextest = cargo().args(["nextest", "--version"]).output().is_ok_and(|o| o.status.success());
+    if !nextest {
+        eprintln!("test: cargo-nextest is not installed; running cargo test (see https://nexte.st)");
+        return run_args(&["test", "--workspace"]);
+    }
+    run_args(&["nextest", "run", "--workspace"])?;
+    run_args(&["test", "--workspace", "--doc"])
 }
 
 /// Dependency licences, bans, sources and advisories (`deny.toml`). Skipped with a hint when
