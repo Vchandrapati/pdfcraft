@@ -1148,7 +1148,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// Windows refuses to replace a read-only file, so the rename fails: the staging file must not
+    /// A read-only file is refused (Windows would refuse the rename anyway): no staging file may
     /// be left behind.
     #[cfg(windows)]
     #[test]
