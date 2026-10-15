@@ -633,6 +633,8 @@ pub struct PdfCraftApp {
     pub recoverable: Vec<RecoveryMeta>,
     recovery_keys: std::collections::HashMap<DocId, String>,
     last_autosave: f64,
+    /// The periodic autosave being written in the background (see `recovery`).
+    autosave_job: recovery::AutosaveJob,
     allow_quit: bool,
     /// Shortcuts pressed while a text field had the keyboard, run on the next frame (see
     /// `registry_shortcuts`).
@@ -887,6 +889,7 @@ impl PdfCraftApp {
             recoverable: Vec::new(),
             recovery_keys: Default::default(),
             last_autosave: 0.0,
+            autosave_job: Default::default(),
             allow_quit: false,
             deferred_commands: Vec::new(),
             dialog_seen: None,

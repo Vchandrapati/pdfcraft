@@ -13,6 +13,35 @@ use std::path::{Path, PathBuf};
 
 use crate::PdfCraftApp;
 
+/// The periodic autosave being written in the background, if any. Everything else that
+/// touches the recovery folder waits for it first ([`AutosaveJob::wait`]), so a slow write can
+/// never land after a removal and bring back a snapshot of a document that was saved or closed.
+/// Dropping it (the app closing) waits too, so a snapshot is never cut off halfway.
+#[derive(Default)]
+pub(crate) struct AutosaveJob(Option<std::thread::JoinHandle<()>>);
+
+impl AutosaveJob {
+    /// A write is still running.
+    fn busy(&self) -> bool {
+        self.0.as_ref().is_some_and(|job| !job.is_finished())
+    }
+
+    /// Wait for the running write, if any.
+    pub(crate) fn wait(&mut self) {
+        if let Some(job) = self.0.take() {
+            // A panic in the writer has been reported by the panic hook; the snapshot is lost,
+            // the app carries on.
+            let _ = job.join();
+        }
+    }
+}
+
+impl Drop for AutosaveJob {
+    fn drop(&mut self) {
+        self.wait();
+    }
+}
+
 /// How often unsaved changes are written to the recovery folder.
 pub const AUTOSAVE_SECS: f64 = 60.0;
 
@@ -164,33 +193,70 @@ impl PdfCraftApp {
         self.recovery = Some(store);
     }
 
-    /// Write snapshots of documents changed since the last autosave (called periodically).
-    pub fn autosave_now(&mut self) {
-        let Some(store) = self.recovery.clone() else { return };
+    /// What to write for documents changed since the last autosave: their entry and working
+    /// file (shared, not copied).
+    fn autosave_entries(&mut self) -> Vec<(RecoveryMeta, std::sync::Arc<Vec<u8>>)> {
+        let mut out = Vec::new();
         for snap in self.session.autosave_snapshots() {
             let key = self.recovery_keys.entry(snap.doc).or_insert_with(|| format!("{}-{}-{}", now_secs(), std::process::id(), snap.doc.0)).clone();
-            let meta = RecoveryMeta { key, name: snap.name, path: snap.path, saved_at: now_secs(), encrypted: snap.encrypted };
-            if let Err(e) = store.write(&meta, &snap.bytes) {
+            out.push((RecoveryMeta { key, name: snap.name, path: snap.path, saved_at: now_secs(), encrypted: snap.encrypted }, snap.bytes));
+        }
+        out
+    }
+
+    /// Write snapshots of documents changed since the last autosave, now, on this thread.
+    pub fn autosave_now(&mut self) {
+        self.autosave_job.wait();
+        let Some(store) = self.recovery.clone() else { return };
+        for (meta, bytes) in self.autosave_entries() {
+            if let Err(e) = store.write(&meta, &bytes) {
                 log::warn!("autosave failed: {e}");
             }
         }
     }
 
+    /// Write snapshots of documents changed since the last autosave on a background thread, so
+    /// writing a large document doesn't stall the interface (the periodic autosave).
+    pub fn autosave_in_background(&mut self) {
+        self.autosave_job.wait();
+        let Some(store) = self.recovery.clone() else { return };
+        let entries = self.autosave_entries();
+        if entries.is_empty() {
+            return;
+        }
+        let write = move || {
+            for (meta, bytes) in entries {
+                if let Err(e) = store.write(&meta, &bytes) {
+                    log::warn!("autosave failed: {e}");
+                }
+            }
+        };
+        #[cfg(not(target_arch = "wasm32"))]
+        match std::thread::Builder::new().name("pdfcraft-autosave".into()).spawn(write) {
+            Ok(job) => self.autosave_job.0 = Some(job),
+            Err(e) => log::warn!("autosave failed: could not start its thread: {e}"),
+        }
+        #[cfg(target_arch = "wasm32")]
+        write();
+    }
+
     /// Drop a document's recovery entry (it was saved, discarded or closed).
     pub(crate) fn forget_recovery(&mut self, doc: pdfcraft_engine::DocId) {
+        self.autosave_job.wait();
         if let (Some(store), Some(key)) = (&self.recovery, self.recovery_keys.remove(&doc)) {
             store.remove(&key);
         }
     }
 
-    /// Autosave when the interval has passed (called every frame).
+    /// Autosave when the interval has passed (called every frame). While the previous autosave
+    /// is still being written, the next one waits for it (it is retried every frame).
     pub(crate) fn autosave_tick(&mut self, now: f64) {
-        if self.recovery.is_none() {
+        if self.recovery.is_none() || self.autosave_job.busy() {
             return;
         }
         if now - self.last_autosave >= AUTOSAVE_SECS {
             self.last_autosave = now;
-            self.autosave_now();
+            self.autosave_in_background();
         }
     }
 
@@ -227,6 +293,7 @@ impl PdfCraftApp {
         let Some(id) = self.views.last().map(|v| v.id) else { return };
         self.session.mark_recovered(id, meta.path.clone());
         self.recovery_keys.insert(id, meta.key.clone());
+        self.autosave_job.wait();
         // A snapshot recovered without readable metadata gets a fresh sidecar now, so the
         // damaged one doesn't linger until the next autosave (or forever, if none comes).
         if let Some(store) = &self.recovery {
@@ -240,6 +307,7 @@ impl PdfCraftApp {
 
     /// Delete recovery entries the user chose not to recover.
     pub fn discard_recovered(&mut self, keys: &[String]) {
+        self.autosave_job.wait();
         if let Some(store) = &self.recovery {
             for k in keys {
                 store.remove(k);
@@ -250,6 +318,7 @@ impl PdfCraftApp {
 
     /// Clean shutdown: documents were saved or discarded, so nothing needs recovering.
     pub fn shutdown_recovery(&mut self) {
+        self.autosave_job.wait();
         if self.first_dirty().is_none()
             && let Some(store) = &self.recovery
         {
