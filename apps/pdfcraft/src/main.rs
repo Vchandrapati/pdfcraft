@@ -482,6 +482,7 @@ fn configure_gpu(native: &mut eframe::NativeOptions) {
     setup.device_descriptor = std::sync::Arc::new(move |adapter| {
         let mut descriptor = device_descriptor(adapter);
         descriptor.required_limits = surface_texture_limits(descriptor.required_limits, &adapter.limits());
+        descriptor.memory_hints = eframe::wgpu::MemoryHints::MemoryUsage;
         descriptor
     });
     if std::env::var_os("WGPU_POWER_PREF").is_none() {
