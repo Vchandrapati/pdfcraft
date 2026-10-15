@@ -234,6 +234,13 @@ pub fn reading(kind: Kind, points: &[Point], scale: &Scale) -> Result<Reading> {
             length += ((b[0] - a[0]) * scale.x).hypot((b[1] - a[1]) * scale.y);
         }
     }
+    // An area's boundary is closed: its length is the whole perimeter, back to the start.
+    if kind == Kind::Area
+        && points.len() >= 3
+        && let (Some(a), Some(b)) = (points.last(), points.first())
+    {
+        length += ((b[0] - a[0]) * scale.x).hypot((b[1] - a[1]) * scale.y);
+    }
     let area = if points.len() >= 3 {
         let origin = points.first().copied().unwrap_or_default();
         points
