@@ -84,6 +84,15 @@ impl<'a> RenderCache<'a> {
             outline_cache: Rc::new(RefCell::new(HashMap::new())),
         }
     }
+
+    /// PdfCraft patch: a render cache whose decoded images live in `images`, shared with the
+    /// other render threads drawing the same document.
+    pub fn with_image_cache(images: &hayro_interpret::SharedImageCache) -> Self {
+        Self {
+            interpreter_cache: InterpreterCache::with_image_cache(images),
+            outline_cache: Rc::new(RefCell::new(HashMap::new())),
+        }
+    }
 }
 
 /// Settings to apply during rendering.

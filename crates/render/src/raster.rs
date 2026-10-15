@@ -21,6 +21,7 @@ use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use work_queue::{ResultReceiver, WorkQueue};
 
+use hayro::hayro_interpret::SharedImageCache;
 use hayro::hayro_interpret::font::{FontData, FontQuery};
 use hayro::hayro_interpret::hayro_cmap::CidFamily;
 use hayro::hayro_interpret::{InterpreterSettings, InterpreterWarning};
@@ -504,6 +505,9 @@ struct Shared {
     /// request cannot trap every worker in turn while other scales, tiles, or generations remain usable.
     stuck: Mutex<std::collections::HashSet<RequestFailureKey>>,
     stats: AtomicRenderStats,
+    /// Decoded images, shared by every worker of the pool: an image is decoded once (and held
+    /// once) however many threads draw it. The pool's bytes never change, so its keys stay valid.
+    images: SharedImageCache,
     /// Per worker id: set to stop that worker's render at its next content operator once nobody
     /// can receive its answer (the pool was dropped, or the watchdog gave up on the render).
     /// Lock `busy` first when holding both.
@@ -1060,7 +1064,7 @@ fn worker(
                         }) {
                             Some(pdf) => {
                                 let shared_generation = pdf.is_some();
-                                (pdf, RenderCache::new(), shared_generation)
+                                (pdf, RenderCache::with_image_cache(&shared.images), shared_generation)
                             }
                             None => {
                                 let pdf = if !request_cancelled.load(Ordering::Acquire)
@@ -1071,7 +1075,7 @@ fn worker(
                                 } else {
                                     None
                                 };
-                                (pdf, RenderCache::new(), false)
+                                (pdf, RenderCache::with_image_cache(&shared.images), false)
                             }
                         }
                     };
@@ -5298,6 +5302,27 @@ endstream endobj
         let fresh = render_page(&pdf, &RenderCache::new(), &settings, false, req(false)).expect("final renders");
         assert_eq!(rgb_at(&preview.2, w, 35, 35), [0, 0, 255]);
         assert_eq!(&fin.2[..], &fresh.2[..], "a final render after a preview matches one with a fresh cache");
+    }
+
+    /// Render caches built on one shared image cache (as a pool's workers are) decode an image
+    /// once: a second thread drawing the same page hits the first one's decode.
+    #[test]
+    fn workers_share_one_decoded_image_cache() {
+        let pdf = image_cache_pdf(
+            "q 50 0 0 50 10 10 cm /A Do Q",
+            "<< /XObject << /A 5 0 R >> >>",
+            &[("<< /Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Length 12 >>", &[200; 12])],
+        );
+        let pdf = parse(&Arc::new(pdf), None).expect("parses");
+        let images = SharedImageCache::new();
+        let settings = InterpreterSettings::default();
+        let req = RenderRequest { page: 0, kind: RequestKind::Pixels, tile: None, scale: 1.0, tag: 0, preview: false };
+        let first = render_page(&pdf, &RenderCache::with_image_cache(&images), &settings, false, req).expect("renders");
+        let held = images.cached_bytes();
+        assert!(held > 0, "the first render cached its decode");
+        let second = render_page(&pdf, &RenderCache::with_image_cache(&images), &settings, false, req).expect("renders");
+        assert_eq!(images.cached_bytes(), held, "the second cache reused the decode instead of adding its own");
+        assert_eq!(&first.2[..], &second.2[..]);
     }
 
     /// An image drawn under a transfer function (`/TR`) is decoded with it, even when the same
