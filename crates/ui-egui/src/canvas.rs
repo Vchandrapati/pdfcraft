@@ -224,6 +224,10 @@ pub struct Find {
     pub whole_words: bool,
     /// Shown in the Search panel (Advanced Search) instead of the find bar.
     pub in_panel: bool,
+    /// Pages already searched for `case_query`. Their text need not stay cached: only pages
+    /// with matches keep it (to draw highlights), so a long search holds the matches, not
+    /// every page's glyphs.
+    pub searched: HashSet<usize>,
 }
 
 /// A text selection on one page.
@@ -854,6 +858,7 @@ impl DocView {
         if let Some(f) = self.find.as_mut() {
             f.matches.clear();
             f.current = None;
+            f.searched.clear();
         }
     }
 
@@ -884,6 +889,9 @@ impl DocView {
         self.slow_pages.remove(&page);
         self.texts.remove(&page);
         self.text_failed.remove(&page);
+        if let Some(f) = self.find.as_mut() {
+            f.searched.remove(&page);
+        }
         self.errors.remove(&page);
         self.last_queue.clear();
         if self.selection.is_some_and(|s| s.page == page) {
@@ -946,6 +954,7 @@ impl DocView {
         f.case_query = f.query.clone();
         f.matches.clear();
         f.current = None;
+        f.searched.clear();
         if f.case_query.trim().is_empty() {
             return;
         }
@@ -954,6 +963,7 @@ impl DocView {
         for &p in &pages {
             if let Some(text) = self.texts.get(&p) {
                 f.matches.extend(text.find_opts(&f.case_query, f.case_sensitive, f.whole_words).into_iter().map(|r| (p, r)));
+                f.searched.insert(p);
             }
         }
         f.matches.sort_by_key(|(p, r)| (*p, r.start));
@@ -975,6 +985,7 @@ impl DocView {
         let current_key = f.current.and_then(|c| f.matches.get(c).cloned());
         f.matches.retain(|(p, _)| *p != page);
         f.matches.extend(text.find_opts(&f.case_query, f.case_sensitive, f.whole_words).into_iter().map(|r| (page, r)));
+        f.searched.insert(page);
         f.matches.sort_by_key(|(p, r)| (*p, r.start));
         f.current = current_key.as_ref().and_then(|k| f.matches.iter().position(|m| m == k));
         if f.current.is_none() && !f.matches.is_empty() {
@@ -1537,15 +1548,12 @@ impl DocView {
     /// Drop text layers nothing can still need. Every visited page's text used to stay
     /// cached for the session. Keep visible, selected and matched pages plus the nearest
     /// prefetch window; evicted pages re-extract on revisit. (Count window only: unlike
-    /// rasters there is no byte budget here.) While a search is active keep everything:
-    /// demand still wants every page, so evicting would re-request evicted pages each
-    /// frame and churn the workers. Failures are never evicted either: they cost nothing
-    /// to remember, and evicting one would re-request and re-fail it every frame.
+    /// rasters there is no byte budget here.) A search marks each page it has read
+    /// ([`Find::searched`]), so it doesn't ask for an evicted page again. Failures are never
+    /// evicted: they cost nothing to remember, and evicting one would re-request and re-fail
+    /// it every frame.
     fn retain_text_layers(&mut self) {
         if self.texts.len() <= MAX_CACHED_TEXT_PAGES {
-            return;
-        }
-        if self.find.as_ref().is_some_and(|f| !f.case_query.trim().is_empty()) {
             return;
         }
         let mut keep: HashSet<usize> = self.frame_visible.clone();
@@ -3180,9 +3188,10 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
     // Text layers: visible pages for selection, every page while a search is active.
     let need_text = |p: &usize| !view.texts.contains_key(p) && !view.text_failed.contains(p);
     let mut text_pages: Vec<usize> = if hand { Vec::new() } else { visible_now.iter().copied().filter(need_text).collect() };
-    if view.find.as_ref().is_some_and(|f| !f.case_query.trim().is_empty()) {
+    if let Some(f) = view.find.as_ref().filter(|f| !f.case_query.trim().is_empty()) {
         let n = info.pages.len();
-        let rest: Vec<usize> = (0..n).map(|k| (cur + k) % n).filter(need_text).filter(|p| !text_pages.contains(p)).collect();
+        let rest: Vec<usize> =
+            (0..n).map(|k| (cur + k) % n).filter(need_text).filter(|p| !f.searched.contains(p) && !text_pages.contains(p)).collect();
         text_pages.extend(rest);
     }
     queue.extend(text_pages.into_iter().map(|page| RenderRequest {
@@ -4578,7 +4587,7 @@ trailer << /Root 1 0 R >>
     }
 
     #[test]
-    fn text_layers_stay_while_a_search_is_active() {
+    fn a_search_keeps_only_matched_and_nearby_text_and_a_new_query_reads_again() {
         let info = thumbnail_info(100);
         let mut v = DocView::new(DocId(1), &info, ViewDefaults::default());
         v.current = 50;
@@ -4586,9 +4595,18 @@ trailer << /Root 1 0 R >>
         for p in 0..100 {
             v.texts.insert(p, Arc::new(PageText::default()));
         }
-        v.find = Some(Find { query: "dup".into(), case_query: "dup".into(), matches: vec![(0, 0..1)], ..Default::default() });
+        let searched: HashSet<usize> = (0..100).collect();
+        v.find = Some(Find { query: "dup".into(), case_query: "dup".into(), matches: vec![(0, 0..1)], searched, ..Default::default() });
         let _ = v.prepare_render_queue(&info, 1.0);
-        assert_eq!(v.texts.len(), 100, "evicting mid-search would churn the workers");
+        assert!(v.texts.len() <= 2 + MAX_CACHED_TEXT_PAGES, "only matched, visible and nearby pages stay: {}", v.texts.len());
+        assert!(v.texts.contains_key(&0) && v.texts.contains_key(&50), "the matched and the visible page stay");
+        assert_eq!(v.find.as_ref().unwrap().searched.len(), 100, "evicted pages still count as searched for this query");
+        // A new query has read only the pages still cached; the evicted ones are unread again.
+        v.find.as_mut().unwrap().query = "other".into();
+        v.rerun_find();
+        let f = v.find.as_ref().unwrap();
+        assert_eq!(f.searched, v.texts.keys().copied().collect::<HashSet<_>>());
+        assert!(f.searched.len() < 100);
     }
 
     fn thumbnail_info(count: usize) -> DocInfo {

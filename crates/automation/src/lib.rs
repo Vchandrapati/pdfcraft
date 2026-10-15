@@ -97,6 +97,10 @@ const FIND_MAX_BATCH: usize = 128;
 /// Page texts of one document version: (the working bytes, one slot per page).
 type TextCache = (Arc<Vec<u8>>, Vec<Option<Arc<PageText>>>);
 
+/// Page texts kept per document between calls: enough for repeated work on one section, while a
+/// whole-document search or extraction keeps only its last pages instead of every page's glyphs.
+const MAX_CACHED_TEXTS: usize = 64;
+
 /// A headless PdfCraft session driven by tool calls.
 pub struct Automation {
     session: Session,
@@ -1763,7 +1767,16 @@ impl Automation {
                 *slot = Some(text);
             }
         }
-        pages.iter().map(|p| entry.1.get(*p).cloned().flatten().ok_or_else(|| failed(format!("page {} has no text", p + 1)))).collect()
+        let result = pages.iter().map(|p| entry.1.get(*p).cloned().flatten().ok_or_else(|| failed(format!("page {} has no text", p + 1)))).collect();
+        if entry.1.iter().filter(|slot| slot.is_some()).count() > MAX_CACHED_TEXTS {
+            let keep: std::collections::HashSet<usize> = pages.iter().rev().take(MAX_CACHED_TEXTS).copied().collect();
+            for (p, slot) in entry.1.iter_mut().enumerate() {
+                if !keep.contains(&p) {
+                    *slot = None;
+                }
+            }
+        }
+        result
     }
 
     fn text_extract(&mut self, a: &Args) -> Result<Value> {
@@ -2340,6 +2353,22 @@ mod tests {
             Ok(Content::Json(v)) => v,
             other => panic!("{tool} {args}: {other:?}"),
         }
+    }
+
+    #[test]
+    fn the_page_text_cache_is_bounded_per_document() {
+        let dir = std::env::temp_dir().join(format!("pdfcraft-text-cache-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("many.pdf"), numbered_pages(150)).unwrap();
+        let mut a = Automation::new().with_root(&dir).unwrap();
+        let doc = json(&mut a, "doc_open", json!({ "path": "many.pdf" }))["doc"].as_u64().unwrap();
+        let out = json(&mut a, "text_extract", json!({ "doc": doc }));
+        assert_eq!(out["pages"].as_array().unwrap().len(), 150, "every page is still returned");
+        let cached = a.texts.values().map(|(_, slots)| slots.iter().filter(|s| s.is_some()).count()).sum::<usize>();
+        assert!(cached <= MAX_CACHED_TEXTS, "{cached} pages stay cached");
+        let found = json(&mut a, "text_find", json!({ "doc": doc, "query": "Page 140" }));
+        assert!(found["count"].as_u64().unwrap() >= 1, "{found}");
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
