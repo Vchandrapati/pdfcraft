@@ -43,6 +43,9 @@ pub struct FilledRect {
 struct Gs {
     ctm: Matrix,
     fill: [f64; 3],
+    /// Components of the non-stroking colour space when it is gray, RGB or CMYK-like (1, 3 or
+    /// 4); `None` for any other space, whose colours are left as the space's initial black.
+    fill_space: Option<usize>,
     alpha: f64,
 }
 
@@ -100,7 +103,7 @@ fn lines_rect(mut pts: Vec<[f64; 2]>) -> Option<[f64; 4]> {
 
 impl Default for Gs {
     fn default() -> Self {
-        Gs { ctm: Matrix::IDENTITY, fill: [0.0, 0.0, 0.0], alpha: 1.0 }
+        Gs { ctm: Matrix::IDENTITY, fill: [0.0, 0.0, 0.0], fill_space: Some(1), alpha: 1.0 }
     }
 }
 
@@ -162,26 +165,27 @@ impl<'a> Walker<'a> {
                         path = Path::Other;
                     }
                 }
-                b"g" => {
-                    if let Some(v) = op.num(0).filter(|v| v.is_finite()) {
-                        let v = v.clamp(0.0, 1.0);
-                        gs.fill = [v, v, v];
+                b"g" | b"rg" | b"k" => {
+                    let n = op.operands.len();
+                    if let Some(rgb) = colour(&op.operands) {
+                        gs.fill = rgb;
                     }
+                    gs.fill_space = Some(n);
                 }
-                b"rg" => {
-                    if let Some([r, g, b]) = op.nums::<3>()
-                        && [r, g, b].iter().all(|v| v.is_finite())
-                    {
-                        gs.fill = [r.clamp(0.0, 1.0), g.clamp(0.0, 1.0), b.clamp(0.0, 1.0)];
-                    }
+                // A colour space and a colour in it (a white figure background painted as
+                // `/Cs1 cs 1 sc` was taken for a black cover). Selecting a space sets its
+                // initial colour, black; a colour in a space that isn't gray, RGB or CMYK-like
+                // (a separation, an indexed palette, a pattern) stays black, so a possible
+                // cover is still reported rather than missed.
+                b"cs" => {
+                    gs.fill_space = op.name(0).and_then(|name| space_components(self.doc, resources, name));
+                    gs.fill = [0.0, 0.0, 0.0];
                 }
-                b"k" => {
-                    if let Some([c, m, y, k]) = op.nums::<4>()
-                        && [c, m, y, k].iter().all(|v| v.is_finite())
+                b"sc" | b"scn" => {
+                    if gs.fill_space == Some(op.operands.len())
+                        && let Some(rgb) = colour(&op.operands)
                     {
-                        // Naive CMYK -> RGB; good enough to tell black from white.
-                        let (c, m, y, k) = (c.clamp(0.0, 1.0), m.clamp(0.0, 1.0), y.clamp(0.0, 1.0), k.clamp(0.0, 1.0));
-                        gs.fill = [(1.0 - c) * (1.0 - k), (1.0 - m) * (1.0 - k), (1.0 - y) * (1.0 - k)];
+                        gs.fill = rgb;
                     }
                 }
                 b"gs" => {
@@ -287,6 +291,48 @@ fn user_point(gs: &Gs, op: &Op) -> Option<[f64; 2]> {
 }
 
 /// The non-stroking alpha (`/ca`) of a named ExtGState, defaulting to opaque.
+/// A gray, RGB or CMYK colour given by its operands, as RGB (`None` unless they are 1, 3 or 4
+/// finite numbers).
+fn colour(operands: &[Object]) -> Option<[f64; 3]> {
+    let v: Vec<f64> = operands.iter().map(|o| o.as_f64().filter(|v| v.is_finite()).map(|v| v.clamp(0.0, 1.0))).collect::<Option<_>>()?;
+    match *v.as_slice() {
+        [g] => Some([g, g, g]),
+        [r, g, b] => Some([r, g, b]),
+        // Naive CMYK -> RGB; good enough to tell black from white.
+        [c, m, y, k] => Some([(1.0 - c) * (1.0 - k), (1.0 - m) * (1.0 - k), (1.0 - y) * (1.0 - k)]),
+        _ => None,
+    }
+}
+
+/// How many components the colour space `name` has when it is gray, RGB or CMYK-like: the
+/// device spaces, CalGray, CalRGB and ICC-based spaces with 1, 3 or 4 components. `None` for
+/// any other (separations, indexed, Lab, patterns) or one that can't be read.
+fn space_components(doc: &Document, resources: &Dict, name: &[u8]) -> Option<usize> {
+    match name {
+        b"DeviceGray" | b"G" | b"CalGray" => return Some(1),
+        b"DeviceRGB" | b"RGB" | b"CalRGB" => return Some(3),
+        b"DeviceCMYK" | b"CMYK" => return Some(4),
+        _ => {}
+    }
+    let space = resources.get(b"ColorSpace").map(|o| doc.resolve(o)).and_then(|o| o.as_dict().cloned())?.get(name).map(|o| doc.resolve(o))?;
+    match &*space {
+        Object::Name(n) if n.as_slice() != name => space_components(doc, &Dict::default(), n),
+        Object::Array(a) => {
+            let family = a.first()?.as_name()?;
+            match family {
+                b"CalGray" => Some(1),
+                b"CalRGB" => Some(3),
+                b"ICCBased" => {
+                    let n = doc.resolve(a.get(1)?).as_dict()?.get(b"N").and_then(|o| doc.resolve(o).as_f64())?;
+                    [1.0, 3.0, 4.0].contains(&n).then_some(n as usize)
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
 fn ext_alpha(doc: &Document, resources: &Dict, name: &[u8]) -> f64 {
     let alpha = resources
         .get(b"ExtGState")

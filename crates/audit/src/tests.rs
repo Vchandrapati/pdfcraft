@@ -272,3 +272,43 @@ fn non_rectangular_path_is_not_a_cover() {
         assert!(findings.is_empty(), "{:?}: {findings:?}", String::from_utf8_lossy(cover));
     }
 }
+
+/// A page whose resources name colour spaces: `/Gray1` an ICC-based space with one component,
+/// `/Spot` a separation.
+fn page_with_colour_spaces(content: &[u8]) -> Vec<u8> {
+    let mut b = Builder::new();
+    b.add("<< /Type /Catalog /Pages 2 0 R >>");
+    b.add("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+    b.add(
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> /ColorSpace << /Gray1 6 0 R /Spot 7 0 R >> >> >>",
+    );
+    b.add_stream(content);
+    b.add(FONT);
+    b.add("[/ICCBased 8 0 R]");
+    b.add("[/Separation /Spot /DeviceGray << /FunctionType 2 /Domain [0 1] /C0 [1] /C1 [0] /N 1 >>]");
+    b.add_stream_with(b"icc", "/N 1");
+    b.build()
+}
+
+/// Colours set through a colour space (`cs` then `sc`/`scn`) count: a white rectangle painted in
+/// a one-component ICC space or in DeviceRGB over text is a background, not a cover, while a
+/// black one is. A colour in a space the audit doesn't model (a separation) is still treated as
+/// a possible cover rather than skipped.
+#[test]
+fn colours_set_through_a_colour_space_decide_whether_a_rectangle_covers() {
+    let text = b"BT /F1 24 Tf 100 700 Td (SECRET DATA 123) Tj ET\n";
+    for (fill, covers) in [
+        (&b"/Gray1 cs 1 sc"[..], false),
+        (b"/Gray1 cs 0 sc", true),
+        (b"/DeviceRGB cs 1 1 1 sc", false),
+        (b"/DeviceRGB cs 0 0 0 scn", true),
+        (b"/DeviceRGB cs", true),
+        (b"/Spot cs 0 scn", true),
+    ] {
+        let mut content = text.to_vec();
+        content.extend_from_slice(fill);
+        content.extend_from_slice(b"\n100 688 220 32 re f\n");
+        let findings = audit_redactions(&open(page_with_colour_spaces(&content))).expect("audit must run");
+        assert_eq!(!findings.is_empty(), covers, "{}: {findings:?}", String::from_utf8_lossy(fill));
+    }
+}
