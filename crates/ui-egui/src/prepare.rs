@@ -1004,10 +1004,7 @@ pub(crate) fn body(ui: &mut egui::Ui, d: &mut FieldDraft, t: &crate::theme::Toke
                             ui.label(label);
                             ui.push_id(("field-color", index), |ui| {
                                 ui.horizontal(|ui| {
-                                    let mut none = slot.is_none();
-                                    if ui.add(widgets::checkbox(&mut none, tl!("No color"))).changed() {
-                                        *slot = if none { None } else { Some([0.0; 3]) };
-                                    }
+                                    crate::comments::no_colour_checkbox(ui, tl!("No color"), slot);
                                     if let Some(c) = crate::comments::swatch_grid(ui, *slot) {
                                         *slot = Some(c);
                                     }

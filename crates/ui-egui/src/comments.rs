@@ -1594,6 +1594,19 @@ pub fn swatch_grid(ui: &mut egui::Ui, current: Option<Rgb>) -> Option<Rgb> {
     picked
 }
 
+/// A "No colour" check box for an optional colour. Unticking it brings back the colour that was
+/// set before it was ticked, instead of resetting to black.
+pub(crate) fn no_colour_checkbox(ui: &mut egui::Ui, label: &str, slot: &mut Option<Rgb>) {
+    let last = ui.next_auto_id().with("last-colour");
+    if let Some(c) = *slot {
+        ui.data_mut(|d| d.insert_temp(last, c));
+    }
+    let mut none = slot.is_none();
+    if ui.add(crate::widgets::checkbox(&mut none, label)).changed() {
+        *slot = if none { None } else { Some(ui.data(|d| d.get_temp::<Rgb>(last)).unwrap_or([0.0; 3])) };
+    }
+}
+
 /// "No fill" and the colour swatches; returns the choice clicked (`Some(None)`: no fill).
 pub fn fill_picker(ui: &mut egui::Ui, current: Option<Rgb>) -> Option<Option<Rgb>> {
     let mut picked = None;

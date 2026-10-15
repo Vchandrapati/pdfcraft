@@ -247,10 +247,7 @@ fn bool_row(ui: &mut egui::Ui, label: &str, c: &mut Change<bool>) {
 
 fn color(ui: &mut egui::Ui, value: &mut Option<[f64; 3]>) {
     ui.horizontal(|ui| {
-        let mut none = value.is_none();
-        if ui.add(widgets::checkbox(&mut none, tl!("No color"))).changed() {
-            *value = if none { None } else { Some([0.0; 3]) };
-        }
+        crate::comments::no_colour_checkbox(ui, tl!("No color"), value);
         if let Some(c) = crate::comments::swatch_grid(ui, *value) {
             *value = Some(c);
         }

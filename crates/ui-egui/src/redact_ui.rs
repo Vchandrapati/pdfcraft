@@ -319,10 +319,7 @@ pub(crate) fn props_body(ui: &mut egui::Ui, d: &mut RedactPrefs, _t: &Tokens) ->
     egui::Grid::new("redact-props").num_columns(2).spacing([12.0, 10.0]).show(ui, |ui| {
         ui.label(tl!("Redacted area fill colour:"));
         ui.horizontal(|ui| {
-            let mut none = d.fill.is_none();
-            if ui.add(widgets::checkbox(&mut none, tl!("No colour"))).changed() {
-                d.fill = if none { None } else { Some([0.0, 0.0, 0.0]) };
-            }
+            crate::comments::no_colour_checkbox(ui, tl!("No colour"), &mut d.fill);
         });
         ui.end_row();
         ui.label("");

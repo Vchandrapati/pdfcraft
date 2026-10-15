@@ -691,6 +691,8 @@ pub struct PdfCraftApp {
     pub field_props: Option<prepare::FieldDraft>,
     pub bulk_field_props: Option<bulk_fields::Draft>,
     pub redact_prefs: RedactPrefs,
+    /// The redaction settings Redaction Tool Properties opened with (restored by Cancel).
+    redact_props_before: Option<RedactPrefs>,
     pub redact_pages_draft: RedactPagesDraft,
     pub redact_search: RedactSearchDraft,
     pub hidden_draft: HiddenDraft,
@@ -926,6 +928,7 @@ impl PdfCraftApp {
             field_props: None,
             bulk_field_props: None,
             redact_prefs: RedactPrefs::default(),
+            redact_props_before: None,
             redact_pages_draft: RedactPagesDraft::default(),
             redact_search: RedactSearchDraft::default(),
             hidden_draft: HiddenDraft::default(),

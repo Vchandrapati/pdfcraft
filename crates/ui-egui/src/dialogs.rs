@@ -529,9 +529,17 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                 return;
             }
             Dialog::RedactProps => {
+                // The settings change as they are clicked; Cancel puts back those the dialog
+                // opened with.
+                if app.redact_props_before.is_none() {
+                    app.redact_props_before = Some(app.redact_prefs.clone());
+                }
                 let mut prefs = app.redact_prefs.clone();
                 let (ok, cancel) = crate::redact_ui::props_body(ui, &mut prefs, &t);
                 app.redact_prefs = prefs;
+                if cancel && let Some(before) = app.redact_props_before.take() {
+                    app.redact_prefs = before;
+                }
                 close = ok || cancel;
                 return;
             }
@@ -1308,6 +1316,12 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
     // Protect / Remove security replace the Properties dialog.
     let replaces = link_command.is_some_and(|c| c.starts_with("protect.")) || open_revision.is_some();
     if modal.should_close() || close || replaces {
+        // Closed with Escape or a click outside: like Cancel.
+        if let Some(before) = app.redact_props_before.take()
+            && !close
+        {
+            app.redact_prefs = before;
+        }
         app.dialog = None;
         app.props_draft = None;
         app.view_draft = None;
