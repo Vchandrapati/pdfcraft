@@ -44,6 +44,7 @@ PdfCraft is a clean-room, open-source, Rust-native PDF application. It runs nati
 ## Running and looking at the app
 - `cargo run -p pdfcraft -- <file.pdf>` opens the desktop app.
 - `cargo run -p pdfcraft-cli -- run --script steps.json --root DIR` drives the engine headlessly through the automation tools (`pdfcraft-cli tools` lists them). Use it, together with `page_render`, to check engine changes. `pdfcraft-cli mcp` is the opt-in MCP server (AGENTS.md §3).
+- `cargo xtask clif build -p pdfcraft`, `cargo xtask clif run -p pdfcraft -- file.pdf` and `cargo xtask clif test` are the fast debug loop: the Cranelift backend on nightly, in `target/clif/` (setup and limits in `xtask/src/clif.rs`). `cargo xtask ci` stays the gate before committing.
 - `cargo xtask fuzz --time 300` mutation-fuzzes open/render/edit/save in child processes. Findings land in `fuzz-out/findings/` (git-ignored; never commit corpus-derived files). Turn every real finding into a small synthetic regression test before fixing it.
 - `cargo xtask demo-pdf` builds `dist/demo/pdfcraft-showcase.pdf` (needs Chrome) for visual checks.
 - For UI work, **look at the result**. Either launch `pdfcraft --control FILE doc.pdf` and use `pdfcraft-cli ui --control FILE screenshot --out x.png` (plus `inspect`, `click`, `key`, `type`, `command`, `set`), or take a headless shot with `cargo run -p pdfcraft-ui-egui --example shot`. Control-channel tests use kittest (`crates/ui-egui/tests/control.rs`).
