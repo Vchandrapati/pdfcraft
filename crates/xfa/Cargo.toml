@@ -10,6 +10,10 @@ repository.workspace = true
 [lints]
 workspace = true
 
+[features]
+# Synthetic XFA forms for other crates' tests; never on in a release build.
+fixtures = []
+
 [dependencies]
 pdfcraft-content = { workspace = true }
 pdfcraft-cos = { workspace = true }
