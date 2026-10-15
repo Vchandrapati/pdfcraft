@@ -2516,29 +2516,28 @@ mod tests {
     /// An embedded TrueType font with no `/Encoding`, flagged `flags`, its `/ToUnicode` (if
     /// any) mapping only printable ASCII, as OCR engines write the text layer of a scan.
     fn ocr_layer_text(flags: i64, ascii_to_unicode: bool) -> String {
-        use lopdf::{Document, Object, Stream, dictionary};
-        let mut doc = Document::with_version("1.7");
-        let program = doc.add_object(Stream::new(dictionary! {}, include_bytes!("../../../assets/fonts/Inter-Regular.ttf").to_vec()));
-        let descriptor =
-            doc.add_object(dictionary! { "Type" => "FontDescriptor", "FontName" => "Inter-Regular", "Flags" => flags, "FontFile2" => program });
-        let mut font = dictionary! { "Type" => "Font", "Subtype" => "TrueType", "BaseFont" => "Inter-Regular", "FontDescriptor" => descriptor };
-        if ascii_to_unicode {
+        let mut doc = crate::test_pdf::TestPdf::new();
+        let program = doc.add_stream("", include_bytes!("../../../assets/fonts/Inter-Regular.ttf"));
+        let descriptor = doc.add(format!("<< /Type /FontDescriptor /FontName /Inter-Regular /Flags {flags} /FontFile2 {program} 0 R >>"));
+        let to_unicode = if ascii_to_unicode {
             let cmap = b"/CIDInit /ProcSet findresource begin 12 dict begin begincmap /CMapName /Ascii def /CMapType 2 def 1 begincodespacerange <00> <FF> endcodespacerange 1 beginbfrange <20> <7E> <0020> endbfrange endcmap CMapName currentdict /CMap defineresource pop end end";
-            font.set("ToUnicode", doc.add_object(Stream::new(dictionary! {}, cmap.to_vec())));
-        }
-        let font = doc.add_object(font);
+            format!(" /ToUnicode {} 0 R", doc.add_stream("", cmap))
+        } else {
+            String::new()
+        };
+        let font = doc.add(format!("<< /Type /Font /Subtype /TrueType /BaseFont /Inter-Regular /FontDescriptor {descriptor} 0 R{to_unicode} >>"));
         // WinAnsi bytes: "Rückfragen für Überhitzungsschutz: können, weiß, Café".
         let mut ops = b"BT /F1 14 Tf 1 0 0 1 20 200 Tm (".to_vec();
         ops.extend_from_slice(b"R\xfcckfragen f\xfcr \xdcberhitzungsschutz: k\xf6nnen, wei\xdf, Caf\xe9");
         ops.extend_from_slice(b") Tj ET");
-        let content = doc.add_object(Stream::new(dictionary! {}, ops));
-        let pages = doc.new_object_id();
-        let page = doc.add_object(dictionary! { "Type" => "Page", "Parent" => pages, "MediaBox" => vec![Object::Integer(0), Object::Integer(0), Object::Integer(400), Object::Integer(400)], "Resources" => dictionary! {"Font" => dictionary! {"F1" => font}}, "Contents" => content });
-        doc.objects.insert(pages, dictionary! {"Type" => "Pages", "Kids" => vec![Object::Reference(page)], "Count" => 1}.into());
-        let catalog = doc.add_object(dictionary! {"Type" => "Catalog", "Pages" => pages});
-        doc.trailer.set("Root", catalog);
-        let mut bytes = Vec::new();
-        doc.save_to(&mut bytes).unwrap();
+        let content = doc.add_stream("", &ops);
+        let pages = doc.reserve();
+        let page = doc.add(format!(
+            "<< /Type /Page /Parent {pages} 0 R /MediaBox [0 0 400 400] /Resources << /Font << /F1 {font} 0 R >> >> /Contents {content} 0 R >>"
+        ));
+        doc.set(pages, format!("<< /Type /Pages /Kids [{page} 0 R] /Count 1 >>"));
+        let catalog = doc.add(format!("<< /Type /Catalog /Pages {pages} 0 R >>"));
+        let bytes = doc.finish(catalog);
         let pdf = Pdf::new(std::sync::Arc::new(bytes)).unwrap();
         extract_page(&pdf, 0, &InterpreterSettings::default()).unwrap().plain_text()
     }
