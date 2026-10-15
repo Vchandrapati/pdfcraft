@@ -524,6 +524,21 @@ fn errors_are_specific_and_safe() {
     assert!(matches!(err(&mut a, "page_rotate", json!({ "doc": doc, "pages": [1], "degrees": 45 })), ToolError::InvalidArgs(_)));
     assert!(matches!(err(&mut a, "doc_info", json!({ "doc": 99 })), ToolError::Failed(_)));
     assert!(matches!(err(&mut a, "edit_undo", json!({ "doc": doc })), ToolError::Failed(_)));
+    for key in ["", "\u{0}Title", "Two words", "a/b"] {
+        assert!(
+            matches!(err(&mut a, "doc_set_info", json!({ "doc": doc, "key": key, "value": "v" })), ToolError::InvalidArgs(m) if m.contains("document information")),
+            "{key:?}"
+        );
+    }
+    // redact_mark: `page` alone scopes find, words, pattern and whole_pages; with `pages` it is
+    // ambiguous.
+    let marked = ok(&mut a, "redact_mark", json!({ "doc": doc, "page": 2, "whole_pages": true }));
+    assert_eq!(marked["pages_marked"], json!([2]));
+    assert!(
+        matches!(err(&mut a, "redact_mark", json!({ "doc": doc, "page": 2, "pages": [1], "whole_pages": true })), ToolError::InvalidArgs(m) if m.contains("not both"))
+    );
+    ok(&mut a, "redact_mark", json!({ "doc": doc, "page": 1, "rect": [10, 10, 100, 100], "fill": "none" }));
+    ok(&mut a, "redact_clear", json!({ "doc": doc }));
 
     // Unsaved changes are never dropped silently.
     ok(&mut a, "page_delete", json!({ "doc": doc, "pages": [1] }));

@@ -177,7 +177,15 @@ impl Automation {
             "doc_close" => self.doc_close(&a)?,
             "doc_save" => self.doc_save(&a)?,
             "doc_set_info" => {
-                let edit = Edit::SetInfo { key: a.str("key")?.into(), value: a.str("value")?.into() };
+                // The key becomes a PDF name: something to read back, without the characters a
+                // name can't hold (NUL) or that would be written escaped and look different.
+                let key = a.str("key")?;
+                if key.is_empty() || key.len() > 127 || key.chars().any(|c| c.is_whitespace() || c.is_control() || "()<>[]{}/%#".contains(c)) {
+                    return Err(ToolError::InvalidArgs(format!(
+                        "key {key:?} can't be a document information entry: use 1–127 characters without spaces, control characters or ()<>[]{{}}/%# (for example Title, Author or a custom name such as Department)"
+                    )));
+                }
+                let edit = Edit::SetInfo { key: key.into(), value: a.str("value")?.into() };
                 self.apply(&a, edit)?
             }
             "page_render" => return self.page_render(&a).map(|c| vec![c]),
