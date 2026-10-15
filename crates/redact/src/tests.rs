@@ -79,6 +79,30 @@ fn reopen(doc: &Document) -> Document {
     Document::open(Arc::new(write_incremental(doc, &SaveOptions::default()).unwrap())).unwrap()
 }
 
+/// "No colour": a mark without a fill removes what it covers and leaves the area empty, but
+/// still shows its overlay text; a fill set on the mark afterwards (Properties) is the box's
+/// colour.
+#[test]
+fn a_mark_without_a_fill_leaves_no_box_but_keeps_its_overlay_text() {
+    let mut doc = one_page(b"BT /F1 10 Tf 10 100 Td (AB1234CD) Tj ET", "", vec![]);
+    let shape = Shape::Redact { quads: vec![rect_quad([20.0, 95.0, 40.0, 110.0])], overlay: "X".into(), look: Default::default() };
+    let style = Style { fill: None, ..Style::default_for(&shape) };
+    add_annotation(&mut doc, &NewAnnotation { page: 0, shape, style, contents: String::new(), author: "Tester".into() }, &Meta::default()).unwrap();
+    assert!(marks(&doc)[0].fill.is_none(), "no /IC was written");
+    apply(&mut doc, None).unwrap();
+    let c = content(&doc, 0);
+    assert!(!c.contains("1234"), "{c}");
+    assert!(!c.contains("re f"), "no box: {c}");
+    assert!(c.contains("(X) Tj"), "the overlay text is drawn: {c}");
+
+    let mut doc = one_page(b"BT /F1 10 Tf 10 100 Td (AB1234CD) Tj ET", "", vec![]);
+    mark(&mut doc, 0, &[[20.0, 95.0, 40.0, 110.0]], "");
+    pdfcraft_annot::set_fill(&mut doc, 0, 0, Some([1.0, 0.0, 0.0]), &Meta::default()).unwrap();
+    apply(&mut doc, None).unwrap();
+    let c = content(&doc, 0);
+    assert!(c.contains("1 0 0 rg") && c.contains("20 95 20 15 re f"), "a red box: {c}");
+}
+
 #[test]
 fn glyphs_under_a_mark_go_and_the_rest_stays_put() {
     // "AB1234CD" from x = 10 at 10 pt: each glyph 5 pt wide; 1234 spans x 20–40.

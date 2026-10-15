@@ -1046,7 +1046,10 @@ pub fn add_annotation(doc: &mut Document, new: &NewAnnotation, meta: &Meta) -> R
         }
         Shape::Redact { quads, overlay, look } => {
             d.set(b"C".to_vec(), rgb(style.color));
-            d.set(b"IC".to_vec(), rgb(style.fill.unwrap_or([0.0, 0.0, 0.0])));
+            // No /IC: the area is left empty when applied ("No colour").
+            if let Some(f) = style.fill {
+                d.set(b"IC".to_vec(), rgb(f));
+            }
             d.set(b"QuadPoints".to_vec(), num_array(&quads.concat()));
             if !overlay.is_empty() {
                 d.set(b"OverlayText".to_vec(), PdfString::text(overlay));
@@ -1938,20 +1941,21 @@ pub fn set_style(
 }
 
 /// Whether a comment of this subtype has an interior that can be filled (`/IC`: rectangles,
-/// ovals, polygons and clouds, §12.5.6.8–9).
+/// ovals, polygons and clouds, §12.5.6.8–9, and the box a redaction mark leaves, §12.5.6.23).
 pub fn fillable(subtype: &str) -> bool {
-    matches!(subtype, "Square" | "Circle" | "Polygon")
+    matches!(subtype, "Square" | "Circle" | "Polygon" | "Redact")
 }
 
 /// Fill a rectangle, oval or polygon comment with `fill`, or remove its fill (`None`), and
-/// redraw its appearance (Acrobat: Properties ▸ Fill Color).
+/// redraw its appearance (Acrobat: Properties ▸ Fill Color). For a redaction mark it is the
+/// colour of the box left once the mark is applied (`None`: no box).
 pub fn set_fill(doc: &mut Document, page: usize, index: usize, fill: Option<Rgb>, meta: &Meta) -> Result<(), AnnotError> {
     let (_, r) = annot_ref(doc, page, index)?;
     unlocked(doc, r)?;
     let d = annot_dict(doc, r);
     let subtype = String::from_utf8_lossy(d.name(b"Subtype").unwrap_or_default()).into_owned();
     if !fillable(&subtype) {
-        return Err(AnnotError::Invalid("only rectangles, ovals and polygons can be filled".into()));
+        return Err(AnnotError::Invalid("only rectangles, ovals, polygons and redaction marks can be filled".into()));
     }
     // Check before changing anything: a stale appearance would contradict the new fill.
     if appearance::build(&d).is_none() {

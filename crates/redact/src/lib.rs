@@ -214,12 +214,14 @@ fn overlay_content(marks: &[&Mark]) -> Vec<u8> {
     };
     let mut c: Vec<u8> = Vec::new();
     for m in marks {
-        let Some(fill) = m.fill else { continue };
-        c.extend(format!("q {} {} {} rg\n", n(fill[0]), n(fill[1]), n(fill[2])).bytes());
-        for r in &m.rects {
-            c.extend(format!("{} {} {} {} re f\n", n(r[0]), n(r[1]), n(r[2] - r[0]), n(r[3] - r[1])).bytes());
+        // The box ("No colour": none, the area is just left empty); the overlay text either way.
+        if let Some(fill) = m.fill {
+            c.extend(format!("q {} {} {} rg\n", n(fill[0]), n(fill[1]), n(fill[2])).bytes());
+            for r in &m.rects {
+                c.extend(format!("{} {} {} {} re f\n", n(r[0]), n(r[1]), n(r[2] - r[0]), n(r[3] - r[1])).bytes());
+            }
+            c.extend_from_slice(b"Q\n");
         }
-        c.extend_from_slice(b"Q\n");
         if m.overlay.is_empty() {
             continue;
         }
