@@ -333,14 +333,18 @@ impl PdfCraftApp {
         let (doc, progress) = (run.doc, run.progress.clone());
         let Ok(mut s) = progress.lock() else { return };
         let Some(result) = s.result.take() else {
-            let msg = crate::i18n::fmt(
-                tl!("Recognizing text… page {d} of {t}"),
-                &[("d", &(s.done + 1).min(s.total.max(1)).to_string()), ("t", &s.total.max(1).to_string())],
-            );
+            let label = if s.cancel {
+                tl!("Cancelling…").to_string()
+            } else {
+                crate::i18n::fmt(
+                    tl!("Recognizing text… page {d} of {t}"),
+                    &[("d", &(s.done + 1).min(s.total.max(1)).to_string()), ("t", &s.total.max(1).to_string())],
+                )
+            };
+            let fraction = if s.total == 0 { 0.0 } else { s.done.min(s.total) as f32 / s.total as f32 };
+            let cancellable = !s.cancel;
             drop(s);
-            if self.toast.as_ref().is_none_or(|t| t.0 != msg) {
-                self.notify(msg);
-            }
+            self.progress_notice = Some(crate::widgets::ProgressNotice { label, fraction, cancellable });
             if let Some(ctx) = &self.ctx {
                 ctx.request_repaint_after(std::time::Duration::from_millis(200));
             }
@@ -348,6 +352,7 @@ impl PdfCraftApp {
         };
         drop(s);
         self.ocr_run = None;
+        self.progress_notice = None;
         let found = match result {
             Ok(f) => f,
             Err(e) => {
@@ -382,5 +387,41 @@ impl PdfCraftApp {
             }
             Err(e) => self.notify_error(e),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use egui_kittest::Harness;
+    use egui_kittest::kittest::Queryable;
+
+    use super::*;
+
+    #[test]
+    fn a_running_recognition_shows_its_progress_and_cancels() {
+        let progress = Arc::new(Mutex::new(OcrProgress { done: 3, total: 10, ..Default::default() }));
+        let p = progress.clone();
+        let mut h = Harness::builder().with_size(egui::vec2(1200.0, 800.0)).build_eframe(move |_cc| {
+            let mut app = PdfCraftApp::new();
+            app.set_option("language", "en").unwrap();
+            app.open_bytes("notes.txt", None, b"hello".to_vec()).unwrap();
+            let (_, doc) = app.active_ids().unwrap();
+            app.ocr_run = Some(OcrRun { doc, progress: p });
+            app
+        });
+        h.run_steps(2);
+        h.get_by_label("Recognizing text… page 4 of 10");
+        assert!(h.state().progress_notice.as_ref().is_some_and(|n| n.cancellable));
+
+        h.get_by_label("Cancel").click();
+        h.run_steps(2);
+        assert!(progress.lock().unwrap().cancel, "the worker is asked to stop");
+        h.get_by_label("Cancelling…");
+        assert!(h.query_by_label("Cancel").is_none(), "Cancel is not offered twice");
+
+        // The worker stops with the pages read so far (none here) and the card goes away.
+        progress.lock().unwrap().result = Some(Ok(Vec::new()));
+        h.run_steps(2);
+        assert!(h.state().ocr_run.is_none() && h.state().progress_notice.is_none());
     }
 }

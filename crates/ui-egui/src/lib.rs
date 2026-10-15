@@ -1463,10 +1463,15 @@ impl PdfCraftApp {
         self.desktop_theme_enabled = true;
     }
 
-    /// Draw the running job's progress card and pass a Cancel click on to the job.
+    /// Draw the running job's progress card and pass a Cancel click on to the job. Optimize
+    /// polls after OCR, so while both run the card is the optimization's.
     fn show_progress(&mut self, ctx: &egui::Context) {
         if widgets::progress_notice(self, ctx) {
-            self.cancel_optimize();
+            if self.optimize_run.is_some() {
+                self.cancel_optimize();
+            } else {
+                self.cancel_ocr();
+            }
         }
     }
 
