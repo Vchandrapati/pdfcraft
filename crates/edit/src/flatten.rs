@@ -12,7 +12,7 @@ use std::collections::HashSet;
 
 use pdfcraft_cos::{Dict, Document, ObjRef, Object};
 
-use crate::{EditError, check, n, page_list, place_tagged};
+use crate::{EditError, check, n, place_tagged};
 
 const HIDDEN: i64 = 2;
 const NO_VIEW: i64 = 32;
@@ -123,7 +123,7 @@ fn undrawn_on(doc: &Document, all: &[pdfcraft_model::Page], pages: &[usize], whi
 }
 
 fn flatten_which(doc: &mut Document, pages: &[usize], which: Which) -> Result<usize, EditError> {
-    let all = page_list(doc);
+    let all = pdfcraft_model::pages(doc);
     check(pages, all.len())?;
     // `?` in an appearance can still be fixed (a field's value, a comment's text are stored as
     // typed, and other viewers redraw form fields); flattened, it would be the page for good.
@@ -243,10 +243,10 @@ fn flatten_which(doc: &mut Document, pages: &[usize], which: Which) -> Result<us
             }
             res.set(b"XObject".to_vec(), Object::Dict(xo));
             doc.update_dict(page.obj, |d| d.set(b"Resources".to_vec(), Object::Dict(res)))?;
-            let page = page_list(doc)[i].clone();
+            let page = pdfcraft_model::pages(doc)[i].clone();
             place_tagged(doc, &page, "Flattened", content.into_bytes(), false)?;
         }
-        let page_now = page_list(doc)[i].clone();
+        let page_now = pdfcraft_model::pages(doc)[i].clone();
         match page_now.dict.get(b"Annots").and_then(|a| a.as_ref()).filter(|r| doc.get(*r).as_array().is_some()) {
             Some(r) => doc.set(r, Object::Array(kept)),
             None => doc.update_dict(page.obj, |d| {
@@ -262,7 +262,7 @@ fn flatten_which(doc: &mut Document, pages: &[usize], which: Which) -> Result<us
     // document must still take it out of the form, or other software keeps seeing one (#1470).
     let orphans = matches!(which, Which::Comments { fields: true, .. }) && (0..all.len()).all(|i| pages.contains(&i));
     if !removed_widgets.is_empty() || orphans {
-        let on_page: HashSet<ObjRef> = page_list(doc)
+        let on_page: HashSet<ObjRef> = pdfcraft_model::pages(doc)
             .iter()
             .filter_map(|p| p.dict.get(b"Annots").map(|a| doc.resolve(a)).and_then(|a| a.as_array().cloned()))
             .flatten()

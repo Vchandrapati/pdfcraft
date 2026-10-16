@@ -79,6 +79,38 @@ pub fn view_matrix_for(rotation: i64, crop: [f64; 4]) -> [f64; 6] {
     }
 }
 
+/// Leaf page objects in document order, without their attributes: the cheap walk for code that
+/// only needs to find or count pages. Same tree rules as [`pages`].
+pub fn page_refs(doc: &Document) -> Vec<ObjRef> {
+    let Some(root) = doc.root() else { return Vec::new() };
+    let Some(top) = doc.get(root).as_dict().and_then(|d| d.reference(b"Pages")) else { return Vec::new() };
+    let mut out = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+    let mut stack = vec![top];
+    while let Some(node) = stack.pop() {
+        if !seen.insert(node) || seen.len() > 1_000_000 {
+            continue;
+        }
+        let obj = doc.get(node);
+        let Some(d) = obj.as_dict() else { continue };
+        if is_pages_node(d) {
+            if let Some(kids) = d.get(b"Kids").map(|k| doc.resolve(k))
+                && let Some(kids) = kids.as_array()
+            {
+                stack.extend(kids.iter().rev().filter_map(Object::as_ref));
+            }
+        } else {
+            out.push(node);
+        }
+    }
+    out
+}
+
+/// A page tree node (`/Pages`, or an untyped node with kids) rather than a leaf page.
+fn is_pages_node(d: &Dict) -> bool {
+    d.name(b"Type") == Some(b"Pages") || (d.contains(b"Kids") && d.name(b"Type") != Some(b"Page"))
+}
+
 /// Leaf pages in document order, with inherited attributes resolved. Cycles and absurdly deep
 /// trees are cut off rather than followed.
 pub fn pages(doc: &Document) -> Vec<Page> {
@@ -99,8 +131,7 @@ pub fn pages(doc: &Document) -> Vec<Page> {
                 attrs.set(k.to_vec(), v.clone());
             }
         }
-        let is_pages = d.name(b"Type") == Some(b"Pages") || (d.contains(b"Kids") && d.name(b"Type") != Some(b"Page"));
-        if is_pages {
+        if is_pages_node(d) {
             let kids = d.get(b"Kids").map(|k| doc.resolve(k)).and_then(|k| k.as_array().cloned()).unwrap_or_default();
             for k in kids.iter().rev() {
                 if let Some(r) = k.as_ref() {
@@ -152,6 +183,22 @@ mod tests {
         }
         out.extend_from_slice(format!("trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{x}\n%%EOF\n", objs.len() + 1).as_bytes());
         Document::open(Arc::new(out)).unwrap()
+    }
+
+    #[test]
+    fn page_refs_skip_empty_page_tree_nodes_like_pages() {
+        let mut doc = Document::new_empty();
+        let top = doc.get(doc.root().unwrap()).as_dict().unwrap().reference(b"Pages").unwrap();
+        let mut page = Dict::new();
+        page.set(b"Type".to_vec(), Object::name("Page"));
+        let page = doc.add(page);
+        // A /Pages node without /Kids holds no pages; it is not itself a page.
+        let mut empty = Dict::new();
+        empty.set(b"Type".to_vec(), Object::name("Pages"));
+        let empty = doc.add(empty);
+        doc.update_dict(top, |d| d.set(b"Kids".to_vec(), Object::Array(vec![Object::Ref(empty), Object::Ref(page)]))).unwrap();
+        assert_eq!(page_refs(&doc), vec![page]);
+        assert_eq!(pages(&doc).iter().map(|p| p.obj).collect::<Vec<_>>(), vec![page]);
     }
 
     fn apply(m: [f64; 6], x: f64, y: f64) -> [f64; 2] {
