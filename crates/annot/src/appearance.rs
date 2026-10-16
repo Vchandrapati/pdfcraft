@@ -13,6 +13,7 @@
 use pdfcraft_cos::{Dict, Object, PdfString, Stream};
 use pdfcraft_fonts::{first_undrawable, literal, win_ansi};
 pub use pdfcraft_fonts::{helvetica_width as text_width, wrap};
+use std::fmt::Write as _;
 
 use crate::{NOTE_SIZE, Rgb, n};
 
@@ -67,12 +68,12 @@ fn line_end(c: &mut String, kind: &[u8], tip: (f64, f64), from: (f64, f64), w: f
             let a = (tip.0 + s * (ux * cos - uy * sin), tip.1 + s * (ux * sin + uy * cos));
             let b = (tip.0 + s * (ux * cos + uy * sin), tip.1 + s * (-ux * sin + uy * cos));
             let op = if kind.ends_with(b"ClosedArrow") { "h B" } else { "S" };
-            c.push_str(&format!("{} {} m {} {} l {} {} l {op}\n", n(a.0), n(a.1), n(tip.0), n(tip.1), n(b.0), n(b.1)));
+            let _ = writeln!(c, "{} {} m {} {} l {} {} l {op}", n(a.0), n(a.1), n(tip.0), n(tip.1), n(b.0), n(b.1));
         }
         b"Square" | b"Circle" | b"Diamond" => {
             let h = s / 2.0;
             if kind == b"Square" {
-                c.push_str(&format!("{} {} {} {} re h B\n", n(tip.0 - h), n(tip.1 - h), n(s), n(s)));
+                let _ = writeln!(c, "{} {} {} {} re h B", n(tip.0 - h), n(tip.1 - h), n(s), n(s));
             } else if kind == b"Circle" {
                 c.push_str(&ellipse(tip.0 - h, tip.1 - h, tip.0 + h, tip.1 + h));
                 c.push_str("B\n");
@@ -80,7 +81,7 @@ fn line_end(c: &mut String, kind: &[u8], tip: (f64, f64), from: (f64, f64), w: f
                 let (px, py) = (-iy, ix);
                 let v = |along: f64, across: f64| (tip.0 + ix * along + px * across, tip.1 + iy * along + py * across);
                 let (a, b, d, e) = (v(h, 0.0), v(0.0, h), v(-h, 0.0), v(0.0, -h));
-                c.push_str(&format!("{} {} m {} {} l {} {} l {} {} l h B\n", n(a.0), n(a.1), n(b.0), n(b.1), n(d.0), n(d.1), n(e.0), n(e.1)));
+                let _ = writeln!(c, "{} {} m {} {} l {} {} l {} {} l h B", n(a.0), n(a.1), n(b.0), n(b.1), n(d.0), n(d.1), n(e.0), n(e.1));
             }
         }
         _ => {
@@ -93,7 +94,7 @@ fn line_end(c: &mut String, kind: &[u8], tip: (f64, f64), from: (f64, f64), w: f
                 (px, py)
             };
             let h = s / 2.0;
-            c.push_str(&format!("{} {} m {} {} l S\n", n(tip.0 - sx * h), n(tip.1 - sy * h), n(tip.0 + sx * h), n(tip.1 + sy * h)));
+            let _ = writeln!(c, "{} {} m {} {} l S", n(tip.0 - sx * h), n(tip.1 - sy * h), n(tip.0 + sx * h), n(tip.1 + sy * h));
         }
     }
     true
@@ -131,7 +132,7 @@ pub fn cloud_path(pts: &[(f64, f64)], r: f64) -> String {
         let (dx, dy) = (b.0 - a.0, b.1 - a.1);
         let len = dx.hypot(dy);
         if i == 0 {
-            c.push_str(&format!("{} {} m\n", n(a.0), n(a.1)));
+            let _ = writeln!(c, "{} {} m", n(a.0), n(a.1));
         }
         if len < 1e-6 {
             continue;
@@ -144,7 +145,7 @@ pub fn cloud_path(pts: &[(f64, f64)], r: f64) -> String {
         for j in 0..k {
             let p0 = (a.0 + ux * step * j as f64, a.1 + uy * step * j as f64);
             let p1 = (a.0 + ux * step * (j + 1) as f64, a.1 + uy * step * (j + 1) as f64);
-            c.push_str(&format!("{} {} {} {} {} {} c\n", n(p0.0 + nx * h), n(p0.1 + ny * h), n(p1.0 + nx * h), n(p1.1 + ny * h), n(p1.0), n(p1.1)));
+            let _ = writeln!(c, "{} {} {} {} {} {} c", n(p0.0 + nx * h), n(p0.1 + ny * h), n(p1.0 + nx * h), n(p1.1 + ny * h), n(p1.0), n(p1.1));
         }
     }
     c.push_str("h\n");
@@ -355,7 +356,7 @@ pub fn build(d: &Dict) -> Option<Stream> {
                         let lw = (h * 0.07).clamp(0.5, 3.0);
                         let t = if subtype == b"Underline" { 0.08 } else { 0.42 };
                         let (a, b) = (at(p3, p1, t), at(p4, p2, t));
-                        c.push_str(&format!("{}{} w\n{} {} m {} {} l S\n", rg_stroke(col), n(lw), n(a.0), n(a.1), n(b.0), n(b.1)));
+                        let _ = write!(c, "{}{} w\n{} {} m {} {} l S\n", rg_stroke(col), n(lw), n(a.0), n(a.1), n(b.0), n(b.1));
                     }
                     _ => {
                         // Squiggly: a zigzag along the bottom of the quad.
@@ -364,14 +365,14 @@ pub fn build(d: &Dict) -> Option<Stream> {
                         let len = (p4.0 - p3.0).hypot(p4.1 - p3.1);
                         let step = (h / 4.0).max(1.5);
                         let steps = ((len / step).ceil() as usize).clamp(1, 10_000);
-                        c.push_str(&format!("{}{} w 1 j\n", rg_stroke(col), n(lw)));
+                        let _ = writeln!(c, "{}{} w 1 j", rg_stroke(col), n(lw));
                         for i in 0..=steps {
                             let t = i as f64 / steps as f64;
                             let base = (p3.0 + (p4.0 - p3.0) * t, p3.1 + (p4.1 - p3.1) * t);
                             let up = if i % 2 == 0 { amp * 2.0 } else { 0.0 };
                             let (ux, uy) = if h > 0.0 { ((p1.0 - p3.0) / h, (p1.1 - p3.1) / h) } else { (0.0, 1.0) };
                             let (x, y) = (base.0 + ux * up, base.1 + uy * up);
-                            c.push_str(&format!("{} {} {}\n", n(x), n(y), if i == 0 { "m" } else { "l" }));
+                            let _ = writeln!(c, "{} {} {}", n(x), n(y), if i == 0 { "m" } else { "l" });
                         }
                         c.push_str("S\n");
                     }
@@ -382,7 +383,7 @@ pub fn build(d: &Dict) -> Option<Stream> {
             // While marked: the outline of each area (the fill comes when applied).
             let q = nums(d, b"QuadPoints").filter(|q| !q.is_empty() && q.len() % 8 == 0)?;
             let col = stroke.unwrap_or([0.89, 0.13, 0.13]);
-            c.push_str(&format!("{}1 w\n", rg_stroke(col)));
+            let _ = writeln!(c, "{}1 w", rg_stroke(col));
             for quad in q.as_chunks::<8>().0.iter() {
                 c.push_str(&format!(
                     "{} {} m {} {} l {} {} l {} {} l h S\n",
@@ -408,10 +409,10 @@ pub fn build(d: &Dict) -> Option<Stream> {
                 c.push_str(&rg(f));
             }
             if let Some(s) = stroke {
-                c.push_str(&format!("{}{} w\n{}", rg_stroke(s), n(w), dash(d)));
+                let _ = write!(c, "{}{} w\n{}", rg_stroke(s), n(w), dash(d));
             }
             if subtype == b"Square" {
-                c.push_str(&format!("{} {} {} {} re\n", n(x0), n(y0), n(x1 - x0), n(y1 - y0)));
+                let _ = writeln!(c, "{} {} {} {} re", n(x0), n(y0), n(x1 - x0), n(y1 - y0));
             } else {
                 c.push_str(&ellipse(x0, y0, x1, y1));
             }
@@ -433,8 +434,8 @@ pub fn build(d: &Dict) -> Option<Stream> {
                 return None;
             }
             let fill = interior_color(d, Some(col)).unwrap_or(col);
-            c.push_str(&format!("{}{}{} w 1 J 1 j\n{}", rg_stroke(col), rg(fill), n(w), dash(d)));
-            c.push_str(&format!("{} {} m {} {} l S\n[] 0 d\n", n(l[0]), n(l[1]), n(l[2]), n(l[3])));
+            let _ = write!(c, "{}{}{} w 1 J 1 j\n{}", rg_stroke(col), rg(fill), n(w), dash(d));
+            let _ = write!(c, "{} {} m {} {} l S\n[] 0 d\n", n(l[0]), n(l[1]), n(l[2]), n(l[3]));
             for (end, (tip, from)) in ends.iter().zip([((l[0], l[1]), (l[2], l[3])), ((l[2], l[3]), (l[0], l[1]))]) {
                 if !line_end(&mut c, end, tip, from, w) {
                     return None;
@@ -466,14 +467,14 @@ pub fn build(d: &Dict) -> Option<Stream> {
                 c.push_str(&rg(f));
             }
             if let Some(s) = col {
-                c.push_str(&format!("{}{} w 1 J 1 j\n{}", rg_stroke(s), n(w), dash(d)));
+                let _ = write!(c, "{}{} w 1 J 1 j\n{}", rg_stroke(s), n(w), dash(d));
             }
             if cloudy {
                 let intensity = d.get(b"BE").and_then(|b| b.as_dict()).and_then(|b| b.get(b"I")).and_then(|i| i.as_f64()).unwrap_or(1.0);
                 c.push_str(&cloud_path(&pts, cloud_radius(w) * intensity.clamp(0.5, 2.0)));
             } else {
                 for (i, p) in pts.iter().enumerate() {
-                    c.push_str(&format!("{} {} {}\n", n(p.0), n(p.1), if i == 0 { "m" } else { "l" }));
+                    let _ = writeln!(c, "{} {} {}", n(p.0), n(p.1), if i == 0 { "m" } else { "l" });
                 }
                 if closed {
                     c.push_str("h\n");
@@ -491,7 +492,7 @@ pub fn build(d: &Dict) -> Option<Stream> {
                 let (Some(&tip0), Some(&from0)) = (pts.first(), pts.get(1)) else { return None };
                 let (Some(&tip1), Some(&from1)) = (pts.last(), pts.get(pts.len().saturating_sub(2))) else { return None };
                 let fill = interior_color(d, Some(col)).unwrap_or(col);
-                c.push_str(&format!("[] 0 d\n{}", rg(fill)));
+                let _ = write!(c, "[] 0 d\n{}", rg(fill));
                 if !line_end(&mut c, start, tip0, from0, w) || !line_end(&mut c, end, tip1, from1, w) {
                     return None;
                 }
@@ -524,12 +525,12 @@ pub fn build(d: &Dict) -> Option<Stream> {
         b"Ink" => {
             let col = stroke?;
             let list = d.get(b"InkList")?.as_array()?;
-            c.push_str(&format!("{}{} w 1 J 1 j\n", rg_stroke(col), n(w)));
+            let _ = writeln!(c, "{}{} w 1 J 1 j", rg_stroke(col), n(w));
             for s in list {
                 let pts: Vec<f64> = s.as_array()?.iter().map(|o| o.as_f64()).collect::<Option<_>>()?;
                 let pts: Vec<(f64, f64)> = pts.as_chunks::<2>().0.iter().map(|p| (p[0], p[1])).collect();
                 let Some(first) = pts.first() else { continue };
-                c.push_str(&format!("{} {} m\n", n(first.0), n(first.1)));
+                let _ = writeln!(c, "{} {} m", n(first.0), n(first.1));
                 match pts.as_slice() {
                     [_] => c.push_str(&format!("{} {} l\n", n(first.0 + 0.01), n(first.1))),
                     [_, end] => c.push_str(&format!("{} {} l\n", n(end.0), n(end.1))),
@@ -547,7 +548,7 @@ pub fn build(d: &Dict) -> Option<Stream> {
                 for contour in outline {
                     let v: Vec<f64> = contour.as_array().map(|a| a.iter().filter_map(Object::as_f64).collect()).unwrap_or_default();
                     for (i, p) in v.as_chunks::<2>().0.iter().enumerate() {
-                        c.push_str(&format!("{} {} {}\n", n(x0 + p[0] * w), n(y0 + p[1] * h), if i == 0 { "m" } else { "l" }));
+                        let _ = writeln!(c, "{} {} {}", n(x0 + p[0] * w), n(y0 + p[1] * h), if i == 0 { "m" } else { "l" });
                     }
                     if v.len() >= 6 {
                         c.push_str("h\n");
@@ -570,7 +571,7 @@ pub fn build(d: &Dict) -> Option<Stream> {
                     let size = nums(d, b"PCPictureSize").filter(|s| s.len() == 2 && s[0] > 0.0 && s[1] > 0.0)?;
                     format!("{} 0 0 {} {} {} cm", n(w / size[0]), n(h / size[1]), n(x0), n(y0))
                 };
-                c.push_str(&format!("q {place} /Pic Do Q\n"));
+                let _ = writeln!(c, "q {place} /Pic Do Q");
                 let mut xo = Dict::new();
                 xo.set(b"Pic".to_vec(), Object::Ref(pic));
                 res.set(b"XObject".to_vec(), Object::Dict(xo));
@@ -687,9 +688,9 @@ pub fn build(d: &Dict) -> Option<Stream> {
                 if pts.len() < 2 || pts.iter().any(|p| !p.0.is_finite() || !p.1.is_finite()) {
                     return None;
                 }
-                c.push_str(&format!("{}{}{} w 1 J 1 j\n", rg_stroke(text_color), rg(bg.unwrap_or([1.0; 3])), n(lw)));
+                let _ = writeln!(c, "{}{}{} w 1 J 1 j", rg_stroke(text_color), rg(bg.unwrap_or([1.0; 3])), n(lw));
                 for (i, p) in pts.iter().enumerate() {
-                    c.push_str(&format!("{} {} {}\n", n(p.0), n(p.1), if i == 0 { "m" } else { "l" }));
+                    let _ = writeln!(c, "{} {} {}", n(p.0), n(p.1), if i == 0 { "m" } else { "l" });
                 }
                 c.push_str("S\n");
                 if !line_end(&mut c, &end, pts[0], pts[1], lw) {
@@ -697,7 +698,7 @@ pub fn build(d: &Dict) -> Option<Stream> {
                 }
             }
             if let Some(bg) = bg {
-                c.push_str(&format!("{}{} {} {} {} re f\n", rg(bg), n(rect[0]), n(rect[1]), n(rect[2] - rect[0]), n(rect[3] - rect[1])));
+                let _ = writeln!(c, "{}{} {} {} {} re f", rg(bg), n(rect[0]), n(rect[1]), n(rect[2] - rect[0]), n(rect[3] - rect[1]));
             }
             if bw > 0.0 {
                 let h = bw / 2.0;
@@ -918,7 +919,7 @@ fn ellipse(x0: f64, y0: f64, x1: f64, y1: f64) -> String {
         [cx - rx, cy - oy, cx - ox, cy - ry, cx, cy - ry],
         [cx + ox, cy - ry, cx + rx, cy - oy, cx + rx, cy],
     ] {
-        s.push_str(&format!("{} {} {} {} {} {} c\n", n(a), n(b), n(c), n(d), n(e), n(f)));
+        let _ = writeln!(s, "{} {} {} {} {} {} c", n(a), n(b), n(c), n(d), n(e), n(f));
     }
     s.push_str("h\n");
     s

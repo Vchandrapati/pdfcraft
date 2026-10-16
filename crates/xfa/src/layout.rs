@@ -7,6 +7,7 @@
 
 use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
+use std::fmt::Write as _;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -161,7 +162,7 @@ impl Ctx {
             if !out.som.is_empty() {
                 out.som.push('.');
             }
-            out.som.push_str(&format!("{n}[{index}]"));
+            let _ = write!(out.som, "{n}[{index}]");
         }
         out
     }

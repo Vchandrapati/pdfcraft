@@ -13,6 +13,7 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
 use std::collections::HashMap;
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
 use pdfcraft_cos::{Dict, Document, Object, Stream};
@@ -362,7 +363,7 @@ pub fn text_layer(doc: &mut Document, fonts: &mut Dict, words: &[PlacedWord]) ->
                 out.extend_from_slice(format!(" /{name} 1 Tf").as_bytes());
                 current = Some(font);
             }
-            run.push_str(&format!("{code:02X}"));
+            let _ = write!(run, "{code:02X}");
         }
         if !run.is_empty() {
             out.extend_from_slice(format!(" <{run}> Tj").as_bytes());

@@ -3,6 +3,7 @@
 //! signatures: ink smoothed and stroked with round ends, typed outlines filled even-odd, images
 //! with their alpha as a soft mask.
 
+use std::fmt::Write as _;
 use std::sync::Arc;
 
 use pdfcraft_annot::appearance::smooth_segments;
@@ -117,13 +118,13 @@ impl Graphic {
                 for (s, segments) in strokes.iter().zip(&curves) {
                     let Some(first) = s.first() else { continue };
                     let start = at((first[0], first[1]));
-                    c.push_str(&format!("{start} m\n"));
+                    let _ = writeln!(c, "{start} m");
                     if segments.is_empty() {
                         // A dot: a zero-length line, which round caps draw as a disc.
-                        c.push_str(&format!("{start} l\n"));
+                        let _ = writeln!(c, "{start} l");
                     }
                     for [p, q, e] in segments {
-                        c.push_str(&format!("{} {} {} c\n", at(*p), at(*q), at(*e)));
+                        let _ = writeln!(c, "{} {} {} c", at(*p), at(*q), at(*e));
                     }
                     c.push_str("S\n");
                 }
@@ -137,7 +138,7 @@ impl Graphic {
                 let mut c = String::from("q 0 g\n");
                 for contour in closed {
                     for (i, p) in contour.iter().enumerate() {
-                        c.push_str(&format!("{} {} {}\n", n(x + (p[0] - b[0]) * k), n(y + (p[1] - b[1]) * k), if i == 0 { "m" } else { "l" }));
+                        let _ = writeln!(c, "{} {} {}", n(x + (p[0] - b[0]) * k), n(y + (p[1] - b[1]) * k), if i == 0 { "m" } else { "l" });
                     }
                     c.push_str("h\n");
                 }

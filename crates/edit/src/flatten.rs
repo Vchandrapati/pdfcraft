@@ -9,6 +9,7 @@
 //! form's field tree.
 
 use std::collections::HashSet;
+use std::fmt::Write as _;
 
 use pdfcraft_cos::{Dict, Document, ObjRef, Object};
 
@@ -186,7 +187,7 @@ fn flatten_which(doc: &mut Document, pages: &[usize], which: Which) -> Result<us
                 let form = doc.get(ap).as_dict().cloned().unwrap_or_default();
                 if let Some(m) = placement(doc, &form, rect) {
                     let name = xobject_name(&existing_xo, &xobjects, &mut name_n);
-                    content.push_str(&format!("q {} {} {} {} {} {} cm /{name} Do Q\n", n(m[0]), n(m[1]), n(m[2]), n(m[3]), n(m[4]), n(m[5])));
+                    let _ = writeln!(content, "q {} {} {} {} {} {} cm /{name} Do Q", n(m[0]), n(m[1]), n(m[2]), n(m[3]), n(m[4]), n(m[5]));
                     xobjects.set(name.into_bytes(), Object::Ref(ap));
                     drawn += 1;
                     drew = true;

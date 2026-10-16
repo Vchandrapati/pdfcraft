@@ -8,6 +8,8 @@
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
+use std::fmt::Write as _;
+
 mod pptx;
 mod zip;
 
@@ -394,7 +396,7 @@ table{{border-collapse:collapse;margin:1em 0}}td,th{{border:1px solid #999;paddi
                         }
                         let span = if c.span > 1 { format!(" colspan=\"{}\"", c.span) } else { String::new() };
                         let style = hex(c.color).map_or(String::new(), |h| format!(" style=\"color:#{h}\""));
-                        s.push_str(&format!("<td{span}{style}>{body}</td>"));
+                        let _ = write!(s, "<td{span}{style}>{body}</td>");
                     }
                     s.push_str("</tr>\n");
                 }
@@ -402,7 +404,7 @@ table{{border-collapse:collapse;margin:1em 0}}td,th{{border:1px solid #999;paddi
             }
             Item::Img(im) => {
                 let mime = if im.ext == "jpg" { "image/jpeg" } else { "image/png" };
-                s.push_str(&format!("<p><img alt=\"\" src=\"data:{mime};base64,{}\"></p>\n", base64(&im.bytes)));
+                let _ = writeln!(s, "<p><img alt=\"\" src=\"data:{mime};base64,{}\"></p>", base64(&im.bytes));
             }
             Item::PageBreak => s.push_str("<hr>\n"),
         }
@@ -433,10 +435,10 @@ fn run_xml(text: &str, size: f64, bold: bool, italic: bool, color: [f64; 3]) -> 
         rpr.push_str("<w:i/>");
     }
     if let Some(h) = hex(color) {
-        rpr.push_str(&format!("<w:color w:val=\"{h}\"/>"));
+        let _ = write!(rpr, "<w:color w:val=\"{h}\"/>");
     }
     let half_points = if size.is_finite() { (size * 2.0).round().clamp(2.0, 3276.0) as i64 } else { 24 };
-    rpr.push_str(&format!("<w:sz w:val=\"{half_points}\"/>"));
+    let _ = write!(rpr, "<w:sz w:val=\"{half_points}\"/>");
     format!("<w:r><w:rPr>{rpr}</w:rPr><w:t xml:space=\"preserve\">{}</w:t></w:r>", esc(text))
 }
 
@@ -448,11 +450,11 @@ fn docx_table(t: &Table) -> String {
     let widths: Vec<i64> = edges.windows(2).map(|w| ((w[1] - w[0]).max(20.0) * 20.0).round().clamp(60.0, 31680.0) as i64).collect();
     let mut s = String::from("<w:tbl><w:tblPr><w:tblW w:w=\"0\" w:type=\"auto\"/><w:tblBorders>");
     for edge in ["top", "left", "bottom", "right", "insideH", "insideV"] {
-        s.push_str(&format!("<w:{edge} w:val=\"nil\"/>"));
+        let _ = write!(s, "<w:{edge} w:val=\"nil\"/>");
     }
     s.push_str("</w:tblBorders></w:tblPr><w:tblGrid>");
     for w in &widths {
-        s.push_str(&format!("<w:gridCol w:w=\"{w}\"/>"));
+        let _ = write!(s, "<w:gridCol w:w=\"{w}\"/>");
     }
     s.push_str("</w:tblGrid>");
     for row in &t.rows {
@@ -557,7 +559,10 @@ fn positioned_page<'a>(page: &'a Page, media: &mut Vec<(String, &'a Image)>, sha
         let (w, h) = (layout_number(im.size[0]).max(1.0), layout_number(im.size[1]).max(1.0));
         let (x, y) = (layout_number((im.rect[0] + im.rect[2] - w) / 2.0), layout_number(page.height - (im.rect[1] + im.rect[3] + h) / 2.0));
         let rotation = layout_number(-im.rotation).rem_euclid(360.0);
-        s.push_str(&format!("<w:r><w:pict><v:rect id=\"Image{shape_id}\" style=\"position:absolute;margin-left:{x:.3}pt;margin-top:{y:.3}pt;width:{w:.3}pt;height:{h:.3}pt;rotation:{rotation:.3};z-index:-1;mso-position-horizontal-relative:page;mso-position-vertical-relative:page\" stroked=\"f\"><v:imagedata r:id=\"rIdImg{n}\"/><w10:wrap type=\"none\"/></v:rect></w:pict></w:r>"));
+        let _ = write!(
+            s,
+            "<w:r><w:pict><v:rect id=\"Image{shape_id}\" style=\"position:absolute;margin-left:{x:.3}pt;margin-top:{y:.3}pt;width:{w:.3}pt;height:{h:.3}pt;rotation:{rotation:.3};z-index:-1;mso-position-horizontal-relative:page;mso-position-vertical-relative:page\" stroked=\"f\"><v:imagedata r:id=\"rIdImg{n}\"/><w10:wrap type=\"none\"/></v:rect></w:pict></w:r>"
+        );
         media.push((format!("image{n}.{}", im.ext), im));
     }
     s.push_str("</w:p>");
@@ -603,7 +608,7 @@ pub fn docx(pages: &[Page], title: &str) -> Vec<u8> {
                             2 => "<w:pPr><w:pStyle w:val=\"Heading2\"/></w:pPr>",
                             _ => "",
                         };
-                        body.push_str(&format!("<w:p>{style}{}</w:p>", run(b)));
+                        let _ = write!(body, "<w:p>{style}{}</w:p>", run(b));
                     }
                     Item::Table(t) => {
                         if after_table {
@@ -712,7 +717,7 @@ fn rtf_text(s: &str) -> String {
                 // \uN with a ? fallback; UTF-16 units as signed 16-bit numbers.
                 let mut buf = [0u16; 2];
                 for u in c.encode_utf16(&mut buf) {
-                    o.push_str(&format!("\\u{}?", *u as i16));
+                    let _ = write!(o, "\\u{}?", *u as i16);
                 }
             }
         }
@@ -748,7 +753,7 @@ pub fn rtf(pages: &[Page]) -> String {
     if !colors.is_empty() {
         s.push_str("{\\colortbl;");
         for [r, g, b] in &colors {
-            s.push_str(&format!("\\red{r}\\green{g}\\blue{b};"));
+            let _ = write!(s, "\\red{r}\\green{g}\\blue{b};");
         }
         s.push_str("}\n");
     }
@@ -763,7 +768,7 @@ pub fn rtf(pages: &[Page]) -> String {
                     fmt.push_str("\\i");
                 }
                 fmt.push_str(&cf(b.color));
-                s.push_str(&format!("{{\\pard{fmt} {}\\par}}\n", rtf_text(&b.text)));
+                let _ = writeln!(s, "{{\\pard{fmt} {}\\par}}", rtf_text(&b.text));
             }
             Item::Table(t) => {
                 let mut edges = t.cols.clone();
@@ -777,7 +782,7 @@ pub fn rtf(pages: &[Page]) -> String {
                     for c in row {
                         column += c.span.max(1);
                         if let Some(x) = cellx.get(column.min(cellx.len()).saturating_sub(1)) {
-                            s.push_str(&format!("\\cellx{x}"));
+                            let _ = write!(s, "\\cellx{x}");
                         }
                     }
                     for c in row {
@@ -789,7 +794,7 @@ pub fn rtf(pages: &[Page]) -> String {
                             fmt.push_str("\\i");
                         }
                         fmt.push_str(&cf(c.color));
-                        s.push_str(&format!("{{{fmt} {}}}\\cell", rtf_text(&c.text)));
+                        let _ = write!(s, "{{{fmt} {}}}\\cell", rtf_text(&c.text));
                     }
                     s.push_str("\\row\n");
                 }

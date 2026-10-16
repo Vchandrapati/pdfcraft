@@ -14,6 +14,7 @@
 //! left as it was.
 
 use pdfcraft_cos::{Document, Object, Stream};
+use std::fmt::Write as _;
 
 use crate::OrganizeError;
 use crate::pdfx::esc;
@@ -118,7 +119,7 @@ fn insert_description(xmp: &str, name: &str, ns: &str, element: &str) -> Option<
     let about = attribute_span(xmp, "rdf:about").and_then(|(_, s, e, _)| xmp.get(s..e)).unwrap_or_default().replace('"', "&quot;");
     let mut out = String::with_capacity(xmp.len() + element.len() + 128);
     out.push_str(xmp.get(..at)?);
-    out.push_str(&format!("<rdf:Description rdf:about=\"{about}\" xmlns:{prefix}=\"{ns}\">{element}</rdf:Description>\n"));
+    let _ = writeln!(out, "<rdf:Description rdf:about=\"{about}\" xmlns:{prefix}=\"{ns}\">{element}</rdf:Description>");
     out.push_str(xmp.get(at..)?);
     Some(out)
 }

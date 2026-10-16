@@ -1,6 +1,7 @@
 //! Modal dialogs: Document Properties, Keyboard Shortcuts, About (with the Contributors and Models credits).
 
 use egui::{Align, Layout};
+use std::fmt::Write as _;
 
 use crate::theme::{self, Tokens};
 use pdfcraft_engine::Edit;
@@ -312,7 +313,7 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                             for f in &i.fonts {
                                 let mut detail = f.kind.clone();
                                 if let Some(e) = &f.encoding {
-                                    detail.push_str(&format!(" · {e}"));
+                                    let _ = write!(detail, " · {e}");
                                 }
                                 detail.push_str(if f.subset {
                                     " · Embedded subset"

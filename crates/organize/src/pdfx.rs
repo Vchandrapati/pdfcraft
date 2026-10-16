@@ -9,6 +9,7 @@
 //! meets, such as PDF/UA, whose structure tree is not copied.
 
 use std::collections::HashMap;
+use std::fmt::Write as _;
 
 use pdfcraft_cos::{Dict, Document, ObjRef, Object, PdfString, Stream};
 
@@ -119,14 +120,14 @@ pub(crate) fn carry(dst: &mut Document, src: Option<&Document>, standard: &Print
 fn packet(doc: &Document, standard: &PrintStandard, version: &str) -> String {
     let mut props = String::new();
     if let Some(t) = crate::info(doc, "Title").filter(|t| !t.trim().is_empty()) {
-        props.push_str(&format!("   <dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">{}</rdf:li></rdf:Alt></dc:title>\n", esc(&t)));
+        let _ = writeln!(props, "   <dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">{}</rdf:li></rdf:Alt></dc:title>", esc(&t));
     }
     if let Some(t) = standard.trapped {
-        props.push_str(&format!("   <pdf:Trapped>{t}</pdf:Trapped>\n"));
+        let _ = writeln!(props, "   <pdf:Trapped>{t}</pdf:Trapped>");
     }
-    props.push_str(&format!("   <pdfxid:GTS_PDFXVersion>{}</pdfxid:GTS_PDFXVersion>\n", esc(version)));
+    let _ = writeln!(props, "   <pdfxid:GTS_PDFXVersion>{}</pdfxid:GTS_PDFXVersion>", esc(version));
     if let Some(c) = &standard.conformance {
-        props.push_str(&format!("   <pdfxid:GTS_PDFXConformance>{}</pdfxid:GTS_PDFXConformance>\n", esc(c)));
+        let _ = writeln!(props, "   <pdfxid:GTS_PDFXConformance>{}</pdfxid:GTS_PDFXConformance>", esc(c));
     }
     format!(
         "<?xpacket begin=\"\u{feff}\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n\

@@ -3,6 +3,7 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
 use pdfcraft_cos::{Dict, Document, ObjRef, Object, PdfString, Stream};
+use std::fmt::Write as _;
 
 mod extract;
 pub use extract::{ExtractedImage, ImageExport, extract_images, image_file};
@@ -651,7 +652,7 @@ pub fn from_text_escaped(title: &str, text: &str, page: (f64, f64), font_size: f
             out.push(c);
         } else {
             escaped = escaped.saturating_add(1);
-            out.push_str(&format!("[U+{:04X}]", u32::from(c)));
+            let _ = write!(out, "[U+{:04X}]", u32::from(c));
         }
     }
     if escaped > 0 {

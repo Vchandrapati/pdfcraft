@@ -6,6 +6,7 @@
 //! findings say about the document itself come from elsewhere.
 
 use crate::{Category, Report, Status, Words};
+use std::fmt::Write as _;
 
 fn esc(s: &str) -> String {
     s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;")
@@ -35,15 +36,15 @@ pub const REPORT_WORDS: &[&str] = &[
 pub fn report_html(report: &Report, file_name: &str, date: &str, lang: &str, words: Words) -> String {
     let title = esc(&words("Accessibility Report"));
     let mut h = String::new();
-    h.push_str(&format!("<!doctype html>\n<html lang=\"{}\"><head><meta charset=\"utf-8\"><title>{title}</title>\n<style>\n", esc(lang)));
+    let _ = write!(h, "<!doctype html>\n<html lang=\"{}\"><head><meta charset=\"utf-8\"><title>{title}</title>\n<style>\n", esc(lang));
     h.push_str(
         "body{font:14px/1.45 system-ui,sans-serif;margin:24px;color:#1d1d1f}h1{font-size:22px}h2{font-size:17px;margin-top:28px}\
          table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;vertical-align:top}\
          th{background:#f2f2f2}.Failed{color:#b3261e;font-weight:600}.Passed{color:#1e7b34}ul{margin:4px 0 0;padding-left:18px}\n",
     );
-    h.push_str(&format!("</style></head><body>\n<h1>{title}</h1>\n"));
-    h.push_str(&format!("<p>{}: <b>{}</b><br>{}: {}</p>\n", esc(&words("Filename")), esc(file_name), esc(&words("Report created")), esc(date)));
-    h.push_str(&format!("<h2>{}</h2>\n<p>", esc(&words("Summary"))));
+    let _ = write!(h, "</style></head><body>\n<h1>{title}</h1>\n");
+    let _ = writeln!(h, "<p>{}: <b>{}</b><br>{}: {}</p>", esc(&words("Filename")), esc(file_name), esc(&words("Report created")), esc(date));
+    let _ = write!(h, "<h2>{}</h2>\n<p>", esc(&words("Summary")));
     // Each outcome is a whole sentence, and each is handed over on its own, so the list in
     // `REPORT_WORDS` can be read off this file.
     h.push_str(&if report.count(Status::Failed) > 0 {
@@ -53,12 +54,12 @@ pub fn report_html(report: &Report, file_name: &str, date: &str, lang: &str, wor
     });
     h.push_str("</p>\n<ul>\n");
     for s in [Status::Manual, Status::Skipped, Status::Passed, Status::Failed] {
-        h.push_str(&format!("<li>{}: {}</li>\n", esc(&words(s.label())), report.count(s)));
+        let _ = writeln!(h, "<li>{}: {}</li>", esc(&words(s.label())), report.count(s));
     }
-    h.push_str(&format!("</ul>\n<h2>{}</h2>\n", esc(&words("Detailed Report"))));
+    let _ = write!(h, "</ul>\n<h2>{}</h2>\n", esc(&words("Detailed Report")));
     let (name, status, description) = (esc(&words("Rule Name")), esc(&words("Status")), esc(&words("Description")));
     for c in Category::ALL {
-        h.push_str(&format!("<h3>{}</h3>\n<table><tr><th>{name}</th><th>{status}</th><th>{description}</th></tr>\n", esc(&words(c.label()))));
+        let _ = write!(h, "<h3>{}</h3>\n<table><tr><th>{name}</th><th>{status}</th><th>{description}</th></tr>\n", esc(&words(c.label())));
         for r in report.in_category(c) {
             h.push_str(&format!(
                 "<tr><td>{}</td><td class=\"{:?}\">{}</td><td>{}",
@@ -70,7 +71,7 @@ pub fn report_html(report: &Report, file_name: &str, date: &str, lang: &str, wor
             if !r.findings.is_empty() {
                 h.push_str("<ul>");
                 for f in &r.findings {
-                    h.push_str(&format!("<li>{}</li>", esc(&f.said(words))));
+                    let _ = write!(h, "<li>{}</li>", esc(&f.said(words)));
                 }
                 h.push_str("</ul>");
             }

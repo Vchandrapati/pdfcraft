@@ -23,6 +23,7 @@
 use pdfcraft_cos::{Dict, Document, Object, Stream};
 use pdfcraft_fonts::pdf::Metrics;
 use pdfcraft_fonts::{UnicodeCMap, cjk_width, helvetica_width, literal, win_ansi, wrap_with};
+use std::fmt::Write as _;
 
 use crate::{Field, FieldKind, Widget, acroform, flags};
 
@@ -219,7 +220,7 @@ fn frame(doc: &Document, wd: &Dict, w: f64, h: f64) -> (String, f64) {
     let mk = wd.get(b"MK").map(|m| doc.resolve(m)).and_then(|m| m.as_dict().cloned());
     let mut c = String::new();
     if let Some(bg) = color_array(doc, mk.as_ref(), b"BG") {
-        c.push_str(&format!("{bg}\n0 0 {} {} re f\n", n(w), n(h)));
+        let _ = write!(c, "{bg}\n0 0 {} {} re f\n", n(w), n(h));
     }
     let bs = wd.get(b"BS").map(|b| doc.resolve(b)).and_then(|b| b.as_dict().cloned());
     let bw = bs.as_ref().and_then(|b| b.get(b"W")).and_then(|x| doc.resolve(x).as_f64()).unwrap_or(1.0).max(0.0);
@@ -229,7 +230,7 @@ fn frame(doc: &Document, wd: &Dict, w: f64, h: f64) -> (String, f64) {
         let style = bs.as_ref().and_then(|b| b.name(b"S").map(<[u8]>::to_vec)).unwrap_or_default();
         if style == b"U" {
             // Underline: only the bottom edge.
-            c.push_str(&format!("{}\n{} w\n0 {} m {} {} l S\n", stroke_op(&bc), n(bw), n(bw / 2.0), n(w), n(bw / 2.0)));
+            let _ = write!(c, "{}\n{} w\n0 {} m {} {} l S\n", stroke_op(&bc), n(bw), n(bw / 2.0), n(w), n(bw / 2.0));
             return (c, bw);
         }
         let dashed = style == b"D";
@@ -377,7 +378,7 @@ pub fn field_appearance_drawn(doc: &Document, f: &Field, w: &Widget, values: &[S
                     break;
                 }
                 if values.contains(export) {
-                    c.push_str(&format!("0.6 0.75 0.86 rg\n{} {} {} {} re f\n", n(bw), n(y - line), n(width - 2.0 * bw), n(line)));
+                    let _ = write!(c, "0.6 0.75 0.86 rg\n{} {} {} {} re f\n", n(bw), n(y - line), n(width - 2.0 * bw), n(line));
                 }
                 show(&mut body, pad, y - line + size * 0.25, display);
                 y -= line;
@@ -488,7 +489,7 @@ fn check_mark(style: crate::author::CheckStyle, cx: f64, cy: f64, s: f64) -> Str
     let polygon = |pts: &[(f64, f64)]| {
         let mut c = String::from("0 g\n");
         for (i, (x, y)) in pts.iter().enumerate() {
-            c.push_str(&format!("{} {} {} ", n(*x), n(*y), if i == 0 { "m" } else { "l" }));
+            let _ = write!(c, "{} {} {} ", n(*x), n(*y), if i == 0 { "m" } else { "l" });
         }
         c.push_str("h f\n");
         c
