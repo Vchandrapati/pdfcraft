@@ -318,7 +318,7 @@ pub struct Document {
     /// Page marks present (headers and footers, watermarks, backgrounds), for Update/Remove.
     pub marks: Vec<MarkKind>,
     /// Text and images added with Edit a PDF ▸ Add content (still editable).
-    pub added: Vec<pdfcraft_edit::Added>,
+    pub added: Arc<Vec<pdfcraft_edit::Added>>,
     /// Link annotations, for Edit a PDF ▸ Link.
     pub links: Vec<pdfcraft_annot::links::LinkItem>,
     /// Signature fields, validated against the session's trust store (Signatures panel).
@@ -3177,7 +3177,7 @@ impl Session {
             read_only_reason,
             form: Arc::new(form),
             marks,
-            added,
+            added: Arc::new(added),
             links,
             signatures,
             trust: self.trust.clone(),
@@ -3545,7 +3545,7 @@ impl Session {
         pdfcraft_render::check_pages(bytes.clone(), doc.password.as_deref(), doc.info.pages.len()).map_err(|e| EditError::Reopen(e.to_string()))?;
         let (touches_added, touches_marks) = Self::content_refresh_lists(edit);
         if touches_added {
-            doc.added = pdfcraft_edit::list_added(&editor.cos);
+            doc.added = Arc::new(pdfcraft_edit::list_added(&editor.cos));
         }
         if touches_marks {
             doc.marks = pdfcraft_edit::marks_present(&editor.cos);
@@ -3619,7 +3619,7 @@ impl Session {
         doc.form = Arc::new(form);
         let marker_scan = pdfcraft_edit::scan_markers(&editor.cos);
         doc.marks = marker_scan.marks;
-        doc.added = marker_scan.added;
+        doc.added = Arc::new(marker_scan.added);
         doc.links = pdfcraft_annot::links::list(&editor.cos);
         doc.signatures = signatures_of(&editor.cos, &bytes, &doc.trust, &doc.sig_cache);
         doc.display = display_bytes(Some(editor), &bytes);

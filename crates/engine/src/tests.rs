@@ -1916,12 +1916,12 @@ fn open_populates_marks_and_added_from_the_combined_marker_scan() {
     source.mark_saved(source_id, bytes.clone(), None).unwrap();
     let refreshed = source.get(source_id).unwrap();
     assert_eq!(refreshed.marks, expected_marks);
-    assert_eq!(refreshed.added, expected_added);
+    assert_eq!(*refreshed.added, expected_added);
     let mut reopened = Session::new();
     let reopened_id = reopened.open("marked.pdf", None, bytes, None).unwrap();
     let opened = reopened.get(reopened_id).unwrap();
     assert_eq!(opened.marks, expected_marks);
-    assert_eq!(opened.added, expected_added);
+    assert_eq!(*opened.added, expected_added);
     assert_eq!(opened.marks.len(), 3);
     assert!(opened.marks.contains(&MarkKind::HeaderFooter));
     assert!(opened.marks.contains(&MarkKind::Watermark));
