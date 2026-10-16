@@ -154,6 +154,19 @@ fn field_flags_reject_values_outside_the_unsigned_32_bit_domain() {
 /// annotations: the tree walk alone finds nothing, and Acrobat and the browsers fill them anyway.
 /// The pages' widgets are adopted as fields, after the listed tree fields.
 #[test]
+fn a_push_button_goto_names_its_target_page() {
+    let objs: Vec<String> = vec![
+        "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R] >> >>".into(), // 1
+        "<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 /MediaBox [0 0 600 800] >>".into(), // 2
+        "<< /Type /Page /Parent 2 0 R /Annots [5 0 R] >>".into(),                   // 3
+        "<< /Type /Page /Parent 2 0 R >>".into(),                                   // 4
+        "<< /Type /Annot /Subtype /Widget /FT /Btn /Ff 65536 /T (next) /Rect [50 700 150 720] /P 3 0 R /A << /S /GoTo /D [4 0 R /Fit] >> >>".into(), // 5
+    ];
+    let doc = document(&objs);
+    assert_eq!(field(&fields(&doc), "next").button, Some(af::ButtonAction::GoTo(1)));
+}
+
+#[test]
 fn fields_listed_only_on_the_pages_are_adopted() {
     let objs: Vec<String> = vec![
         "<< /Type /Catalog /Pages 2 0 R /AcroForm 4 0 R >>".into(),                 // 1

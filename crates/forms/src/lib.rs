@@ -13,6 +13,8 @@
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
+use std::collections::HashMap;
+
 use pdfcraft_cos::{Dict, Document, ObjRef, Object, PdfString};
 pub(crate) use pdfcraft_model::page_refs;
 
@@ -254,7 +256,7 @@ fn name_obj(text: &str) -> Object {
 const MAX_LAYER_STATE: usize = 1024;
 
 /// A push button's mouse-up action (`/A`, or `/AA /U`, on the field or its widget).
-fn button_action(doc: &Document, d: &Dict, widgets: &[ObjRef]) -> Option<af::ButtonAction> {
+fn button_action(doc: &Document, d: &Dict, widgets: &[ObjRef], page_index: &HashMap<ObjRef, usize>) -> Option<af::ButtonAction> {
     // A button PdfCraft generated for an XFA image field (`/PCXfaImage true`, no PDF action):
     // clicking it picks a picture, as `buttonImportIcon()` does.
     if matches!(d.get(b"PCXfaImage").map(|o| doc.resolve(o)).as_deref(), Some(Object::Bool(true))) {
@@ -294,7 +296,7 @@ fn button_action(doc: &Document, d: &Dict, widgets: &[ObjRef]) -> Option<af::But
         b"GoTo" => {
             let dest = doc.resolve(a.get(b"D")?);
             let target = dest.as_array()?.first()?.as_ref()?;
-            af::ButtonAction::GoTo(page_refs(doc).iter().position(|p| *p == target)?)
+            af::ButtonAction::GoTo(*page_index.get(&target)?)
         }
         b"Hide" => {
             // /T: a field name, an annotation (or field) reference, or an array of them.
@@ -496,14 +498,15 @@ pub fn fields_with_adopted(doc: &Document) -> Fields {
 
 fn enumerate(doc: &Document) -> (Vec<Field>, usize) {
     let af = acroform(doc);
-    let mut page_of = std::collections::HashMap::new();
-    let mut annot_index = std::collections::HashMap::new();
+    let mut index = PageIndex::default();
+    let mut annot_index = HashMap::new();
     let pages = page_refs(doc);
     for (i, p) in pages.iter().enumerate() {
+        index.of_page.entry(*p).or_insert(i);
         if let Some(a) = doc.get(*p).as_dict().and_then(|d| d.get(b"Annots").cloned()) {
             for (k, e) in doc.resolve(&a).as_array().into_iter().flatten().enumerate() {
                 if let Some(r) = e.as_ref() {
-                    page_of.entry(r).or_insert(i);
+                    index.of_annot.entry(r).or_insert(i);
                     annot_index.entry(r).or_insert(k);
                 }
             }
@@ -522,15 +525,22 @@ fn enumerate(doc: &Document) -> (Vec<Field>, usize) {
     if let Some(af) = &af {
         for f in af.get(b"Fields").map(|o| doc.resolve(o)).and_then(|o| o.as_array().cloned()).unwrap_or_default() {
             if let Some(r) = f.as_ref() {
-                walk(doc, r, &base, &page_of, &mut seen, &mut out, 0);
+                walk(doc, r, &base, &index, &mut seen, &mut out, 0);
             }
         }
     }
     let listed = out.len();
-    adopt_page_fields(doc, &pages, &base, &page_of, &mut seen, &mut out);
+    adopt_page_fields(doc, &pages, &base, &index, &mut seen, &mut out);
     let adopted = out.len() - listed;
     rank_tabs(doc, &pages, &annot_index, &mut out);
     (out, adopted)
+}
+
+/// Where annotations and pages are, by object: an annotation's page, and a page's index.
+#[derive(Default)]
+struct PageIndex {
+    of_annot: HashMap<ObjRef, usize>,
+    of_page: HashMap<ObjRef, usize>,
 }
 
 /// Widget annotations no `/Fields` entry reaches are adopted as fields, as Acrobat and the
@@ -541,7 +551,7 @@ fn adopt_page_fields(
     doc: &Document,
     pages: &[ObjRef],
     base: &Inherited,
-    page_of: &std::collections::HashMap<ObjRef, usize>,
+    index: &PageIndex,
     seen: &mut std::collections::HashSet<ObjRef>,
     out: &mut Vec<Field>,
 ) {
@@ -563,7 +573,7 @@ fn adopt_page_fields(
                 continue;
             }
             if let Some(root) = unlisted_root(doc, r, seen) {
-                walk(doc, root, base, page_of, seen, out, 0);
+                walk(doc, root, base, index, seen, out, 0);
             }
         }
     }
@@ -696,7 +706,7 @@ fn walk(
     doc: &Document,
     r: ObjRef,
     parent: &Inherited,
-    page_of: &std::collections::HashMap<ObjRef, usize>,
+    index: &PageIndex,
     seen: &mut std::collections::HashSet<ObjRef>,
     out: &mut Vec<Field>,
     depth: usize,
@@ -736,14 +746,15 @@ fn walk(
     let field_kids: Vec<ObjRef> = kids.iter().copied().filter(|k| doc.get(*k).as_dict().is_some_and(|kd| kd.contains(b"T"))).collect();
     if !field_kids.is_empty() {
         for k in field_kids {
-            walk(doc, k, &inh, page_of, seen, out, depth + 1);
+            walk(doc, k, &inh, index, seen, out, depth + 1);
         }
         return;
     }
     let widget_refs: Vec<ObjRef> = if d.contains(b"Rect") { vec![r] } else { kids };
     let actions = actions_of(doc, d, &widget_refs);
-    let button =
-        (inh.ft.as_deref() == Some(b"Btn") && inh.ff.unwrap_or(0) & flags::PUSH_BUTTON != 0).then(|| button_action(doc, d, &widget_refs)).flatten();
+    let button = (inh.ft.as_deref() == Some(b"Btn") && inh.ff.unwrap_or(0) & flags::PUSH_BUTTON != 0)
+        .then(|| button_action(doc, d, &widget_refs, &index.of_page))
+        .flatten();
     let ff = inh.ff.unwrap_or(0);
     let kind = match inh.ft.as_deref() {
         Some(b"Tx") => FieldKind::Text,
@@ -770,7 +781,7 @@ fn walk(
                 .and_then(|n| n.iter().map(|(k, _)| name_text(k)).find(|k| k != "Off"));
             Some(Widget {
                 obj: w,
-                page: page_of.get(&w).copied(),
+                page: index.of_annot.get(&w).copied(),
                 rect: [rect[0].min(rect[2]), rect[1].min(rect[3]), rect[0].max(rect[2]), rect[1].max(rect[3])],
                 on_state: on_state.filter(|_| matches!(kind, FieldKind::CheckBox | FieldKind::Radio)),
                 state: wd.name(b"AS").map(name_text),
