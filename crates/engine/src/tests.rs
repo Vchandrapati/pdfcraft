@@ -347,6 +347,21 @@ fn metadata_edit_keeps_the_renderer_without_changing_page_content() {
 }
 
 #[test]
+fn undo_keeps_the_newest_steps_up_to_its_limit() {
+    let (mut s, id) = session_with(1);
+    for i in 0..MAX_UNDO + 2 {
+        s.apply(id, Edit::SetInfo { key: "Title".into(), value: format!("v{i}") }).unwrap();
+    }
+    let mut undone = 0;
+    while s.undo(id).is_ok() {
+        undone += 1;
+    }
+    assert_eq!(undone, MAX_UNDO);
+    // The two oldest steps were dropped: undo stops after the second edit.
+    assert_eq!(s.get(id).unwrap().info_value("Title").as_deref(), Some("v1"));
+}
+
+#[test]
 fn metadata_edits_and_history_reuse_the_render_pool() {
     let (mut s, id) = session_with(1);
     let pixels = shown(&s, id, 0).rgba;

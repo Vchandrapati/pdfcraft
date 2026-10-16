@@ -241,7 +241,8 @@ type Snapshot = (Label, pdfcraft_cos::Document, Keys, Scope);
 #[derive(Clone)]
 struct Editor {
     cos: pdfcraft_cos::Document,
-    undo: Vec<Snapshot>,
+    /// Oldest first; the oldest step goes when there are more than [`MAX_UNDO`].
+    undo: std::collections::VecDeque<Snapshot>,
     redo: Vec<Snapshot>,
     keys: Keys,
     /// Display appearances built for annotations without any, reused while no annotation edit
@@ -577,7 +578,7 @@ impl Document {
 
     /// What Undo would undo, in parts, for an interface that says it in another language.
     pub fn undo_label(&self) -> Option<&Label> {
-        self.editor.as_ref().and_then(|e| e.undo.last()).map(|(l, ..)| l)
+        self.editor.as_ref().and_then(|e| e.undo.back()).map(|(l, ..)| l)
     }
 
     /// What Redo would redo, in parts.
@@ -3116,7 +3117,7 @@ impl Session {
                 (
                     Some(Editor {
                         cos,
-                        undo: Vec::new(),
+                        undo: std::collections::VecDeque::new(),
                         redo: Vec::new(),
                         keys,
                         appearances: AppearanceCache::default(),
@@ -3343,9 +3344,9 @@ impl Session {
         let keys = keys_after(&edit).unwrap_or_else(|| editor.keys.clone());
         let previous_keys = std::mem::replace(&mut editor.keys, keys);
         let scope = scope_of(&edit);
-        editor.undo.push((label, previous, previous_keys, scope));
+        editor.undo.push_back((label, previous, previous_keys, scope));
         if editor.undo.len() > MAX_UNDO {
-            editor.undo.remove(0);
+            editor.undo.pop_front();
         }
         editor.redo.clear();
         Self::adopt_keys(doc);
@@ -3354,7 +3355,7 @@ impl Session {
         if let Err(e) = refreshed {
             // Roll back: the edit produced something we cannot display.
             if let Some(ed) = doc.editor.as_mut()
-                && let Some((_, prev, keys, _)) = ed.undo.pop()
+                && let Some((_, prev, keys, _)) = ed.undo.pop_back()
             {
                 ed.cos = prev;
                 ed.keys = keys;
@@ -3386,7 +3387,7 @@ impl Session {
         let doc = self.doc_mut(id)?;
         doc.edit_notices.clear();
         let editor = doc.editor.as_mut().ok_or(EditError::NothingToUndo)?;
-        let (label, prev, keys, scope) = editor.undo.pop().ok_or(EditError::NothingToUndo)?;
+        let (label, prev, keys, scope) = editor.undo.pop_back().ok_or(EditError::NothingToUndo)?;
         let current = std::mem::replace(&mut editor.cos, prev);
         let current_keys = std::mem::replace(&mut editor.keys, keys);
         editor.redo.push((label.clone(), current, current_keys, scope));
@@ -3404,7 +3405,7 @@ impl Session {
         let (label, next, keys, scope) = editor.redo.pop().ok_or(EditError::NothingToRedo)?;
         let current = std::mem::replace(&mut editor.cos, next);
         let current_keys = std::mem::replace(&mut editor.keys, keys);
-        editor.undo.push((label.clone(), current, current_keys, scope));
+        editor.undo.push_back((label.clone(), current, current_keys, scope));
         Self::adopt_keys(doc);
         Self::refresh_scoped(doc, scope).inspect_err(|_| Self::show_released(doc))?;
         doc.dirty = true;
