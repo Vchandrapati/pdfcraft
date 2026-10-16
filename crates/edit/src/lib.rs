@@ -172,8 +172,8 @@ pub struct Context {
     pub date: (i64, u32, u32),
 }
 
-fn n(v: f64) -> String {
-    pdfcraft_content::number(v, 3)
+fn n(v: f64) -> pdfcraft_content::Num {
+    pdfcraft_content::Num(v, 3)
 }
 
 fn rgb(c: Rgb) -> String {

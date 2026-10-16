@@ -27,13 +27,13 @@ use pdfcraft_fonts::{UnicodeCMap, cjk_width, helvetica_width, literal, win_ansi,
 use crate::{Field, FieldKind, Widget, acroform, flags};
 
 /// Format a number for content streams.
-fn n(v: f64) -> String {
-    pdfcraft_content::number(v, 3)
+fn n(v: f64) -> pdfcraft_content::Num {
+    pdfcraft_content::Num(v, 3)
 }
 
 /// Format a number for content streams (up to three decimals).
 pub fn fmt(v: f64) -> String {
-    n(v)
+    n(v).to_string()
 }
 
 /// `/MK /R` as a quadrant, or 0 when it is missing or not a multiple of 90.

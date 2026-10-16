@@ -506,8 +506,8 @@ pub fn layout(sizes: &[(f64, f64)], settings: &Settings) -> Result<Vec<Sheet>, P
     Ok(sheets)
 }
 
-fn n(v: f64) -> String {
-    pdfcraft_content::number(v, 4)
+fn n(v: f64) -> pdfcraft_content::Num {
+    pdfcraft_content::Num(v, 4)
 }
 
 fn decoded_contents(doc: &Document, page: &Dict) -> Vec<u8> {

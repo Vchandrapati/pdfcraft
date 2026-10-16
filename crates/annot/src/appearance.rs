@@ -191,7 +191,7 @@ fn dash(d: &Dict) -> String {
         return String::new();
     }
     let arr = nums(bs, b"D").filter(|a| !a.is_empty() && a.iter().all(|x| *x >= 0.0)).unwrap_or_else(|| vec![3.0]);
-    format!("[{}] 0 d\n", arr.iter().map(|x| n(*x)).collect::<Vec<_>>().join(" "))
+    format!("[{}] 0 d\n", arr.iter().map(|x| n(*x).to_string()).collect::<Vec<_>>().join(" "))
 }
 
 fn rg(c: Rgb) -> String {

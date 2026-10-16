@@ -93,8 +93,8 @@ fn jpeg_info(data: &[u8]) -> Option<(u32, u32, u8, bool)> {
 }
 
 /// Format a number for content streams.
-fn n(v: f64) -> String {
-    pdfcraft_content::number(v, 3)
+fn n(v: f64) -> pdfcraft_content::Num {
+    pdfcraft_content::Num(v, 3)
 }
 
 fn rgb(c: [f64; 3]) -> String {

@@ -205,8 +205,8 @@ fn esc(s: &str) -> String {
     o
 }
 
-fn n(v: f64) -> String {
-    pdfcraft_content::number(v, 4)
+fn n(v: f64) -> pdfcraft_content::Num {
+    pdfcraft_content::Num(v, 4)
 }
 
 fn hex(c: &[f64]) -> Option<String> {
@@ -320,7 +320,7 @@ fn xfdf_annots(doc: &Document, out: &mut String) {
             }
             let quads = nums_of(doc, d.get(b"QuadPoints"));
             if !quads.is_empty() {
-                let _ = write!(attrs, " coords=\"{}\"", quads.iter().map(|v| n(*v)).collect::<Vec<_>>().join(","));
+                let _ = write!(attrs, " coords=\"{}\"", quads.iter().map(|v| n(*v).to_string()).collect::<Vec<_>>().join(","));
             }
             let l = nums_of(doc, d.get(b"L"));
             if l.len() == 4 {
@@ -335,10 +335,10 @@ fn xfdf_annots(doc: &Document, out: &mut String) {
             // A callout: its leader path, text-box inset, intent and (single-name) line ending.
             let cl = nums_of(doc, d.get(b"CL"));
             if cl.len() == 4 || cl.len() == 6 {
-                let _ = write!(attrs, " callout=\"{}\"", cl.iter().map(|v| n(*v)).collect::<Vec<_>>().join(","));
+                let _ = write!(attrs, " callout=\"{}\"", cl.iter().map(|v| n(*v).to_string()).collect::<Vec<_>>().join(","));
                 let rd = nums_of(doc, d.get(b"RD"));
                 if rd.len() == 4 {
-                    let _ = write!(attrs, " fringe=\"{}\"", rd.iter().map(|v| n(*v)).collect::<Vec<_>>().join(","));
+                    let _ = write!(attrs, " fringe=\"{}\"", rd.iter().map(|v| n(*v).to_string()).collect::<Vec<_>>().join(","));
                 }
                 if let Some(it) = d.get(b"IT").map(|o| doc.resolve(o)).and_then(|o| o.as_name().map(|x| String::from_utf8_lossy(x).into_owned())) {
                     let _ = write!(attrs, " intent=\"{}\"", esc(&it));

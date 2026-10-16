@@ -483,9 +483,9 @@ fn wrapping_and_widths() {
     // A word longer than the line is broken.
     let long = appearance::wrap("Supercalifragilisticexpialidocious", 12.0, 40.0);
     assert!(long.len() > 3 && long.concat() == "Supercalifragilisticexpialidocious");
-    assert_eq!(n(1.0), "1");
-    assert_eq!(n(-0.0001), "0");
-    assert_eq!(n(2.50), "2.5");
+    assert_eq!(n(1.0).to_string(), "1");
+    assert_eq!(n(-0.0001).to_string(), "0");
+    assert_eq!(n(2.50).to_string(), "2.5");
 }
 
 #[test]

@@ -278,8 +278,8 @@ fn ink_extent(text: &str) -> (f64, f64) {
 /// One-byte codes 1–255 per font; a page with more distinct characters gets more fonts.
 const CODES_PER_FONT: usize = 255;
 
-fn num(v: f64) -> String {
-    pdfcraft_content::number(v, 4)
+fn num(v: f64) -> pdfcraft_content::Num {
+    pdfcraft_content::Num(v, 4)
 }
 
 /// A character's advance in the invisible font, in thousandths of an em: full width for CJK,
@@ -346,7 +346,7 @@ pub fn text_layer(doc: &mut Document, fonts: &mut Dict, words: &[PlacedWord]) ->
         let ax = [w.across[0] / width, w.across[1] / width];
         let o = [w.origin[0] - em[0] * bottom, w.origin[1] - em[1] * bottom];
         let m = [ax[0], ax[1], em[0], em[1], o[0], o[1]];
-        let nums: Vec<String> = m.iter().map(|v| num(*v)).collect();
+        let nums: Vec<String> = m.iter().map(|v| num(*v).to_string()).collect();
         out.extend_from_slice(nums.join(" ").as_bytes());
         out.extend_from_slice(b" Tm");
         // One Tj per run of characters in the same font.

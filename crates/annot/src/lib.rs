@@ -1436,8 +1436,8 @@ pub fn with_missing_appearances_cached(doc: &Document, cache: &mut AppearanceCac
 }
 
 /// Format a number for content streams and DA strings.
-pub(crate) fn n(v: f64) -> String {
-    pdfcraft_content::number(v, 3)
+pub(crate) fn n(v: f64) -> pdfcraft_content::Num {
+    pdfcraft_content::Num(v, 3)
 }
 
 // ── edits ───────────────────────────────────────────────────────────────────────────────────
