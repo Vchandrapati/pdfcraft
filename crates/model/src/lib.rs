@@ -25,6 +25,21 @@ fn rect(doc: &Document, o: Option<&Object>) -> Option<[f64; 4]> {
 }
 
 impl Page {
+    /// This page as `doc` holds it now, after edits that added or replaced keys of the page's own
+    /// dictionary. Inherited attributes come from `self`: the nodes above the page must not have
+    /// changed. Cheaper than walking the whole tree again for one page.
+    pub fn refreshed(&self, doc: &Document) -> Page {
+        let mut dict = doc.get(self.obj).as_dict().cloned().unwrap_or_default();
+        for k in INHERITABLE {
+            if !dict.contains(k)
+                && let Some(v) = self.dict.get(k)
+            {
+                dict.set(k.to_vec(), v.clone());
+            }
+        }
+        Page { obj: self.obj, dict }
+    }
+
     /// The visible region (crop box clipped to the media box), in user space.
     pub fn crop(&self, doc: &Document) -> [f64; 4] {
         let media = rect(doc, self.dict.get(b"MediaBox")).unwrap_or([0.0, 0.0, 612.0, 792.0]);
@@ -199,6 +214,16 @@ mod tests {
         doc.update_dict(top, |d| d.set(b"Kids".to_vec(), Object::Array(vec![Object::Ref(empty), Object::Ref(page)]))).unwrap();
         assert_eq!(page_refs(&doc), vec![page]);
         assert_eq!(pages(&doc).iter().map(|p| p.obj).collect::<Vec<_>>(), vec![page]);
+    }
+
+    #[test]
+    fn a_refreshed_page_matches_a_new_walk_after_editing_the_page() {
+        let mut doc = doc(90);
+        let before = pages(&doc).swap_remove(0);
+        doc.update_dict(before.obj, |d| d.set(b"Contents".to_vec(), Object::Array(Vec::new()))).unwrap();
+        let after = before.refreshed(&doc);
+        assert_eq!(after, pages(&doc).swap_remove(0));
+        assert!(after.dict.contains(b"Contents") && after.dict.int(b"Rotate") == Some(90), "own edit and inherited /Rotate");
     }
 
     fn apply(m: [f64; 6], x: f64, y: f64) -> [f64; 2] {

@@ -989,9 +989,9 @@ fn write(doc: &mut Document, page: usize, c: &Content, obj: Option<ObjRef>) -> R
         }
         None => {
             // place_tagged appends a new stream; recover its reference.
-            let p = pdfcraft_model::pages(doc).swap_remove(page);
+            let p = p.refreshed(doc);
             place_tagged(doc, &p, TAG, content.clone(), false)?;
-            let p = pdfcraft_model::pages(doc).swap_remove(page);
+            let p = p.refreshed(doc);
             let r = contents(doc, &p)?.last().and_then(Object::as_ref).ok_or_else(|| EditError::Invalid("could not add the content".into()))?;
             doc.set(r, Object::Stream(stream));
             Ok(r)

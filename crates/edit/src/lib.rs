@@ -351,7 +351,7 @@ pub fn stamp(doc: &mut Document, page: usize, tag: &str, content: Vec<u8>) -> Re
     let all = pdfcraft_model::pages(doc);
     check(&[page], all.len())?;
     add_resources(doc, &all[page], None, Some(&content))?;
-    let p = pdfcraft_model::pages(doc).swap_remove(page);
+    let p = all[page].refreshed(doc);
     place_tagged(doc, &p, tag, content, false)
 }
 
@@ -367,7 +367,7 @@ pub fn stamp_with(doc: &mut Document, page: usize, tag: &str, build: impl FnOnce
     res.set(b"Font".to_vec(), Object::Dict(fonts));
     // The page gets its own (possibly copied) resources; shared dictionaries stay untouched.
     doc.update_dict(p.obj, |d| d.set(b"Resources".to_vec(), Object::Dict(res)))?;
-    let p = pdfcraft_model::pages(doc).swap_remove(page);
+    let p = p.refreshed(doc);
     place_tagged(doc, &p, tag, content, false)
 }
 
@@ -487,8 +487,7 @@ pub fn add_header_footer(doc: &mut Document, pages: &[usize], hf: &HeaderFooter,
         content.extend(body);
         content.extend_from_slice(END.as_bytes());
         add_resources(doc, page, None, None)?;
-        let page = &pdfcraft_model::pages(doc)[i];
-        place(doc, page, MarkKind::HeaderFooter, content, false)?;
+        place(doc, &page.refreshed(doc), MarkKind::HeaderFooter, content, false)?;
     }
     Ok(())
 }
@@ -518,7 +517,7 @@ pub fn add_watermark(doc: &mut Document, pages: &[usize], wm: &Watermark, replac
     let opacity = wm.opacity.clamp(0.0, 1.0);
     let lines: Vec<&str> = text.lines().collect();
     for &i in pages {
-        let page = pdfcraft_model::pages(doc)[i].clone();
+        let page = all[i].refreshed(doc);
         let (w, h) = page.display_size(doc);
         if let Some(src) = &wm.source {
             let mut content = begin(MarkKind::Watermark, "Watermark", page.view_matrix(doc));
@@ -526,9 +525,8 @@ pub fn add_watermark(doc: &mut Document, pages: &[usize], wm: &Watermark, replac
             content.push_str(&picture(src, (w, h), wm.scale, wm.rotation, wm.offset));
             content.push_str(END);
             add_resources(doc, &page, Some(opacity), None)?;
-            add_picture_resource(doc, &pdfcraft_model::pages(doc)[i].clone(), src)?;
-            let page = &pdfcraft_model::pages(doc)[i];
-            place(doc, page, MarkKind::Watermark, content.into_bytes(), wm.behind)?;
+            add_picture_resource(doc, &page.refreshed(doc), src)?;
+            place(doc, &page.refreshed(doc), MarkKind::Watermark, content.into_bytes(), wm.behind)?;
             continue;
         }
         let widest = lines.iter().map(|l| helvetica_width(l, 1.0)).fold(0.0, f64::max).max(0.01);
@@ -560,8 +558,7 @@ pub fn add_watermark(doc: &mut Document, pages: &[usize], wm: &Watermark, replac
         content.extend_from_slice(b"ET\n");
         content.extend_from_slice(END.as_bytes());
         add_resources(doc, &page, Some(opacity), None)?;
-        let page = &pdfcraft_model::pages(doc)[i];
-        place(doc, page, MarkKind::Watermark, content, wm.behind)?;
+        place(doc, &page.refreshed(doc), MarkKind::Watermark, content, wm.behind)?;
     }
     Ok(())
 }
@@ -575,7 +572,7 @@ pub fn add_background(doc: &mut Document, pages: &[usize], bg: &Background, repl
     }
     let opacity = if bg.opacity.is_finite() { bg.opacity.clamp(0.0, 1.0) } else { 1.0 };
     for &i in pages {
-        let page = pdfcraft_model::pages(doc)[i].clone();
+        let page = all[i].refreshed(doc);
         let (w, h) = page.display_size(doc);
         let mut content = begin(MarkKind::Background, "Background", page.view_matrix(doc));
         match &bg.source {
@@ -588,10 +585,9 @@ pub fn add_background(doc: &mut Document, pages: &[usize], bg: &Background, repl
         content.push_str(END);
         add_resources(doc, &page, Some(opacity), None)?;
         if let Some(src) = &bg.source {
-            add_picture_resource(doc, &pdfcraft_model::pages(doc)[i].clone(), src)?;
+            add_picture_resource(doc, &page.refreshed(doc), src)?;
         }
-        let page = &pdfcraft_model::pages(doc)[i];
-        place(doc, page, MarkKind::Background, content.into_bytes(), true)?;
+        place(doc, &page.refreshed(doc), MarkKind::Background, content.into_bytes(), true)?;
     }
     Ok(())
 }

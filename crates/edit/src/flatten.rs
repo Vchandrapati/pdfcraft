@@ -243,10 +243,9 @@ fn flatten_which(doc: &mut Document, pages: &[usize], which: Which) -> Result<us
             }
             res.set(b"XObject".to_vec(), Object::Dict(xo));
             doc.update_dict(page.obj, |d| d.set(b"Resources".to_vec(), Object::Dict(res)))?;
-            let page = pdfcraft_model::pages(doc)[i].clone();
-            place_tagged(doc, &page, "Flattened", content.into_bytes(), false)?;
+            place_tagged(doc, &page.refreshed(doc), "Flattened", content.into_bytes(), false)?;
         }
-        let page_now = pdfcraft_model::pages(doc)[i].clone();
+        let page_now = page.refreshed(doc);
         match page_now.dict.get(b"Annots").and_then(|a| a.as_ref()).filter(|r| doc.get(*r).as_array().is_some()) {
             Some(r) => doc.set(r, Object::Array(kept)),
             None => doc.update_dict(page.obj, |d| {
