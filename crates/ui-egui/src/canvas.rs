@@ -1971,6 +1971,13 @@ impl PageXform {
         (u * self.pw, v * self.ph)
     }
 
+    /// Screen point → user space of `page` (PDF points).
+    pub fn to_user(&self, info: &DocInfo, page: usize, p: Pos2) -> [f64; 2] {
+        let (vx, vy) = self.screen_to_view(p);
+        let u = info.pages.get(page).map_or([vx, vy], |pg| pg.view_to_user(vx, vy));
+        [f64::from(u[0]), f64::from(u[1])]
+    }
+
     /// A view-space rect [x0, y0, x1, y1] → screen rect.
     pub fn view_rect(&self, g: [f32; 4]) -> Rect {
         Rect::from_two_pos(self.norm_to_screen(g[0] / self.pw, g[1] / self.ph), self.norm_to_screen(g[2] / self.pw, g[3] / self.ph))

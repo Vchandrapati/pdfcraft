@@ -393,12 +393,6 @@ pub struct TypeBox {
 /// The size Fill & Sign uses for typed text (Acrobat's default is 10 pt).
 pub const TEXT_SIZE: f64 = 10.0;
 
-fn to_user(xf: &PageXform, info: &DocInfo, page: usize, p: Pos2) -> [f64; 2] {
-    let (vx, vy) = xf.screen_to_view(p);
-    let u = info.pages[page].view_to_user(vx, vy);
-    [u[0] as f64, u[1] as f64]
-}
-
 fn new(page: usize, shape: Shape, contents: String, author: &str) -> Edit {
     let style = Style::default_for(&shape);
     Edit::AddAnnotation(NewAnnotation { page, shape, style, contents, author: author.to_string() })
@@ -607,7 +601,7 @@ pub(crate) fn page_input(
         return None;
     }
     let p = info.pages.get(page)?;
-    let at = to_user(xf, info, page, pointer);
+    let at = xf.to_user(info, page, pointer);
     let saved = match tool {
         FillTool::Signature => signature,
         FillTool::Initials => initials,

@@ -478,9 +478,7 @@ pub(crate) struct PageCx<'a> {
 
 impl PageCx<'_> {
     fn to_user(&self, p: Pos2) -> [f64; 2] {
-        let (vx, vy) = self.xf.screen_to_view(p);
-        let u = self.info.pages[self.page].view_to_user(vx, vy);
-        [u[0] as f64, u[1] as f64]
+        self.xf.to_user(self.info, self.page, p)
     }
 
     fn to_screen(&self, p: [f64; 2]) -> Pos2 {
