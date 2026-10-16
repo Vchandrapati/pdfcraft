@@ -1180,7 +1180,7 @@ impl Document {
                 }
             }
         }
-        Ok((s.dict.clone(), true))
+        Ok((s.dict, true))
     }
 
     /// Rebuild the cross-reference index by scanning for `N G obj` headers (§7.5.4 recovery).

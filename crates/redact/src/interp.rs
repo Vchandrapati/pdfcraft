@@ -281,7 +281,7 @@ pub(crate) fn unlink_doomed(doc: &mut Document, doomed: &[ObjRef]) -> Result<(),
     for (node, users) in holders {
         let Some(res) = doc.get(node).as_dict().and_then(|d| d.get(b"Resources")).and_then(|r| doc.resolve(r).as_dict().cloned()) else { continue };
         let mut xo = res_dict(doc, &res, b"XObject");
-        let names: Vec<Vec<u8>> = xo.iter().filter(|(_, v)| v.as_ref().is_some_and(|r| doomed.contains(&r))).map(|(n, _)| n.to_vec()).collect();
+        let names: Vec<Vec<u8>> = xo.iter().filter(|(_, v)| v.as_ref().is_some_and(|r| doomed.contains(&r))).map(|(n, _)| n.clone()).collect();
         if names.is_empty() {
             continue;
         }
@@ -789,7 +789,7 @@ fn xobject(
                 Err(_) => return None,
             };
             let own = s.dict.get(b"Resources").and_then(|r| doc.resolve(r).as_dict().cloned());
-            let res = own.clone().unwrap_or_else(|| resources.clone());
+            let res = own.unwrap_or_else(|| resources.clone());
             let saved_fonts = std::mem::take(&mut scope.fonts);
             scope.depth += 1;
             let inner = process(doc, scope, std::slice::from_ref(&data), &res, fctm);

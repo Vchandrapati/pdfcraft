@@ -123,7 +123,7 @@ pub fn enhance(doc: &mut Document, now: Stamp) -> Result<Summary> {
     let field_count = form_page.fields.len();
     let acroform = doc.add_object(form::acroform(&fonts, &form_page.fields));
 
-    let mut all_pages = pages.clone();
+    let mut all_pages = pages;
     all_pages.push(form_page.page);
 
     // 4. Outline.

@@ -435,7 +435,7 @@ fn format_section(app: &mut PdfCraftApp, ui: &mut egui::Ui, t: &Tokens) {
     match selected {
         Some((page, index, text)) => {
             if let Some(style) = crate::content_ui::format_panel(ui, t, &text) {
-                app.text_style = pdfcraft_engine::AddedText { text: String::new(), rect: [0.0; 4], ..style.clone() };
+                app.text_style = pdfcraft_engine::AddedText { text: String::new(), rect: [0.0; 4], ..style };
                 app.apply_edit(pdfcraft_engine::Edit::UpdateContent { page, index, content: pdfcraft_engine::AddedContent::Text(style) });
             }
         }

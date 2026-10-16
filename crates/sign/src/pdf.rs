@@ -1158,7 +1158,7 @@ fn validate_x509_rsa_sha1(
             info.certificate = Some(cert);
             info.status = Status::Unknown;
             // What is not supported yet is named by the reader, in its own words.
-            info.details.push(Detail::of("PdfCraft can't check this signature yet: {}.", Fill::Reason(e.to_string())));
+            info.details.push(Detail::of("PdfCraft can't check this signature yet: {}.", Fill::Reason(e)));
             return;
         }
         Err(e) => {
@@ -1455,7 +1455,7 @@ fn acroform_kind(doc: &Document, old: &Document, now: &Dict, before: Option<&Dic
     let before = before.unwrap_or(&fallback);
     let strip = |d: &Dict| -> Vec<(Vec<u8>, Object)> {
         let mut v: Vec<(Vec<u8>, Object)> =
-            d.iter().filter(|(k, _)| !matches!(k.as_slice(), b"Fields" | b"SigFlags")).map(|(k, o)| (k.to_vec(), o.clone())).collect();
+            d.iter().filter(|(k, _)| !matches!(k.as_slice(), b"Fields" | b"SigFlags")).map(|(k, o)| (k.clone(), o.clone())).collect();
         v.sort_by(|a, b| a.0.cmp(&b.0));
         v
     };
@@ -1469,7 +1469,7 @@ fn acroform_kind(doc: &Document, old: &Document, now: &Dict, before: Option<&Dic
 
 /// Dictionary entries in a stable order, without `keys`.
 fn without(x: &Dict, keys: &[&[u8]]) -> Vec<(Vec<u8>, Object)> {
-    let mut v: Vec<(Vec<u8>, Object)> = x.iter().filter(|(k, _)| !keys.contains(&k.as_slice())).map(|(k, o)| (k.to_vec(), o.clone())).collect();
+    let mut v: Vec<(Vec<u8>, Object)> = x.iter().filter(|(k, _)| !keys.contains(&k.as_slice())).map(|(k, o)| (k.clone(), o.clone())).collect();
     v.sort_by(|a, b| a.0.cmp(&b.0));
     v
 }

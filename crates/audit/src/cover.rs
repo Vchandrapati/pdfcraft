@@ -265,7 +265,7 @@ impl<'a> Walker<'a> {
         let matrix = dict
             .get(b"Matrix")
             .map(|o| self.doc.resolve(o))
-            .and_then(|o| o.as_array().map(|a| a.to_vec()))
+            .and_then(|o| o.as_array().cloned())
             .and_then(|a| {
                 let v: Vec<f64> = a.iter().filter_map(|o| self.doc.resolve(o).as_f64()).collect();
                 (v.len() == 6 && v.iter().all(|x| x.is_finite())).then(|| Matrix([v[0], v[1], v[2], v[3], v[4], v[5]]))

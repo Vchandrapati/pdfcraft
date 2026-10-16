@@ -484,7 +484,7 @@ impl PdfCraftApp {
                 if let Some(i) = self.active
                     && let Err(e) = self.fit_visible(i)
                 {
-                    self.notify_fmt("Couldn't fit the visible content: {e}", &[("e", &e.to_string())]);
+                    self.notify_fmt("Couldn't fit the visible content: {e}", &[("e", &e)]);
                 }
             }
             "view.marquee_zoom" => self.quick_tool = crate::QuickTool::MarqueeZoom,

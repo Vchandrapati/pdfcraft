@@ -1170,7 +1170,7 @@ fn install(ctx: &mut Context, event: &XfaEvent, doc: &XfaDoc, current: usize) ->
         .property(js_string!("layout"), layout, rw)
         .property(js_string!("event"), ev.clone(), rw)
         .property(js_string!("datasets"), datasets, rw)
-        .property(js_string!("record"), form.clone(), rw)
+        .property(js_string!("record"), form, rw)
         .property(js_string!("template"), template, rw)
         .property(js_string!("resolveNode"), resolve_one, rw)
         .property(js_string!("resolveNodes"), resolve_many, rw)

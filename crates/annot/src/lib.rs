@@ -1867,7 +1867,7 @@ pub fn set_style(
     let subtype = String::from_utf8_lossy(d.name(b"Subtype").unwrap_or_default()).into_owned();
     // Check before changing anything: a stale appearance would contradict the new style.
     if appearance::build(&d).is_none() {
-        return Err(AnnotError::Unsupported(subtype.clone()));
+        return Err(AnnotError::Unsupported(subtype));
     }
     if color.is_some_and(|c| !finite(&c)) || opacity.is_some_and(|o| !o.is_finite()) || width.is_some_and(|w| !w.is_finite()) {
         return Err(AnnotError::Invalid("invalid style".into()));

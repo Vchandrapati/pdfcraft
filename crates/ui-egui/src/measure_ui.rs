@@ -424,7 +424,7 @@ fn panel_body(app: &mut PdfCraftApp, ui: &mut egui::Ui, _t: &Tokens) {
                     scale,
                 });
             }
-            Err(e) => state.error = Some(e.to_string()),
+            Err(e) => state.error = Some(e),
         }
     }
     if let Some((page, annotation, reading, scale)) = select {

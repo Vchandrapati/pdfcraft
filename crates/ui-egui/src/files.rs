@@ -397,7 +397,7 @@ impl PdfCraftApp {
         let name = f.path().file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| "dropped.pdf".into());
         match f.bytes() {
             Ok(bytes) => self.use_files(FilePurpose::Combine, vec![(name, bytes)]),
-            Err(e) => self.notify_fmt("Couldn't read {name}: {e}", &[("name", &name), ("e", &e.to_string())]),
+            Err(e) => self.notify_fmt("Couldn't read {name}: {e}", &[("name", &name), ("e", &e)]),
         }
     }
 

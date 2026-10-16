@@ -94,7 +94,7 @@ fn collect(doc: &Document, res: &Dict, depth: usize, forms: &mut HashSet<ObjRef>
 
 fn filters(s: &Stream) -> Vec<Vec<u8>> {
     match s.dict.get(b"Filter") {
-        Some(Object::Name(n)) => vec![n.to_vec()],
+        Some(Object::Name(n)) => vec![n.clone()],
         Some(Object::Array(a)) => a.iter().filter_map(|f| f.as_name().map(<[u8]>::to_vec)).collect(),
         _ => Vec::new(),
     }

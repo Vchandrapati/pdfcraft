@@ -666,7 +666,7 @@ impl crate::PdfCraftApp {
             Some(Ok((ext, bytes))) => {
                 self.write_files(&[(format!("Image page {} #{}.{ext}", page + 1, index + 1), std::sync::Arc::new(bytes))], "Save image");
             }
-            Some(Err(e)) => self.notify_fmt("Couldn't save the image: {e}", &[("e", &e.to_string())]),
+            Some(Err(e)) => self.notify_fmt("Couldn't save the image: {e}", &[("e", &e)]),
             None => {}
         }
     }
@@ -743,7 +743,7 @@ pub(crate) fn image_panel(ui: &mut egui::Ui, t: &Tokens, img: &pdfcraft_engine::
         }
         if crate::icons::button(ui, "flip-vertical-2", 28.0, false, tl!("Flip vertical")).clicked() {
             i.flip_v = !i.flip_v;
-            out = Some(ImageAction::Update(AddedContent::Image(i.clone())));
+            out = Some(ImageAction::Update(AddedContent::Image(i)));
         }
         if crate::icons::button(ui, "replace", 28.0, false, tl!("Replace image")).clicked() {
             out = Some(ImageAction::Replace);

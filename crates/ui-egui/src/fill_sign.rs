@@ -1168,15 +1168,13 @@ impl crate::PdfCraftApp {
             let mut bytes = Vec::new();
             std::fs::File::open(&path).and_then(|f| f.take(limit as u64 + 1).read_to_end(&mut bytes)).map(|_| bytes).map_err(|e| e.to_string())
         } else {
-            file.bytes().map_err(|e| e.to_string())
+            file.bytes()
         };
         if scan {
-            let photo =
-                bytes.and_then(|b| pdfcraft_engine::guard(|| SignaturePhoto::from_bytes(&b)).map_err(|e| e.to_string())?.map_err(|e| e.to_string()));
+            let photo = bytes.and_then(|b| pdfcraft_engine::guard(|| SignaturePhoto::from_bytes(&b))?.map_err(|e| e.to_string()));
             self.use_signature_photo(photo);
         } else {
-            let image =
-                bytes.and_then(|b| pdfcraft_engine::guard(|| SignatureImage::from_bytes(&b)).map_err(|e| e.to_string())?.map_err(|e| e.to_string()));
+            let image = bytes.and_then(|b| pdfcraft_engine::guard(|| SignatureImage::from_bytes(&b))?.map_err(|e| e.to_string()));
             self.use_signature_image(image);
         }
         Vec::new()

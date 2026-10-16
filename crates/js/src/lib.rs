@@ -245,7 +245,7 @@ fn strings(v: &JsValue, ctx: &mut Context) -> JsResult<Vec<String>> {
     if let Some(o) = v.as_object()
         && o.is_array()
     {
-        let a = JsArray::from_object(o.clone())?;
+        let a = JsArray::from_object(o)?;
         let n = a.length(ctx)?;
         if n > MAX_ARRAY_LENGTH {
             return Err(error(format!("array length exceeds {MAX_ARRAY_LENGTH}")));
@@ -444,7 +444,7 @@ fn field_object(ctx: &mut Context, name: &str) -> JsObject {
     let get_item_at = NativeFunction::from_copy_closure_with_captures(get_item_at, n.clone());
     let is_box_checked = NativeFunction::from_copy_closure_with_captures(is_box_checked, n.clone());
     let check_this_box = NativeFunction::from_copy_closure_with_captures(check_this_box, n.clone());
-    let set_focus = NativeFunction::from_copy_closure_with_captures(set_focus, n.clone());
+    let set_focus = NativeFunction::from_copy_closure_with_captures(set_focus, n);
     ObjectInitializer::new(ctx)
         .accessor(js_string!("value"), Some(value_get), Some(value_set), rw)
         .accessor(js_string!("valueAsString"), Some(as_string), None, rw)

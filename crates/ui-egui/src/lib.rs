@@ -1093,10 +1093,10 @@ impl PdfCraftApp {
         match f.bytes() {
             Ok(bytes) => {
                 if let Err(e) = self.open_bytes(&name, None, bytes) {
-                    self.notify_fmt("Couldn't open {name}: {e}", &[("name", &name), ("e", &e.to_string())]);
+                    self.notify_fmt("Couldn't open {name}: {e}", &[("name", &name), ("e", &e)]);
                 }
             }
-            Err(e) => self.notify_fmt("Couldn't read {name}: {e}", &[("name", &name), ("e", &e.to_string())]),
+            Err(e) => self.notify_fmt("Couldn't read {name}: {e}", &[("name", &name), ("e", &e)]),
         }
     }
 
@@ -1187,10 +1187,10 @@ impl PdfCraftApp {
         let Some(att) = d.info.attachments.get(index).cloned() else { return };
         let data = pdfcraft_render::attachment_data(&d.bytes, d.password.as_deref(), &att);
         match (data, open) {
-            (Err(e), _) => self.notify_fmt("Couldn't read {name}: {e}", &[("name", &att.name), ("e", &e.to_string())]),
+            (Err(e), _) => self.notify_fmt("Couldn't read {name}: {e}", &[("name", &att.name), ("e", &e)]),
             (Ok(bytes), true) => {
                 if let Err(e) = self.open_bytes(&att.name, None, bytes) {
-                    self.notify_fmt("Couldn't open {name}: {e}", &[("name", &att.name), ("e", &e.to_string())]);
+                    self.notify_fmt("Couldn't open {name}: {e}", &[("name", &att.name), ("e", &e)]);
                 }
             }
             (Ok(bytes), false) => {
@@ -1227,7 +1227,7 @@ impl PdfCraftApp {
             return;
         };
         match self.try_open(&p.name, p.path, p.bytes, Some(&pw), p.activate) {
-            Err(e) => self.notify_fmt("Couldn't open {name}: {e}", &[("name", &p.name), ("e", &e.to_string())]),
+            Err(e) => self.notify_fmt("Couldn't open {name}: {e}", &[("name", &p.name), ("e", &e)]),
             // A recovered encrypted document is open once its prompt is gone.
             Ok(()) if self.password_prompt.is_none() => {
                 if let Some(meta) = &p.recovered {
@@ -1295,7 +1295,7 @@ impl PdfCraftApp {
         match std::fs::read(path) {
             Ok(bytes) => {
                 if let Err(e) = self.open_bytes(&name, Some(path.to_string()), bytes) {
-                    self.notify_fmt("Couldn't open {name}: {e}", &[("name", &name), ("e", &e.to_string())]);
+                    self.notify_fmt("Couldn't open {name}: {e}", &[("name", &name), ("e", &e)]);
                 } else if self.views.len() > tabs
                     && let Some(doc) = self.views.last().map(|v| v.id)
                 {
@@ -2362,7 +2362,7 @@ impl eframe::App for PdfCraftApp {
         let arrived: Vec<(String, Vec<u8>)> = self.inbox.lock().map(|mut q| std::mem::take(&mut *q)).unwrap_or_default();
         for (name, bytes) in arrived {
             if let Err(e) = self.open_bytes(&name, None, bytes) {
-                self.notify_fmt("Couldn't open {name}: {e}", &[("name", &name), ("e", &e.to_string())]);
+                self.notify_fmt("Couldn't open {name}: {e}", &[("name", &name), ("e", &e)]);
             }
         }
         // Don't replace a pending prompt or import. A startup file may need its own password

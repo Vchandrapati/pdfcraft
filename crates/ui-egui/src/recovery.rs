@@ -282,7 +282,7 @@ impl PdfCraftApp {
                         prompt.recovered = Some(meta.clone());
                     }
                 }
-                Err(e) => self.notify_fmt("Couldn't recover {name}: {e}", &[("name", &meta.name), ("e", &e.to_string())]),
+                Err(e) => self.notify_fmt("Couldn't recover {name}: {e}", &[("name", &meta.name), ("e", &e)]),
             }
         }
         self.recoverable.retain(|m| !keys.contains(&m.key));

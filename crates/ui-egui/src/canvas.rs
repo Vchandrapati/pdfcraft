@@ -3169,7 +3169,7 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
                     ui.close();
                 }
                 if ui.add_enabled(can_modify, egui::Button::new(tl!("Duplicate…"))).clicked() {
-                    field_menu = Some(FieldMenu::Duplicate(name.clone()));
+                    field_menu = Some(FieldMenu::Duplicate(name));
                     ui.close();
                 }
                 ui.separator();

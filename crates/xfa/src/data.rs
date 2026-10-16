@@ -547,7 +547,7 @@ fn append_edit(src: &str, node: roxmltree::Node, inner: &str) -> Option<Edit> {
         let name = qname(src, &range)?;
         return Some(Edit { start: tag_end.checked_sub(1)?, end: range.end, text: format!(">{inner}</{name}>") });
     }
-    let close = range.start + src.get(range.clone())?.rfind("</")?;
+    let close = range.start + src.get(range)?.rfind("</")?;
     Some(Edit { start: close, end: close, text: inner.to_string() })
 }
 
@@ -559,7 +559,7 @@ fn replace_edit(src: &str, node: roxmltree::Node, text: &str) -> Option<Edit> {
         let name = qname(src, &range)?;
         return Some(Edit { start: tag_end.checked_sub(1)?, end: range.end, text: format!(">{text}</{name}>") });
     }
-    let close = range.start + src.get(range.clone())?.rfind("</")?;
+    let close = range.start + src.get(range)?.rfind("</")?;
     (close > tag_end).then(|| Edit { start: tag_end + 1, end: close, text: text.to_string() })
 }
 

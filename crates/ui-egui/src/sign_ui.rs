@@ -511,7 +511,7 @@ impl PdfCraftApp {
                 self.views.push(DocView::new(new, &doc.info, self.view_defaults));
                 self.active = Some(self.views.len() - 1);
             }
-            Err(e) => self.notify_fmt("Couldn't open revision {n}: {e}", &[("n", &n.to_string()), ("e", &e.to_string())]),
+            Err(e) => self.notify_fmt("Couldn't open revision {n}: {e}", &[("n", &n.to_string()), ("e", &e)]),
         }
     }
 
@@ -1273,7 +1273,7 @@ pub(crate) fn cert_viewer(ui: &mut egui::Ui, v: &mut CertViewer, trusted: &[Cert
             }
             ui.add_space(8.0);
             if widgets::pill_button(ui, tl!("Export…"), false).clicked() {
-                action = Some(CertAction::Export(Box::new(c.clone())));
+                action = Some(CertAction::Export(Box::new(c)));
             }
         });
     });

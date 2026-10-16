@@ -1709,7 +1709,7 @@ pub(crate) fn rewrite_block_with_limit(
     if let Some(sc) = style.scale {
         ts_state.scale = (sc / 100.0).clamp(0.1, 10.0);
     }
-    let o_state = ts_state.clone();
+    let o_state = ts_state;
     let metrics = fonts_res.get(font_name.as_bytes()).and_then(|f| doc.resolve(f).as_dict().cloned()).map(|d| Metrics::from_dict(doc, &d));
     let reuse = style.family.is_none() && style.bold.is_none() && metrics.as_ref().is_some_and(|m| source_encodes(m, &text));
     let space = metrics.as_ref().map_or(0.33, |m| source_space(doc, &fonts_res, m));
@@ -1782,7 +1782,7 @@ pub(crate) fn rewrite_block_with_limit(
     let new_font = !reuse;
     let (show_font, encode): (String, Encoder) = if let Some(m) = metrics.clone().filter(|_| reuse) {
         let name = font_name.clone();
-        (font_name.clone(), Box::new(move |s: &str| m.encode(s).map(|bytes| vec![(name.clone(), bytes)])))
+        (font_name, Box::new(move |s: &str| m.encode(s).map(|bytes| vec![(name.clone(), bytes)])))
     } else if let Some(fallback) = type3.clone() {
         substituted = Some(format!("{} Type3", fallback.family));
         let first = fallback.names.first().cloned().ok_or_else(no_japanese_font)?;

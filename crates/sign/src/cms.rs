@@ -333,7 +333,7 @@ fn build(
     let refs: Vec<&[u8]> = attrs.iter().map(Vec::as_slice).collect();
     let set = der::set_of(&refs);
     let signature = key.sign(alg, &set)?;
-    let mut signed_attrs = set.clone();
+    let mut signed_attrs = set;
     signed_attrs[0] = tag::ctx(0);
     let sid = der::seq(&[&cert.issuer.raw, &der::uint(&cert.serial)]);
     let signer = der::seq(&[&der::int(1), &sid, &alg.algorithm(), &signed_attrs, &key.signature_algorithm(alg), &der::octets(&signature)]);
