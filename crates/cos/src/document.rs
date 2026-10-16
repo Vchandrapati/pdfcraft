@@ -651,6 +651,13 @@ impl Document {
         self.resolve(o).as_dict().cloned()
     }
 
+    /// Resolve `o` to an array of numbers, following references to the array and its entries.
+    /// `None` unless every entry is a number: a malformed entry must not shift the others.
+    pub fn numbers(&self, o: Option<&Object>) -> Option<Vec<f64>> {
+        let a = self.resolve(o?);
+        a.as_array()?.iter().map(|x| x.as_f64().or_else(|| x.as_ref().and_then(|r| self.get(r).as_f64()))).collect()
+    }
+
     pub fn try_get(&self, num: u32) -> Result<Arc<Object>, CosError> {
         match self.overlay.get(&num) {
             Some(Slot::Set(_, o)) => return Ok(o.clone()),
@@ -1320,6 +1327,17 @@ mod tests {
 
     /// Entries the reader sets aside are remembered, so a caller comparing revisions can tell
     /// that another reader may resolve the object differently.
+    #[test]
+    fn numbers_follow_references_and_refuse_a_malformed_entry() {
+        let mut doc = Document::new_empty();
+        let three = doc.add(Object::Int(3));
+        let arr = doc.add(Object::Array(vec![Object::Real(1.5), Object::Ref(three)]));
+        assert_eq!(doc.numbers(Some(&Object::Ref(arr))), Some(vec![1.5, 3.0]));
+        assert_eq!(doc.numbers(Some(&Object::Array(vec![Object::Int(1), Object::name("X"), Object::Int(2)]))), None);
+        assert_eq!(doc.numbers(Some(&Object::Int(1))), None);
+        assert_eq!(doc.numbers(None), None);
+    }
+
     #[test]
     fn cross_reference_entries_that_are_set_aside_are_recorded() {
         let base = build(&["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [] /Count 0 >>", "(three)"], "/Root 1 0 R");

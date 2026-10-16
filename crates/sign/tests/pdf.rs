@@ -488,8 +488,13 @@ fn cached_discovery_still_validates_current_timestamp_bytes_ranges_and_trust() {
     edited.update_dict(stamp, |d| d.set(b"ByteRange".to_vec(), Object::Array(vec![Object::Int(-1)]))).unwrap();
     assert_eq!(check(&edited, &bytes, &trusted).status, Status::Invalid);
     assert_eq!(check(&doc, &bytes, &trusted).status, Status::Valid);
-    // Even a malformed token in the same byte ranges must be read again after discovery.
+    // A malformed entry makes the byte range invalid; it is not dropped to leave four numbers.
     let br = doc.get(stamp).as_dict().unwrap().get(b"ByteRange").unwrap().as_array().unwrap().clone();
+    let mut junk = br.clone();
+    junk.insert(2, Object::name("X"));
+    edited.update_dict(stamp, |d| d.set(b"ByteRange".to_vec(), Object::Array(junk))).unwrap();
+    assert_eq!(check(&edited, &bytes, &trusted).status, Status::Invalid);
+    // Even a malformed token in the same byte ranges must be read again after discovery.
     let gap_start = br[1].as_int().unwrap() as usize;
     tampered = bytes.clone();
     tampered[gap_start + 1] = b'F';

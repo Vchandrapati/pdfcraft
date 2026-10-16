@@ -444,11 +444,6 @@ fn values_of(doc: &Document, o: Option<&Object>, kind: FieldKind) -> Vec<String>
     }
 }
 
-fn nums(doc: &Document, o: Option<&Object>) -> Option<Vec<f64>> {
-    let o = doc.resolve(o?);
-    o.as_array()?.iter().map(|x| doc.resolve(x).as_f64()).collect()
-}
-
 /// The AcroForm dictionary.
 pub fn acroform(doc: &Document) -> Option<Dict> {
     let root = doc.root()?;
@@ -771,7 +766,7 @@ fn walk(
         .filter_map(|w| {
             let wo = doc.get(w);
             let wd = wo.as_dict()?;
-            let rect = nums(doc, wd.get(b"Rect")).filter(|r| r.len() == 4).unwrap_or_else(|| vec![0.0; 4]);
+            let rect = doc.numbers(wd.get(b"Rect")).filter(|r| r.len() == 4).unwrap_or_else(|| vec![0.0; 4]);
             let annot_flags = wd.get(b"F").and_then(|f| doc.resolve(f).as_int()).unwrap_or(0);
             let on_state = wd
                 .get(b"AP")

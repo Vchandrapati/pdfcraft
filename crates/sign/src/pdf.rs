@@ -554,10 +554,6 @@ fn annot_pages(doc: &Document) -> HashMap<ObjRef, usize> {
     map
 }
 
-fn nums(doc: &Document, d: &Dict, key: &[u8]) -> Option<Vec<f64>> {
-    doc.resolve(d.get(key)?).as_array().map(|a| a.iter().filter_map(|x| doc.resolve(x).as_f64()).collect())
-}
-
 /// List and validate every signature field. `bytes` is the file as stored (the ranges index it).
 pub fn list(doc: &Document, bytes: &[u8], trust: &TrustStore) -> Vec<SignatureInfo> {
     list_cached(doc, bytes, trust, &DigestCache::default())
@@ -576,7 +572,7 @@ pub fn list_cached(doc: &Document, bytes: &[u8], trust: &TrustStore, cache: &Dig
         let widget = f.widgets.first();
         let page = widget.and_then(|(r, w)| r.and_then(|r| pages.get(&r).copied()).or_else(|| w.reference(b"P").and_then(|p| page_index(doc, p))));
         let rect = widget
-            .and_then(|(_, w)| nums(doc, w, b"Rect"))
+            .and_then(|(_, w)| doc.numbers(w.get(b"Rect")))
             .filter(|r| r.len() == 4)
             .map(|r| [r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])]);
         let visible = rect.is_some_and(|r| r[2] - r[0] > 0.5 && r[3] - r[1] > 0.5);
@@ -711,7 +707,7 @@ fn validate_into(doc: &Document, bytes: &[u8], trust: &TrustStore, v: &Dict, inf
         info.details.push(why);
     };
     // Byte ranges: [0 a b c] with the gap holding exactly the hex /Contents.
-    let Some(br) = nums(doc, v, b"ByteRange").filter(|b| b.len() == 4 && b.iter().all(|x| *x >= 0.0)) else {
+    let Some(br) = doc.numbers(v.get(b"ByteRange")).filter(|b| b.len() == 4 && b.iter().all(|x| *x >= 0.0)) else {
         return invalid(info, Detail::plain("The signature has no valid byte range."));
     };
     let [o0, l0, o1, l1] = [br[0] as usize, br[1] as usize, br[2] as usize, br[3] as usize];
@@ -999,7 +995,7 @@ fn validate_doc_timestamp(doc: &Document, bytes: &[u8], v: &Dict, info: &mut Sig
         info.status = Status::Invalid;
         info.details.push(why);
     };
-    let Some(br) = nums(doc, v, b"ByteRange").filter(|b| b.len() == 4 && b.iter().all(|x| *x >= 0.0)) else {
+    let Some(br) = doc.numbers(v.get(b"ByteRange")).filter(|b| b.len() == 4 && b.iter().all(|x| *x >= 0.0)) else {
         return invalid(info, Detail::plain("The timestamp has no valid byte range."));
     };
     let [o0, l0, o1, l1] = [br[0] as usize, br[1] as usize, br[2] as usize, br[3] as usize];
@@ -1752,7 +1748,8 @@ fn sign_inner(
             let fr = f.r.ok_or_else(|| SignError::Pdf("the field is not an indirect object".into()))?;
             doc.update_dict(fr, |d| d.set(b"V".to_vec(), Object::Ref(sig)))?;
             let (wr, wd) = f.widgets.first().cloned().ok_or_else(|| SignError::Pdf("the field has no widget".into()))?;
-            let rect = nums(&doc, &wd, b"Rect").filter(|r| r.len() == 4).map(|r| [r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])]);
+            let rect =
+                doc.numbers(wd.get(b"Rect")).filter(|r| r.len() == 4).map(|r| [r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])]);
             (wr.unwrap_or(fr), rect.unwrap_or([0.0; 4]))
         }
         None => {

@@ -17,11 +17,6 @@ use crate::{EditError, check, n, place_tagged};
 const HIDDEN: i64 = 2;
 const NO_VIEW: i64 = 32;
 
-fn nums(doc: &Document, o: Option<&Object>) -> Option<Vec<f64>> {
-    let o = doc.resolve(o?);
-    o.as_array()?.iter().map(|x| doc.resolve(x).as_f64()).collect()
-}
-
 /// The appearance stream to draw for an annotation, if it has one.
 fn appearance(doc: &Document, d: &Dict) -> Option<ObjRef> {
     let ap = doc.resolve(d.get(b"AP")?);
@@ -38,8 +33,8 @@ fn appearance(doc: &Document, d: &Dict) -> Option<ObjRef> {
 
 /// Algorithm 8.1: the matrix that maps the form's bounding box onto the annotation rectangle.
 fn placement(doc: &Document, form: &Dict, rect: [f64; 4]) -> Option<[f64; 6]> {
-    let bbox = nums(doc, form.get(b"BBox")).filter(|b| b.len() == 4)?;
-    let m = nums(doc, form.get(b"Matrix")).filter(|m| m.len() == 6).unwrap_or_else(|| vec![1.0, 0.0, 0.0, 1.0, 0.0, 0.0]);
+    let bbox = doc.numbers(form.get(b"BBox")).filter(|b| b.len() == 4)?;
+    let m = doc.numbers(form.get(b"Matrix")).filter(|m| m.len() == 6).unwrap_or_else(|| vec![1.0, 0.0, 0.0, 1.0, 0.0, 0.0]);
     let pts = [(bbox[0], bbox[1]), (bbox[2], bbox[1]), (bbox[0], bbox[3]), (bbox[2], bbox[3])]
         .map(|(x, y)| (m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]));
     let (x0, x1) = pts.iter().fold((f64::MAX, f64::MIN), |(a, b), p| (a.min(p.0), b.max(p.0)));
@@ -185,7 +180,7 @@ fn flatten_which(doc: &mut Document, pages: &[usize], which: Which) -> Result<us
             if flags & (HIDDEN | NO_VIEW) != 0 {
                 continue;
             }
-            let rect = nums(doc, d.get(b"Rect")).filter(|r| r.len() == 4).map(|r| [r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])]);
+            let rect = doc.numbers(d.get(b"Rect")).filter(|r| r.len() == 4).map(|r| [r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])]);
             let mut drew = false;
             if let (Some(ap), Some(rect)) = (appearance(doc, d), rect) {
                 let form = doc.get(ap).as_dict().cloned().unwrap_or_default();

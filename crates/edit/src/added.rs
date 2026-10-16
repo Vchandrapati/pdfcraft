@@ -207,10 +207,6 @@ pub struct MarkerScan {
     pub added: Vec<Added>,
 }
 
-fn nums(doc: &Document, o: Option<&Object>) -> Vec<f64> {
-    o.map(|o| doc.resolve(o)).and_then(|a| a.as_array().map(|a| a.iter().filter_map(Object::as_f64).collect())).unwrap_or_default()
-}
-
 fn norm(r: [f64; 4]) -> [f64; 4] {
     [r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])]
 }
@@ -800,12 +796,12 @@ fn params(c: &Content) -> Dict {
 }
 
 fn parse(doc: &Document, d: &Dict) -> Option<Content> {
-    let r = nums(doc, d.get(b"Rect"));
+    let r = doc.numbers(d.get(b"Rect")).unwrap_or_default();
     let rect: [f64; 4] = r.try_into().ok()?;
     match d.name(b"Kind")? {
         b"Text" => {
             let (family, bold, italic) = Family::from_base(d.name(b"Font").unwrap_or(b"Helvetica"));
-            let c = nums(doc, d.get(b"Color"));
+            let c = doc.numbers(d.get(b"Color")).unwrap_or_default();
             Some(Content::Text(AddedText {
                 rect,
                 text: d.get(b"Text").and_then(|t| doc.resolve(t).as_string().map(|s| s.to_text())).unwrap_or_default(),
@@ -823,7 +819,7 @@ fn parse(doc: &Document, d: &Dict) -> Option<Content> {
             }))
         }
         b"Image" => {
-            let crop = nums(doc, d.get(b"Crop"));
+            let crop = doc.numbers(d.get(b"Crop")).unwrap_or_default();
             Some(Content::Image(AddedImage {
                 rect,
                 image: d.get(b"Image")?.as_ref()?,
