@@ -76,8 +76,7 @@ family (`sign`, `sign_with_timestamp`, `timestamp_document`, `embed_ltv`).
   (ADR-0004). The engine only sees `inspect() -> DocInfo`, `RenderPool` and `text::PageText`, and
   that API stays frozen while M2 replaces what is behind it.
 - Performance budgets (`misc.performance-budgets`) are not set or enforced.
-- Some shipped features are still reachable only from the UI, not through an `automation` tool;
-  `cargo xtask parity` lists them; closing that gap is tracked in the execution plan (D4).
+- Some shipped features are still reachable only from the UI, not through an `automation` tool.
 
 `doc.text_edit_preview(page, block)` prepares a read-only page background with the selected
 paragraph’s glyphs removed, preserving text positioning, images and colours. It shares the

@@ -65,7 +65,7 @@ The PDF object graph *is* the model (`crates/engine/README.md` §The editing mod
 - Text extraction (reading order, columns, vertical CJK, rotated text) feeds find, select, copy,
   redaction, export and compare; word-F1 0.98 against `pdftotext` on the corpus.
 - The replacement (M2, ADR-0004) is the `model` crate, our own font engine and DisplayList devices;
-  only the first pieces of `model` exist. See [gaps.md](gaps.md) gap 2.
+  only the first pieces of `model` exist.
 
 ## File I/O
 
@@ -76,7 +76,7 @@ The PDF object graph *is* the model (`crates/engine/README.md` §The editing mod
   combining.
 - Other formats: images and text in (`create`); PNG/JPEG/TIFF, text, RTF, Word and HTML out
   (`export`, `render`); FDF/XFDF/XML/CSV/TXT form and comment data (`xfdf`); PKCS #12, X.509,
-  PEM/DER certificates (`sign`). Full matrix: [file-format-parity.md](file-format-parity.md).
+  PEM/DER certificates (`sign`).
 
 ## Agent control
 
@@ -99,10 +99,10 @@ Every user-facing feature is reachable headlessly (`AGENTS.md` §3):
 ## Build and quality gates
 
 `cargo xtask ci` runs fmt, clippy (`-D warnings`), tests, the layering check, the WASM check,
-`xtask assets` (asset licences and hashes) and `xtask deny` (dependency licences). `xtask parity`
-(upstream's Acrobat checklist) is no longer part of it in this fork. Other tasks: `xtask fuzz`, `xtask corpus` and `xtask check` (robustness
-sweep over the pinned pdf.js corpus), `xtask text-oracle` (word F1 against `pdftotext`),
-`xtask demo-pdf`, `xtask screenshots`, `xtask models` (OCR models), `xtask version`.
+`xtask assets` (asset licences and hashes) and `xtask deny` (dependency licences). Other tasks:
+`xtask fuzz`, `xtask corpus` and `xtask check` (robustness sweep over the pinned pdf.js corpus),
+`xtask text-oracle` (word F1 against `pdftotext`), `xtask demo-pdf`, `xtask screenshots`,
+`xtask models` (OCR models), `xtask version`.
 
 ## Revision history
 

@@ -4,7 +4,7 @@ PdfCraft is a clean-room, open-source, Rust-native PDF application. It runs nati
 
 ## Start every session here
 1. Read `docs/architecture.md` (crates, layers, the editing model) and the README of the crate you're touching.
-2. The user decides what to work on. Upstream's planning files (`plan/`, the milestone/progress logs in `ROADMAP.md` and `docs/roadmap.md`, `docs/gaps.md`, `docs/target-app-parity.md` and `parity/`) are historical reference only: you don't need to read or update them.
+2. The user decides what to work on.
 
 ## Non-negotiables
 - **Assets: read `AGENTS.md` §1 before adding or showing any icon, image, font or document.** No assets from Adobe products, ever. Only openly licensed or contributor-original assets are allowed, each with an entry in `ATTRIBUTION.toml`. `cargo xtask assets` enforces this. `AGENTS.md` overrides this file.
