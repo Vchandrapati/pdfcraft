@@ -23,8 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # No macOS on PRs, main or nightly: the org's 5 macOS slots are kept for release builds,
-        # and release.yml builds macOS (a failing release is fixed and rebuilt).
+        # No macOS runner: macOS is built and tested locally.
         os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
