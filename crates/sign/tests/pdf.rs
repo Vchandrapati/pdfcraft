@@ -503,48 +503,14 @@ fn cached_discovery_still_validates_current_timestamp_bytes_ranges_and_trust() {
 }
 
 #[test]
-fn embedding_ltv_evidence_adds_a_dss_and_keeps_signatures_valid() {
-    use pdfcraft_sign::dss::{self, Evidence};
-    let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
-    let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
-    let evidence =
-        Evidence { certs: vec![id.certificate.raw.clone()], ocsps: vec![b"synthetic ocsp".to_vec()], crls: vec![b"synthetic crl".to_vec()] };
-    let ltv = dss::embed(&open(&signed), &evidence).unwrap();
-    assert!(ltv.starts_with(&signed), "incremental");
-    let doc = open(&ltv);
-    // The store is in the catalog with one certificate and the /VRI entry for the signature.
-    let root = doc.root().unwrap();
-    let dss_dict: pdfcraft_cos::Dict =
-        doc.get(root).as_dict().unwrap().get(b"DSS").map(|d| doc.resolve(d)).and_then(|d| d.as_dict().cloned()).unwrap();
-    assert_eq!(dss_dict.name(b"Type"), Some(b"DSS".as_slice()));
-    assert!(dss_dict.contains(b"Certs") && dss_dict.contains(b"OCSPs") && dss_dict.contains(b"CRLs") && dss_dict.contains(b"VRI"));
-    // The earlier signature still validates; the DSS counts as a permitted change.
-    let s = signatures(&doc, &ltv, &TrustStore::default()).into_iter().find(|s| s.signed && !s.doc_timestamp).unwrap();
-    assert_eq!(s.status, Status::Unknown);
-    let allowed = match &s.modification {
-        Modification::Allowed(k) => k,
-        other => panic!("{other:?}"),
-    };
-    assert!(allowed.contains(&kind::SECURITY_STORE), "{allowed:?}");
-    // Embedding twice keeps one certificate (byte-identical dedup) and stays valid.
-    let twice = dss::embed(&doc, &evidence).unwrap();
-    let doc2 = open(&twice);
-    let dss2: pdfcraft_cos::Dict =
-        doc2.get(doc2.root().unwrap()).as_dict().unwrap().get(b"DSS").map(|d| doc2.resolve(d)).and_then(|d| d.as_dict().cloned()).unwrap();
-    let certs = dss2.get(b"Certs").map(|c| doc2.resolve(c)).and_then(|c| c.as_array().cloned()).unwrap();
-    assert_eq!(certs.len(), 1, "byte-identical evidence is not duplicated");
-}
-
-#[test]
 fn sign_then_ltv_then_timestamp_makes_a_b_lta_file() {
-    use pdfcraft_sign::dss::{self, Evidence};
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
     let tsa = TestTsa {
         id: pkcs12::open(&data("rsa-aes.p12"), "test").unwrap(),
         time: Time { year: 2026, month: 10, day: 6, hour: 12, minute: 0, second: 0 },
     };
     let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
-    let ltv = dss::embed(&open(&signed), &Evidence { certs: vec![id.certificate.raw.clone()], ocsps: Vec::new(), crls: Vec::new() }).unwrap();
+    let ltv = add_dss(&signed, std::slice::from_ref(&id.certificate.raw), &[]);
     let lta = pdfcraft_sign::timestamp_document(&open(&ltv), &tsa, "D:20261006120000Z").unwrap();
     let all = signatures(&open(&lta), &lta, &TrustStore { certs: vec![tsa.id.certificate.clone()] });
     assert_eq!(all.iter().filter(|s| s.signed).count(), 2);
@@ -562,7 +528,6 @@ fn sign_then_ltv_then_timestamp_makes_a_b_lta_file() {
 
 #[test]
 fn an_embedded_verified_revocation_invalidates_the_signature() {
-    use pdfcraft_sign::dss::{self, Evidence};
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
     let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &opts()).unwrap();
     // The signer's own CRL (self-signed test identity) revokes its certificate, in a window
@@ -583,7 +548,7 @@ fn an_embedded_verified_revocation_invalidates_the_signature() {
     ]);
     let sig = id.key.sign(pdfcraft_sign::DigestAlg::Sha256, &tbs).unwrap();
     let crl = der::seq(&[&tbs, &alg, &der::bit_string(&sig)]);
-    let ltv = dss::embed(&open(&signed), &Evidence { certs: Vec::new(), ocsps: Vec::new(), crls: vec![crl] }).unwrap();
+    let ltv = add_dss(&signed, &[], &[crl]);
     let s = signatures(&open(&ltv), &ltv, &TrustStore::default()).into_iter().find(|s| s.signed && !s.doc_timestamp).unwrap();
     assert_eq!(s.status, Status::Invalid, "{:?}", s.details);
     assert!(s.details.iter().any(|d| d.message.contains("revoked") && d.message.contains("CRL")), "{:?}", s.details);
@@ -862,6 +827,21 @@ fn stream_of(body: &[u8]) -> Object {
 fn set_dss(doc: &mut Document, dss: Object) {
     let root = doc.root().unwrap();
     doc.update_dict(root, |c| c.set(b"DSS".to_vec(), dss)).unwrap();
+}
+
+/// Append a `/DSS` holding `certs` and `crls` to a signed file, as an LTV tool does.
+fn add_dss(signed: &[u8], certs: &[Vec<u8>], crls: &[Vec<u8>]) -> Vec<u8> {
+    edit_after(signed, |doc| {
+        let mut dss = dict_of(vec![("Type", Object::name("DSS"))]);
+        for (key, blobs) in [("Certs", certs), ("CRLs", crls)] {
+            if !blobs.is_empty() {
+                let refs = blobs.iter().map(|b| Object::Ref(doc.add(stream_of(b)))).collect();
+                dss.set(key.as_bytes().to_vec(), Object::Ref(doc.add(Object::Array(refs))));
+            }
+        }
+        let dss = doc.add(Object::Dict(dss));
+        set_dss(doc, Object::Ref(dss));
+    })
 }
 
 /// Rewrite object `num` (the page's contents) so the page shows other text.
@@ -1292,14 +1272,13 @@ fn self_crl(id: &pkcs12::DigitalId, this: Time, next: Time, revoked_at: Time) ->
 
 #[test]
 fn a_revoked_certificate_stays_invalid_when_it_was_also_expired_at_signing() {
-    use pdfcraft_sign::dss::{self, Evidence};
     let id = pkcs12::open(&data("ec-p256.p12"), "test").unwrap();
     // Signed in 2040, after the test certificate expired (2036).
     let late = SignOptions { date: "D:20400101120000Z".into(), ..opts() };
     let signed = pdfcraft_sign::sign(&open(&fixture()), &id, &late).unwrap();
     let t = |year| Time { year, month: 1, day: 1, hour: 0, minute: 0, second: 0 };
     let crl = self_crl(&id, t(2039), t(2041), t(2039));
-    let ltv = dss::embed(&open(&signed), &Evidence { certs: Vec::new(), ocsps: Vec::new(), crls: vec![crl] }).unwrap();
+    let ltv = add_dss(&signed, &[], &[crl]);
     let anchor = id.chain.first().cloned().unwrap_or_else(|| id.certificate.clone());
     for trust in [TrustStore::default(), TrustStore { certs: vec![anchor] }] {
         let s = signatures(&open(&ltv), &ltv, &trust).into_iter().find(|s| s.signed && !s.doc_timestamp).unwrap();

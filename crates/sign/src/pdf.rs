@@ -1072,42 +1072,6 @@ fn validate_doc_timestamp(doc: &Document, bytes: &[u8], v: &Dict, info: &mut Sig
     }
 }
 
-/// The DER `/Contents` of every signature dictionary in the file (field signatures and
-/// document timestamps), for `/VRI` keys and evidence selection.
-pub(crate) fn signature_contents(doc: &Document) -> Vec<Vec<u8>> {
-    let mut out = Vec::new();
-    let mut seen: HashSet<ObjRef> = HashSet::new();
-    let mut add = |d: &Dict, r: Option<ObjRef>| {
-        if let Some(r) = r
-            && !seen.insert(r)
-        {
-            return;
-        }
-        let contents = d.get(b"Contents").map(|c| doc.resolve(c));
-        let Some(s) = contents.as_deref().and_then(Object::as_string) else { return };
-        // Hex strings decode to the DER when parsed; a literal string carries hex text.
-        let der = if s.hex { Some(s.bytes.clone()) } else { unhex(&s.bytes) };
-        if let Some(der) = der {
-            out.push(der);
-        }
-    };
-    for f in sig_fields(doc) {
-        if let Some(v) = f.dict.get(b"V") {
-            let d = doc.resolve(v);
-            if let Some(dd) = d.as_dict() {
-                add(dd, v.as_ref());
-            }
-        }
-    }
-    for (r, o) in doc.scan_objects() {
-        let Some(d) = o.as_dict() else { continue };
-        if is_doc_timestamp(d) {
-            add(d, Some(r));
-        }
-    }
-    out
-}
-
 /// `adbe.x509.rsa_sha1` (ISO 32000-2 §12.8.3.2, deprecated): `/Contents` is the PKCS #1
 /// signature as a DER OCTET STRING over the SHA-1 digest of the byte ranges, and `/Cert` holds the
 /// signer's certificate (then any others) as DER byte strings.

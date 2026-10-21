@@ -4314,14 +4314,6 @@ impl Session {
         Ok(Arc::new(pdfcraft_sign::timestamp_document(&editor.cos, tsa, &date)?))
     }
 
-    /// Embed revocation evidence into the catalog's `/DSS` with `/VRI` entries per signature
-    /// (PAdES B-LT): an incremental update that never rewrites signed bytes.
-    pub fn embed_ltv(&self, doc: DocId, evidence: &pdfcraft_sign::dss::Evidence) -> Result<Arc<Vec<u8>>, EditError> {
-        let d = self.get(doc).ok_or(EditError::NoDocument)?;
-        let editor = d.editor.as_ref().ok_or_else(|| EditError::ReadOnly(d.read_only_reason.clone().unwrap_or_default()))?;
-        Ok(Arc::new(pdfcraft_sign::dss::embed(&editor.cos, evidence)?))
-    }
-
     /// Record that the signed file `bytes` was saved (to `path`): like [`Session::mark_saved`],
     /// and the edit history before signing is dropped (signing can't be undone).
     pub fn mark_signed(&mut self, id: DocId, bytes: Arc<Vec<u8>>, path: Option<String>) -> Result<(), EditError> {

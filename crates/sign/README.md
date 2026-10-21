@@ -37,9 +37,8 @@ for s in signatures(&doc, &bytes, &trust) {                                // li
 - **Document timestamps and LTV:** `timestamp_document` appends a standalone RFC 3161
   document timestamp (`/ETSI.RFC3161`) covering the whole file; validation discovers and
   verifies these dictionaries (imprint over the signed bytes, token signature, TSA cert
-  validity). `dss::embed` merges revocation evidence into the catalog's `/DSS` with `/VRI`
-  entries keyed per signature (uppercase-hex SHA-1 of `/Contents`), deduplicating
-  byte-identical blobs — sign → DSS → timestamp makes a B-LTA file, and the change classifier
+  validity). This crate does not write a `/DSS` itself; when another tool has added one
+  (sign → DSS → timestamp makes a B-LTA file), the change classifier
   treats the store as a permitted change: only objects reached through `/Certs`, `/CRLs`,
   `/OCSPs` and `/VRI` with the shape of their role, and new or only grown since the signature,
   count (a `/DSS` entry naming a page's contents, or a `/Type /DSS` label, does not).
