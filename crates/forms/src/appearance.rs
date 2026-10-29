@@ -284,21 +284,11 @@ fn frame(doc: &Document, wd: &Dict, w: f64, h: f64) -> (String, f64) {
     (c, 0.0)
 }
 
-/// The appearance of a text or choice field's widget showing `values`. Characters its font can't
-/// hold come out as `?`; [`field_appearance_drawn`] says which.
-pub fn field_appearance(doc: &Document, f: &Field, w: &Widget, values: &[String]) -> Stream {
-    field_appearance_as(doc, f, w, values, true)
-}
-
-/// [`field_appearance`], where `format` false means `values` are already what to show (a
-/// custom Format script ran).
-pub fn field_appearance_as(doc: &Document, f: &Field, w: &Widget, values: &[String], format: bool) -> Stream {
-    field_appearance_drawn(doc, f, w, values, format).0
-}
-
-/// [`field_appearance_as`] with the first character it drew as `?` because the field's font can't
-/// hold it: the form's font is a simple (WinAnsi) font, Helvetica stands in for one PdfCraft can't
-/// write with (an embedded subset, `Identity-H`), or a UCS-2 CMap meets a character beyond U+FFFF.
+/// The appearance of a text or choice field's widget showing `values`, where `format` false means
+/// `values` are already what to show (a custom Format script ran). Characters its font can't hold
+/// come out as `?`, and the first of them is returned: the form's font is a simple (WinAnsi) font,
+/// Helvetica stands in for one PdfCraft can't write with (an embedded subset, `Identity-H`), or a
+/// UCS-2 CMap meets a character beyond U+FFFF.
 pub fn field_appearance_drawn(doc: &Document, f: &Field, w: &Widget, values: &[String], format: bool) -> (Stream, Option<char>) {
     // The Format event: what is shown, not what is stored.
     let formatted: Vec<String>;
