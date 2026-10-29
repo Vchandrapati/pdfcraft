@@ -57,7 +57,7 @@ flag, autosave and the automation tools consistent for free.
 `Session` also owns the operations that produce a *new* document rather than editing one:
 `create_blank`, `create_from_images`, `create_from_text`, `combine`, `extract`, `split`,
 `split_by_size`, `reduced_bytes`, `optimized_bytes`, `print_pdf`, `export_data`, and the signing
-family (`sign`, `sign_with_timestamp`, `timestamp_document`, `embed_ltv`).
+family (`sign`, `sign_with_timestamp`, `timestamp_document`).
 
 ## Modules
 
@@ -72,9 +72,9 @@ family (`sign`, `sign_with_timestamp`, `timestamp_document`, `embed_ltv`).
 
 ## Not done here
 
-- **Rendering is still borrowed.** `pdfcraft-render` wraps `hayro` and inspects through `lopdf`
-  (ADR-0004). The engine only sees `inspect() -> DocInfo`, `RenderPool` and `text::PageText`, and
-  that API stays frozen while M2 replaces what is behind it.
+- **Rendering is still borrowed.** `pdfcraft-render` wraps `hayro` and inspects through `cos`.
+  The engine only sees `inspect() -> DocInfo`, `RenderPool` and `text::PageText`, and that API
+  stays frozen while M2 replaces what is behind it.
 - Performance budgets (`misc.performance-budgets`) are not set or enforced.
 - Some shipped features are still reachable only from the UI, not through an `automation` tool.
 

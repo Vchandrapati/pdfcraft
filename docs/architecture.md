@@ -2,9 +2,8 @@
 
 > **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (shared print spooler; Windows CI passes) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 
-How PdfCraft is built today. The design rationale and the planned crates live in
-`plan/architecture.md` and `plan/adr/` (local-only); this file describes what is on `main`. Each
-crate's `README.md` has the detail.
+How PdfCraft is built today: this file describes what is on `main`. Each crate's `README.md` has
+the detail.
 
 ## Shape
 
@@ -15,7 +14,7 @@ handwritten JS/TS, in the product or the build.
 
 | Binary | What it is |
 |---|---|
-| `apps/pdfcraft` | The desktop app (macOS, Windows, Linux, FreeBSD): eframe/egui on wgpu, single instance, Apple events, update check on request |
+| `apps/pdfcraft` | The desktop app (macOS, Windows, Linux, FreeBSD): eframe/egui on wgpu, single instance, Apple events |
 | `apps/pdfcraft-cli` | `inspect`, `edit`, `combine`, `extract`, `split`, `run` (any automation tool or a JSON script), `tools`, `ui` (drive the running app), and the opt-in `mcp` server |
 | `apps/pdfcraft-web` | The same egui shell compiled to WebAssembly |
 
@@ -30,7 +29,7 @@ standalone and publishable.
 | L0 foundation | `geom`, `filters`, `crypt` | Geometry; stream filters (Flate, LZW, predictors, ASCII85, ASCIIHex, RunLength); standard security handler R2–R6 (RC4, AES-128/256, SASLprep) |
 | L1 objects | `cos` | Lazy, tolerant parser with xref repair; copy-on-write object graph; incremental and full writers with object streams; decryption on load and re-encryption on save |
 | L2 core model | `content`, `model`, `fonts` | Content-stream operators with source spans and a serializer; typed page tree with inherited attributes and display geometry (`/UserUnit`, `/Rotate`); font metrics and encodings for generated appearances |
-| L3 core services | `render`, `annot`, `forms`, `js`, `xfa` | Rendering and inspection (bootstrap: vendored `hayro`, `lopdf`); annotation builders and appearance streams; AcroForm model, filling, appearances; sandboxed JavaScript (boa) and FormCalc; XFA template layout and data |
+| L3 core services | `render`, `annot`, `forms`, `js`, `xfa` | Rendering (bootstrap: vendored `hayro`) and inspection (through `cos`); annotation builders and appearance streams; AcroForm model, filling, appearances; sandboxed JavaScript (boa) and FormCalc; XFA template layout and data |
 | L4 features | `edit`, `organize`, `redact`, `xfdf`, `sign`, `ocr`, `create`, `export`, `optimize`, `preflight`, `a11y`, `compare`, `measure`, `print` | One crate per Acrobat tool family |
 | L6 façade | `engine` | Session, open documents, edit history, the command registry and tool catalogue. Frontends never reach past it |
 | L7 platform and frontends | `platform`, `ui-egui`, `automation` | OS services; the egui shell (desktop and web); headless JSON-Schema tools, CLI and MCP |
@@ -64,7 +63,7 @@ The PDF object graph *is* the model (`crates/engine/README.md` §The editing mod
   fallback when a device can't be configured).
 - Text extraction (reading order, columns, vertical CJK, rotated text) feeds find, select, copy,
   redaction, export and compare; word-F1 0.98 against `pdftotext` on the corpus.
-- The replacement (M2, ADR-0004) is the `model` crate, our own font engine and DisplayList devices;
+- The replacement (M2) is the `model` crate, our own font engine and DisplayList devices;
   only the first pieces of `model` exist.
 
 ## File I/O

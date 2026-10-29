@@ -48,7 +48,7 @@ fn metadata() -> anyhow::Result<serde_json::Value> {
 
 pub fn layers(_: &[String]) -> anyhow::Result<()> {
     let crates = layers::from_metadata(&metadata()?).map_err(|e| anyhow!(e))?;
-    println!("Dependency layering (plan/architecture.md §3)\n");
+    println!("Dependency layering (docs/architecture.md, Layers)\n");
     println!("{:<24} {:<14} workspace deps", "crate", "layer");
     for c in &crates {
         let ws: Vec<String> = c
@@ -209,7 +209,7 @@ pub fn check(args: &[String]) -> anyhow::Result<()> {
 
 /// `cargo xtask text-oracle [--limit N]`: compare `pdfcraft-cli text` with poppler's `pdftotext`
 /// (external oracle process, never linked) over the corpus. Reports word-level F1 per file and the
-/// median. Plan target (M2): median ≥ 0.97.
+/// median. Target: median ≥ 0.97.
 pub fn text_oracle(args: &[String]) -> anyhow::Result<()> {
     let limit: usize = args.iter().position(|a| a == "--limit").and_then(|i| args.get(i + 1)).and_then(|v| v.parse().ok()).unwrap_or(usize::MAX);
     if Command::new("pdftotext").arg("-v").output().is_err() {

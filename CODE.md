@@ -51,4 +51,4 @@ PdfCraft is a clean-room, open-source, Rust-native PDF application. It runs nati
 - Parallel agents: use a separate `CARGO_TARGET_DIR` per agent and separate git worktrees.
 
 ## Current bootstrap debt
-- `pdfcraft-render` renders through the vendored `hayro` crate directly and inspects documents through `lopdf` (`vendor/README.md`).
+- `pdfcraft-render` renders through the vendored `hayro` crate directly (`vendor/README.md`); inspection already reads through `cos`.

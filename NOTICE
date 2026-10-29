@@ -32,7 +32,6 @@ list (author, source, license) is in ATTRIBUTION.md.
 - hayro (rendering, via crates.io) — Apache-2.0 OR MIT. Its `embed-fonts` feature bundles the Foxit
   standard-14 Type 1 fonts under BSD-3-Clause ("Copyright 2014 PDFium Authors"), and hayro-cmap bundles
   Adobe CMap resources under BSD-3-Clause.
-- lopdf (bootstrap document inspection, via crates.io) — MIT.
 - egui default fonts (epaint_default_fonts, via eframe) — Ubuntu Light (Ubuntu Font Licence 1.0),
   Hack (MIT / Bitstream Vera licence), Noto Emoji (SIL OFL 1.1), emoji-icon-font (MIT).
 - Colour profile in hayro-interpret — CGATS001Compat-v2-micro.icc (CC0-1.0, Clinton Ingram).
@@ -53,7 +52,7 @@ google/fonts at a pinned commit, verified by SHA-256, all under the SIL Open Fon
 "Downloaded at build time" table in ATTRIBUTION.md.
 
 Asset licences are not visible to cargo-deny; keep this file current whenever assets or asset-bundling
-dependencies change (plan/adr/0002, 0006).
+dependencies change.
 
 Vendored (vendor/, patched; see vendor/README.md):
 - hayro 0.7.1 — Apache-2.0 OR MIT, Copyright the hayro authors (licence files kept in vendor/hayro).

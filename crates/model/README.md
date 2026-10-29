@@ -14,4 +14,4 @@ L3/L4 crates need:
   comment's picture upright inside its user-space `/Rect` on a turned page.
 
 `organize`, `annot` and `forms` still carry their own small walkers; they move here as the model
-grows (ADR-0004).
+grows.
