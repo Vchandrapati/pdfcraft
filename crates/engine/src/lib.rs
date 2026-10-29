@@ -1,4 +1,4 @@
-//! pdfcraft-engine — the façade every frontend talks to (architecture §4).
+//! pdfcraft-engine — the façade every frontend talks to (L6 in `docs/architecture.md`, Layers).
 //!
 //! Holds open documents, their edit history and the tool catalogue. Frontends never touch the
 //! parsing, rendering or editing crates directly.

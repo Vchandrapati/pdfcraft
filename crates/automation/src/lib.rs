@@ -1,4 +1,4 @@
-//! pdfcraft-automation — agent control for PdfCraft (architecture §13).
+//! pdfcraft-automation — agent control for PdfCraft (Agent control in `docs/architecture.md`).
 //!
 //! - **Layer:** L7. Headless: depends on the engine, never on a UI toolkit.
 //! - [`Automation`] is a tool set over an engine [`Session`]: open, inspect, render, extract and

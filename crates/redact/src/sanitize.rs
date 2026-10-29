@@ -1,4 +1,4 @@
-//! Remove Hidden Information and Sanitize Document (architecture §11.1, execution plan M8.4).
+//! Remove Hidden Information and Sanitize Document (execution plan M8.4).
 //!
 //! [`scan`] counts what each category would remove; [`remove_hidden`] removes the chosen
 //! categories; [`sanitize`] removes all of them. Every removal makes the next save a full

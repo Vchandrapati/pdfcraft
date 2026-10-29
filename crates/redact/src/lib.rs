@@ -1,4 +1,4 @@
-//! Redaction (architecture §11.2, execution plan M8.5–M8.7). Layer L4.
+//! Redaction (execution plan M8.5–M8.7). Layer L4.
 //!
 //! Content is marked for redaction with Redact annotations (§12.5.6.23); `pdfcraft-annot`
 //! creates them. [`apply`] then removes everything under the marks, for good:

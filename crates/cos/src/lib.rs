@@ -3,13 +3,13 @@
 //! Parses the COS object graph lazily and tolerantly, keeps edits in a copy-on-write overlay
 //! (cheap snapshots for undo), and writes documents back either incrementally (original bytes
 //! untouched) or as a full, garbage-collected rewrite. The PDF object graph *is* PdfCraft's
-//! document model (plan/architecture.md §5, ADR-0010).
+//! document model (see Data model and editing in `docs/architecture.md`).
 //!
 //! Done: every cross-reference form (tables, streams, hybrid `/XRefStm`), object streams, repair
 //! by scanning, encryption on load and save (R2–R6, crypt filters, `/EFF`), incremental writing,
 //! and full saves that pack objects into compressed object streams with a cross-reference stream.
-//! Not yet: streaming very large files within a memory budget (`ByteSource`,
-//! `core.lazy-loading`), and linearized output (`core.linearization`, M11). See the README.
+//! Not yet: streaming very large files within a memory budget, and linearized output. See the
+//! README.
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 

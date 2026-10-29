@@ -176,8 +176,8 @@ fn replace(tmp: &Path, path: &Path, name: &str) -> std::io::Result<()> {
 
 /// Flush the staging file to the disk before it replaces the original. On macOS `sync_all` asks
 /// for a full flush (`F_FULLFSYNC`), which SMB and FUSE volumes, such as a mounted Cryptomator
-/// vault, refuse as unsupported: there a plain `fsync` is the strongest flush the volume offers
-/// (upstream #981). Any other failure still fails the save.
+/// vault, refuse as unsupported: there a plain `fsync` is the strongest flush the volume offers.
+/// Any other failure still fails the save.
 fn sync_staged(f: &std::fs::File, sync_all: impl FnOnce(&std::fs::File) -> std::io::Result<()>) -> std::io::Result<()> {
     #[cfg(target_os = "macos")]
     {
@@ -364,8 +364,8 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// On macOS `sync_all` asks for a full flush, which SMB and FUSE volumes (a Cryptomator vault,
-    /// upstream #981) refuse as unsupported: ENOTSUP (45) or ENOTTY (25). The save still goes through.
+    /// On macOS `sync_all` asks for a full flush, which SMB and FUSE volumes (a Cryptomator vault)
+    /// refuse as unsupported: ENOTSUP (45) or ENOTTY (25). The save still goes through.
     #[cfg(target_os = "macos")]
     #[test]
     fn a_volume_without_full_flush_still_saves() {

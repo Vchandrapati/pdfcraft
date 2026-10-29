@@ -8,7 +8,7 @@
 //!
 //! The new text uses the line's own font when every character has a code and a glyph in it;
 //! otherwise it is set in Helvetica (WinAnsi), and the result says the font was substituted.
-//! Reflowing a paragraph to a new width is not done here (see `edit.text-reflow`).
+//! Reflowing a paragraph to a new width is not done here.
 
 use std::collections::HashMap;
 use std::rc::Rc;

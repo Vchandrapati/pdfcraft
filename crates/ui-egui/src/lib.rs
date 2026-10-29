@@ -1,7 +1,7 @@
 //! pdfcraft-ui-egui — the first PdfCraft shell (L7).
 //!
-//! Layout grammar follows plan/acrobat/02-ui-ux.md §1: tab strip, mode bar, left tool panel,
-//! floating quick-action bar, document area, right panel + right rail with page navigation.
+//! Layout grammar: tab strip, mode bar, left tool panel, floating quick-action bar, document
+//! area, right panel + right rail with page navigation.
 //! Everything here is presentation: documents, rendering and the tool catalogue live in
 //! `pdfcraft-engine`.
 

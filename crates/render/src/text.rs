@@ -1,4 +1,4 @@
-//! Text extraction (bootstrap for `pdfcraft-text`, architecture §8).
+//! Text extraction (bootstrap for `pdfcraft-text`; see Rendering and text in `docs/architecture.md`).
 //!
 //! A hayro `Device` that ignores paint and records every glyph: its Unicode value (ToUnicode →
 //! encoding → glyph name fallbacks, handled by hayro) and its box in *page view space*, i.e.
@@ -1272,7 +1272,7 @@ fn union(a: &mut [f32; 4], b: &[f32; 4]) {
 /// Reading-order layout. Glyphs are reordered so that `glyphs` is in reading order, lines are
 /// numbered in that order, and word gaps are inferred per line.
 ///
-/// Heuristics (documented so they can be tuned and tested; plan/architecture.md §8):
+/// Heuristics (documented so they can be tuned and tested):
 /// 1. *Segments:* consecutive glyphs (content order) on one baseline with no column-sized gap.
 ///    Segments on the same baseline that nearly touch are merged (text drawn out of order).
 /// 2. *Blocks:* segments stacked with line-sized gaps and overlapping horizontally.
