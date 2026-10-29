@@ -1,8 +1,9 @@
 //! The document area: page layout, zoom, render scheduling, overlays (links, annotation hovers,
 //! form-field highlights), and the organize-pages grid.
 //!
-//! Page images come from the engine's render pool as whole-page rasters at the current zoom;
-//! stale rasters are shown stretched until the sharp one arrives (tiling comes in M3.3).
+//! Page images come from the engine's render pool as whole-page rasters at the current zoom, or,
+//! for pages too large for one raster ([`TILE_THRESHOLD`]), as tiles of the visible area over a
+//! low-resolution backdrop. Stale rasters are shown stretched until the sharp one arrives.
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ops::Range;

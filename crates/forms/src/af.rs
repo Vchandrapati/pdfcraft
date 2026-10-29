@@ -7,7 +7,8 @@
 //! calls from the Format, Validate and Calculate tabs. This module recognises them, runs them
 //! natively (format for display, keystroke check on commit, validation, calculation), and
 //! writes them back when a form is authored. Other scripts are kept untouched and reported as
-//! unsupported; they need the JavaScript engine (M6.4).
+//! unsupported here; they run through the [`crate::Scripts`] hook, which the engine backs with
+//! its JavaScript engine.
 
 use std::fmt::Write as _;
 

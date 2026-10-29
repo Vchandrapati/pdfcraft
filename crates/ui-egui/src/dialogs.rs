@@ -1095,7 +1095,7 @@ fn dialogs(app: &mut PdfCraftApp, ctx: &egui::Context) {
                 });
             }
             Dialog::About => {
-                // Tabs About · Contributors · Models (craftrules standards/contributors.md).
+                // Tabs About · Contributors · Models.
                 let tab_id = egui::Id::new("about_tab");
                 let mut tab = ui.data_mut(|d| d.get_temp::<u8>(tab_id)).unwrap_or(0);
                 ui.horizontal_wrapped(|ui| {

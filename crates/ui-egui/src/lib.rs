@@ -1385,8 +1385,9 @@ impl PdfCraftApp {
         client
     }
 
-    /// Open a web link in the system browser (a new tab on the web). Only for PdfCraft's own
-    /// links; an address that came from a document goes through [`Self::request_document_url`].
+    /// Open a web link in the system browser (a new tab on the web), with no check of its own. An
+    /// address that came from a document goes through [`Self::request_document_url`] first, and
+    /// reaches this only when the user allows it ([`Self::resolve_pending_link`]).
     pub fn open_url(&mut self, url: &str) {
         if let Some(ctx) = &self.ctx {
             ctx.open_url(egui::OpenUrl::new_tab(url));

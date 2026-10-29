@@ -1239,7 +1239,7 @@ fn number_pages_shows_in_the_viewer_and_undoes() {
     use pdfcraft_organize::LabelStyle;
     s.apply(id, Edit::NumberPages { from: 0, to: 1, style: LabelStyle::LowerRoman, prefix: String::new(), first: 1 }).unwrap();
     s.apply(id, Edit::NumberPages { from: 2, to: 4, style: LabelStyle::Decimal, prefix: "§".into(), first: 10 }).unwrap();
-    // The inspector (lopdf-based, independent) formats them the same way.
+    // The inspector (reading through cos and its own object adapter) formats them the same way.
     assert_eq!(labels(&s), ["i", "ii", "§10", "§11", "§12"]);
     s.undo(id).unwrap();
     assert_eq!(labels(&s), ["i", "ii", "3", "4", "5"]);

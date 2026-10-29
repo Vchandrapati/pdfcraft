@@ -123,7 +123,8 @@ fn japanese_face(name: &str, serif: bool, bold: bool) -> JapaneseFace {
     }
 }
 
-/// Hard cap on a rendered side, to bound memory at extreme zoom levels (tiling arrives in M3.3).
+/// Hard cap on a rendered whole-page side, to bound memory at extreme zoom levels. Tiled requests
+/// are bounded per tile instead.
 pub const MAX_SIDE: f32 = 8192.0;
 /// Hard cap on rendered pixels per page (~64 MP ≈ 256 MB RGBA).
 pub const MAX_PIXELS: f32 = 64.0e6;

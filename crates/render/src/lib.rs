@@ -1,10 +1,9 @@
 //! pdfcraft-render — page rasterization and document inspection.
 //!
-//! **Bootstrap status (see ADR-0004):** rasterization goes straight through the `hayro` crate
-//! (hayro-interpret + vello_cpu). Inspection uses the lazy `cos` reader (which repairs damaged
-//! files) through a read-only object adapter (`pdfobj`). The renderer and that adapter are
-//! replaced by `model` and the DisplayList design in M1–M2. The public API is what the engine and UI rely on, so
-//! the swap stays internal to this crate.
+//! Rasterization goes straight through the vendored `hayro` crate (hayro-interpret + vello_cpu).
+//! Inspection uses the lazy `cos` reader (which repairs damaged files) through a read-only object
+//! adapter (`pdfobj`). The public API is what the engine and UI rely on, so either can change
+//! without them noticing.
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 

@@ -8,8 +8,12 @@
 //!   the states their appearances already define.
 //! - [`reset`]: Acrobat's Clear form (back to `/DV`).
 //!
-//! Not yet: JavaScript actions (format, keystroke, validate, calculate — M6.4/M6.5) and rich text
-//! values (`/RV`, which is removed when a value is set so it can't contradict `/V`).
+//! - Field scripts (format, keystroke, validate, calculate): the AF calls run natively ([`af`]);
+//!   other JavaScript runs through the [`Scripts`] hook, which the engine implements with
+//!   `pdfcraft-js` (forms itself has no JavaScript engine).
+//!
+//! Not yet: rich text values (`/RV`, which is removed when a value is set so it can't contradict
+//! `/V`).
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 

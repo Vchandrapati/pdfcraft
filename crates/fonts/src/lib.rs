@@ -1,7 +1,11 @@
-//! pdfcraft-fonts — font metrics and encodings for generated appearances (L2).
+//! pdfcraft-fonts — fonts for generated appearances and edited text (L2).
 //!
-//! See the README: the metrics are approximations by character class (no vendor metrics files
-//! are bundled). The full font subsystem lands in M2.2/M7.
+//! See the README. Without a font program, Helvetica widths are approximations by character
+//! class (no vendor metrics files are bundled) and text is encoded as WinAnsi. [`pdf`] reads what
+//! editing needs from a document's own fonts; [`embedding`] embeds a supplied TrueType face;
+//! [`source_shaping`] and the Arabic and Thai shapers shape text with OpenType features; the
+//! script module draws typed signatures and Type 3 fallback glyphs; and the optional craft-fonts
+//! build input supplies the Japanese and other script faces ([`CRAFT_FONTS`]).
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
