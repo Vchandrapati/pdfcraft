@@ -101,7 +101,6 @@
 	Home	Главная
 	Open	Открыть
 	Open a PDF ({key})	Открыть PDF ({key})
-	Dark gray theme	Тёмно-серая тема
 	Light theme	Светлая тема
 	Appearance mode	Режим оформления
 	Light	Светлое
@@ -151,11 +150,9 @@
 	Next page	Следующая страница
 	Previous page	Предыдущая страница
 	Current page — type a page number or label (such as iv) and press Enter	Текущая страница — введите номер или метку страницы (например, iv) и нажмите Enter
-	Use now	Использовать сейчас
 	Open file	Открыть файл
 	Recent	Недавние
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Файлы, которые вы открываете в PdfCraft, появляются здесь. Перетащите PDF в любое место, чтобы открыть.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Скрипты выполняются в песочнице без доступа к файлам и сети. При отключённом JavaScript стандартные функции Acrobat форматирования, проверки и вычислений всё равно работают.
 	Back to all tools	Назад ко всем инструментам
 	Close panel	Закрыть панель
 	View less	Показать меньше
@@ -293,7 +290,6 @@
 	Export a PDF	Экспортировать PDF
 	Export to	Экспортировать в
 	Microsoft Word (.docx)	Microsoft Word (.docx)
-	Spreadsheet (.xlsx)	Электронная таблица (.xlsx)
 	Presentation (.pptx)	Презентация (.pptx)
 	Image (PNG)	Изображение (PNG)
 	Export all images	Экспортировать все изображения
@@ -416,7 +412,6 @@
 	Fix hairlines	Исправить тонкие линии
 	Measure objects	Измерить объекты
 	Measure	Измерить
-	Measuring tool	Инструмент измерения
 	Geospatial location	Геопространственное положение
 	Compare files	Сравнить файлы
 	Select files to compare	Выбрать файлы для сравнения
@@ -1217,9 +1212,6 @@
 	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	Распознавание текста не установлено: отсутствуют файлы моделей. Переустановите PdfCraft или задайте в PDFCRAFT_MODELS папку, в которой они лежат.
 	Settings	Настройки
 	Optional	Опционально
-	Planned · {m}	Запланировано · {m}
-	Planned for milestone {m} — open to see what it will include	Запланировано на этап {m} — откройте, чтобы увидеть содержимое
-	Coming in milestone {m}. Items marked Ready work today.	Появится на этапе {m}. Пункты с пометкой «Готово» работают сегодня.
 	1 mark	1 метка
 	{n} marks	{n} меток
 	Dynamic	Динамический
@@ -1744,7 +1736,6 @@
 	At least one signature has problems.	Хотя бы одна подпись имеет проблемы.
 	This document is secured. Some changes are restricted by its security settings.	Этот документ защищён. Некоторые изменения ограничены его настройками безопасности.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Это динамическая форма XFA, которую PdfCraft пока не может отобразить. То, что вы видите, — заглушка страницы файла.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Эта форма также содержит данные XFA, которые PdfCraft пока не читает. Вы можете заполнить её поля, но Acrobat может показать значения XFA вместо них.
 	This document contains {n} interactive form fields.	Этот документ содержит {n} интерактивных полей формы.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Этот файл был повреждён и восстановлен. Сохранение сохраняет восстановленную версию.
 	Dismiss	Закрыть
@@ -1776,8 +1767,6 @@
 	Page	Страница
 	None	Нет
 	Delete selected fields	Удалить выделенные поля
-	Diagnostic details	Диагностические подробности
-	The operation failed.	Операция не удалась.
 	no such document	нет такого документа
 	nothing to undo	нечего отменить
 	nothing to redo	нечего повторить
@@ -1928,10 +1917,7 @@
 	Set status Cancelled	Задать статус «Отменено»
 	Set status Completed	Задать статус «Завершено»
 	Set status None	Задать статус «Нет»
-	Set status Unmarked	Задать статус «Не отмечено»
-	Save as PDF/A-1b	Сохранить как PDF/A-1b
 	Save as PDF/A-2b	Сохранить как PDF/A-2b
-	Save as PDF/A-3b	Сохранить как PDF/A-3b
 	Fill & Sign: change signature	Заполнить и подписать: изменить подпись
 	Fill & Sign: change initials	Заполнить и подписать: изменить инициалы
 	Fill & Sign: remove saved signature	Заполнить и подписать: удалить сохранённую подпись
@@ -2041,11 +2027,9 @@
 	Save these pages as one PDF	Сохранить эти страницы в один PDF
 	No changes to save	Нет изменений для сохранения
 	Created a PDF from {n} files; left out: {names}	PDF создан из файлов: {n}; пропущены: {names}
-	Created a PDF from the first {n} files	PDF создан из первых файлов: {n}
 	Go to page…	Перейти на страницу…
 	For page sizes and margins.	Для размеров страниц и полей.
 	The PDF text fonts can't draw “{c}” ({code}). Choose supported text.	Шрифты текста PDF не могут отобразить «{c}» ({code}). Выберите поддерживаемый текст.
-	The standard fonts can't draw “{c}” ({code}). Only Western European characters can be added as text for now.	Стандартные шрифты не могут отобразить «{c}» ({code}). Пока в виде текста можно добавлять только западноевропейские символы.
 	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	Шрифт этого поля не может отобразить «{c}» ({code}), поэтому PdfCraft показывает на его месте ?. Значение сохранено, и другие программы просмотра PDF перерисуют поле по нему.
 	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	Шрифты, которыми пишет PdfCraft, не могут отобразить «{c}» ({code}), поэтому во всех программах просмотра PDF на его месте будет ?. Текст сохранён.
 	Larger pages	Крупнее страницы

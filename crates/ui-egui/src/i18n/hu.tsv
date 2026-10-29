@@ -79,7 +79,6 @@
 	Home	Kezdőlap
 	Open	Megnyitás
 	Open a PDF ({key})	PDF megnyitása ({key})
-	Dark gray theme	Sötétszürke téma
 	Light theme	Világos téma
 	Appearance mode	Megjelenési mód
 	Light	Világos
@@ -129,11 +128,9 @@
 	Next page	Következő oldal
 	Previous page	Előző oldal
 	Current page — type a page number or label (such as iv) and press Enter	Aktuális oldal — írj be egy oldalszámot vagy címkét (például iv), majd nyomd meg az Entert
-	Use now	Használat most
 	Open file	Fájl megnyitása
 	Recent	Legutóbbiak
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	A PdfCraftban megnyitott fájlok itt jelennek meg. Húzz ide egy PDF-et a megnyitáshoz.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	A szkriptek homokozóban futnak, fájl- és hálózat-hozzáférés nélkül. Kikapcsolt JavaScript mellett az Acrobat szabványos formázó, ellenőrző és számoló függvényei továbbra is működnek.
 	Back to all tools	Vissza az összes eszközhöz
 	Close panel	Panel bezárása
 	View less	Kevesebb megjelenítése
@@ -271,7 +268,6 @@
 	Export a PDF	PDF exportálása
 	Export to	Exportálás ide
 	Microsoft Word (.docx)	Microsoft Word (.docx)
-	Spreadsheet (.xlsx)	Táblázat (.xlsx)
 	Presentation (.pptx)	Bemutató (.pptx)
 	Image (PNG)	Kép (PNG)
 	Export all images	Összes kép exportálása
@@ -394,7 +390,6 @@
 	Fix hairlines	Hajszálvonalak javítása
 	Measure objects	Objektumok mérése
 	Measure	Mérés
-	Measuring tool	Mérőeszköz
 	Geospatial location	Földrajzi hely
 	Compare files	Fájlok összehasonlítása
 	Select files to compare	Összehasonlítandó fájlok kiválasztása
@@ -734,7 +729,6 @@
 	{verb} Header and Footer	Fejléc és lábléc: {verb}
 	{verb} Watermark	Vízjel: {verb}
 	{verb} Background	Háttér: {verb}
-	Margins (in)	Margók (hüvelyk)
 	Left Header Text	Bal fejléc szövege
 	Center Header Text	Középső fejléc szövege
 	Right Header Text	Jobb fejléc szövege
@@ -1187,9 +1181,6 @@
 	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	A szövegfelismerés nincs telepítve: hiányoznak a modellfájljai. Telepítsd újra a PdfCraftot, vagy állítsd a PDFCRAFT_MODELS változót az őket tartalmazó mappára.
 	Settings	Beállítások
 	Optional	Nem kötelező
-	Planned · {m}	Tervezett · {m}
-	Planned for milestone {m} — open to see what it will include	{m} mérföldkőre tervezve — nyisd meg, és meglátod, mi lesz benne
-	Coming in milestone {m}. Items marked Ready work today.	{m} mérföldkőben érkezik. A Kész jelölésű elemek már működnek.
 	1 mark	1 jelölés
 	{n} marks	{n} jelölés
 	Dynamic	Dinamikus
@@ -1549,7 +1540,6 @@
 	Looking for printers…	Nyomtatók keresése…
 	Sending to {printer}…	Küldés ide: {printer}…
 	Choose a folder for the searchable files	Válassz mappát a kereshető fájloknak
-	Files are combined in this order. Leave Pages empty to take every page.	A fájlok ebben a sorrendben egyesülnek. Hagyd üresen az Oldalak mezőt, ha minden oldalt kéred.
 	Pages of {name} to combine, e.g. 1-3, 6	{name} egyesítendő oldalai, pl. 1-3, 6
 	Remove {name}	{name} eltávolítása
 	Add files…	Fájlok hozzáadása…
@@ -1664,7 +1654,6 @@
 	At least one signature has problems.	Legalább egy aláírásnak problémája van.
 	This document is secured. Some changes are restricted by its security settings.	Ez a dokumentum védett. Egyes módosításokat a biztonsági beállításai korlátoznak.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Ez egy dinamikus XFA-űrlap, amelyet a PdfCraft még nem tud megjeleníteni. Amit látsz, a fájl helyőrző oldala.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Ez az űrlap XFA-adatokat is tartalmaz, amelyeket a PdfCraft még nem olvas. Kitöltheted a mezőit, de az Acrobat helyettük az XFA-értékeket mutathatja.
 	This document contains {n} interactive form fields.	Ez a dokumentum {n} interaktív űrlapmezőt tartalmaz.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Ez a fájl sérült volt, és javítottuk. A mentés megtartja a javított változatot.
 	Dismiss	Elvetés
@@ -1696,8 +1685,6 @@
 	Page	Oldal
 	None	Nincs
 	Delete selected fields	Kijelölt mezők törlése
-	Diagnostic details	Diagnosztikai részletek
-	The operation failed.	A művelet nem sikerült.
 	no such document	nincs ilyen dokumentum
 	nothing to undo	nincs mit visszavonni
 	nothing to redo	nincs mit megismételni
@@ -1848,10 +1835,7 @@
 	Set status Cancelled	Állapot: Megszakítva
 	Set status Completed	Állapot: Befejezve
 	Set status None	Állapot: Nincs
-	Set status Unmarked	Állapot: Nincs megjelölve
-	Save as PDF/A-1b	Mentés PDF/A-1b-ként
 	Save as PDF/A-2b	Mentés PDF/A-2b-ként
-	Save as PDF/A-3b	Mentés PDF/A-3b-ként
 	Fill & Sign: change signature	Kitöltés és aláírás: aláírás módosítása
 	Fill & Sign: change initials	Kitöltés és aláírás: monogram módosítása
 	Fill & Sign: remove saved signature	Kitöltés és aláírás: mentett aláírás eltávolítása
@@ -1980,7 +1964,6 @@
 	Save these pages as one PDF	Ezeknek az oldalaknak a mentése egy PDF-be
 	No changes to save	Nincs mit menteni
 	Created a PDF from {n} files; left out: {names}	PDF létrehozva {n} fájlból; kimaradt: {names}
-	Created a PDF from the first {n} files	PDF létrehozva az első {n} fájlból
 	None of those files can be made into a PDF; use PDFs, images or .txt files	Ezekből a fájlokból nem készíthető PDF; használj PDF-et, képet vagy .txt fájlt
 	1 file	1 fájl
 	1 file needs attention	1 fájl figyelmet kér
@@ -2123,7 +2106,6 @@ action wizard	Start	Indítás
 	Reverse closed arrow	Fordított zárt nyíl
 	Slash	Perjel
 	The PDF text fonts can't draw “{c}” ({code}). Choose supported text.	A PDF szövegének betűtípusai nem tudják megjeleníteni ezt: „{c}” ({code}). Válasszon támogatott szöveget.
-	The standard fonts can't draw “{c}” ({code}). Only Western European characters can be added as text for now.	A szabványos betűtípusok nem tudják megjeleníteni ezt: „{c}” ({code}). Egyelőre csak nyugat-európai karakterek adhatók hozzá szövegként.
 	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	A mező betűtípusa nem tudja megjeleníteni ezt: „{c}” ({code}), ezért a PdfCraft ? jelet mutat a helyén. Az érték mentve van, és a többi PDF-megjelenítő ebből rajzolja újra a mezőt.
 	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	A PdfCraft által íráshoz használt betűtípusok nem tudják megjeleníteni ezt: „{c}” ({code}), ezért minden PDF-megjelenítőben ? látszik a helyén. A szöveg mentve van.
 	Larger pages	Nagyobb oldalak

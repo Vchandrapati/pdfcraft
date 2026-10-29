@@ -899,7 +899,6 @@
 	Document JavaScripts	JavaScript скриптове на документа
 	Script Name:	Име на скрипта:
 	This document has no document-level scripts.	Този документ няма скриптове на ниво документ.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Скриптовете се изпълняват в изолирана среда без достъп до файлове и мрежа. При изключен JavaScript стандартните функции на Acrobat за форматиране, проверка и изчисление продължават да работят.
 	No form fields were detected	Не са открити полета на формуляр
 	Detected 1 form field	Открито е 1 поле на формуляр
 	Detected {n} form fields	Открити са {n} полета на формуляр
@@ -1014,7 +1013,6 @@
 	Convert colors	Преобразувай цветовете
 	Add printer marks	Добави печатарски маркери
 	Fix hairlines	Поправи тънките линии
-	Measuring tool	Инструмент за измерване
 	Geospatial location	Геопространствено местоположение
 	Select files to compare	Изберете файлове за сравняване
 	Action Wizard	Съветник за действия
@@ -1036,10 +1034,7 @@
 	Optional	По избор
 	Ready	Готово
 	Available	Налично
-	Planned · {m}	Планирано · {m}
-	Planned for milestone {m} — open to see what it will include	Планирано за етап {m} — отворете, за да видите какво ще включва
 	Optional: needs an AI provider you configure	По избор: изисква доставчик на ИИ, който сами конфигурирате
-	Coming in milestone {m}. Items marked Ready work today.	Очаква се в етап {m}. Елементите, отбелязани като готови, работят още днес.
 	1 mark	1 маркировка
 	{n} marks	{n} маркировки
 	Back to all tools	Назад към всички инструменти
@@ -1096,7 +1091,6 @@
 	Previous page	Предишна страница
 	Current page — type a page number or label (such as iv) and press Enter	Текуща страница — въведете номер или етикет на страница (например iv) и натиснете Enter
 	Open a PDF ({key})	Отвори PDF файл ({key})
-	Dark gray theme	Тъмносива тема
 	Light theme	Светла тема
 	Appearance mode	Режим на облика
 	Light	Светъл
@@ -1719,7 +1713,6 @@
 	At least one signature has problems.	Поне един подпис има проблеми.
 	This document is secured. Some changes are restricted by its security settings.	Този документ е защитен. Някои промени са ограничени от настройките му за защита.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Това е динамичен XFA формуляр, който PdfCraft все още не може да показва. Виждате заместващата страница на файла.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Този формуляр съдържа и XFA данни, които PdfCraft все още не чете. Можете да попълвате полетата му, но Acrobat може да покаже вместо това XFA стойностите.
 	This document contains {n} interactive form fields.	Този документ съдържа {n} интерактивни полета на формуляр.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Този файл беше повреден и е поправен. При записване се запазва поправената версия.
 	Dismiss	Скрий
@@ -1758,7 +1751,6 @@
 	Read	Четене
 	Convert	Конвертиране
 	E-Sign	Е-подпис
-	Use now	Използвай сега
 	Recent	Последни
 	Export to image…	Експортирай като изображение…
 	Reduce file size…	Намали размера на файла…
@@ -1914,7 +1906,6 @@
 	Delete page	Изтрий страницата
 	Device colour is used, but there is no PDF/A output intent	Използва се цвят, зависим от устройството, но няма изходно намерение за PDF/A
 	DeviceCMYK is used: it needs a CMYK output intent (not added automatically)	Използва се DeviceCMYK: необходимо е CMYK изходно намерение (не се добавя автоматично)
-	Diagnostic details	Диагностични подробности
 	Diamond	Ромб
 	Double-click	Двукратно щракване
 	Draw your {what} below.	Нарисувайте {what} по-долу.
@@ -1975,9 +1966,7 @@
 	Rotate image	Завърти изображението
 	Rotate page	Завърти страницата
 	Run JavaScript	Изпълни JavaScript
-	Save as PDF/A-1b	Запиши като PDF/A-1b
 	Save as PDF/A-2b	Запиши като PDF/A-2b
-	Save as PDF/A-3b	Запиши като PDF/A-3b
 	Save as PDF/UA	Запиши като PDF/UA
 	Save as PDF/X	Запиши като PDF/X
 	Select a file for the stamp	Изберете файл за печата
@@ -1988,10 +1977,8 @@
 	Set status Completed	Задай състояние „Завършено“
 	Set status None	Задай състояние „Няма“
 	Set status Rejected	Задай състояние „Отхвърлено“
-	Set status Unmarked	Задай състояние „Неотбелязано“
 	Set tab order	Задай реда на обхождане
 	Set the image of {name}	Задай изображението на {name}
-	Spreadsheet (.xlsx)	Електронна таблица (.xlsx)
 	Square	Квадрат
 	Star	Звезда
 	The document has additional actions (/AA)	Документът има допълнителни действия (/AA)
@@ -2004,7 +1991,6 @@
 	the document is protected by a password	документът е защитен с парола
 	The form asks viewers to make appearances (NeedAppearances)	Формулярът изисква от програмите за преглед да генерират изгледите на полетата (NeedAppearances)
 	the image is empty	изображението е празно
-	The operation failed.	Операцията е неуспешна.
 	the password is incorrect	паролата е грешна
 	the text recognition models are not installed (reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them)	моделите за разпознаване на текст не са инсталирани (инсталирайте PdfCraft отново или задайте в PDFCRAFT_MODELS папката, която ги съдържа)
 	The title in the metadata and the document information differ	Заглавието в метаданните и в информацията за документа се различават
@@ -2072,24 +2058,20 @@
 	Save these pages as one PDF	Запиши тези страници като един PDF файл
 	No changes to save	Няма промени за записване
 	Created a PDF from {n} files; left out: {names}	Създаден е PDF от {n} файла; пропуснати: {names}
-	Created a PDF from the first {n} files	Създаден е PDF от първите {n} файла
 	None of those files can be made into a PDF; use PDFs, images or .txt files	Нито един от тези файлове не може да бъде превърнат в PDF; използвайте PDF файлове, изображения или .txt файлове
 	Choose a PNG or JPEG image (up to 4 MiB). Transparency is preserved.	Изберете PNG или JPEG изображение (до 4 MiB). Прозрачността се запазва.
 	Couldn't import the signature image: {e}	Изображението на подписа не може да бъде импортирано: {e}
 	Go to page…	Отиди на страница…
-	Files are combined in this order. Leave Pages empty to take every page.	Файловете се обединяват в този ред. Оставете „Страници“ празно, за да се вземат всички страници.
 comment menu	Edit	Редактирай
 	Undo {action}	Отмени {action}
 	Redo {action}	Повтори {action}
 signature pad	Type	Въвеждане
 action wizard	Start	Старт
-	Margins (in)	Полета (in)
 	Reopen the files that were open when PdfCraft last closed	Отваряй отново файловете, които бяха отворени при последното затваряне на PdfCraft
 	Clear Recent Files	Изчисти последно отваряните файлове
 	Remove from Recent	Премахни от последно отваряните
 	Remove {name} from Recent	Премахни {name} от последно отваряните
 	The PDF text fonts can't draw “{c}” ({code}). Choose supported text.	Шрифтовете за PDF текст не могат да изобразят „{c}“ ({code}). Изберете поддържан текст.
-	The standard fonts can't draw “{c}” ({code}). Only Western European characters can be added as text for now.	Стандартните шрифтове не могат да покажат „{c}“ ({code}). Засега като текст могат да се добавят само западноевропейски символи.
 	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	Шрифтът на това поле не може да покаже „{c}“ ({code}), затова PdfCraft показва ? на негово място. Стойността е запазена и другите програми за PDF преначертават полето по нея.
 	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	Шрифтовете, с които PdfCraft пише, не могат да покажат „{c}“ ({code}), затова във всяка програма за PDF то се показва като ?. Текстът е запазен.
 	Larger pages	По-големи страници

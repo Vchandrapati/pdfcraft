@@ -108,7 +108,6 @@
 	Home	الرئيسية
 	Open	فتح
 	Open a PDF ({key})	فتح ملف PDF ({key})
-	Dark gray theme	سمة رمادية داكنة
 	Light theme	سمة فاتحة
 	Appearance mode	وضع المظهر
 	Light	فاتح
@@ -158,11 +157,9 @@
 	Next page	الصفحة التالية
 	Previous page	الصفحة السابقة
 	Current page — type a page number or label (such as iv) and press Enter	الصفحة الحالية — اكتب رقم صفحة أو تسميتها (مثل iv) ثم اضغط Enter
-	Use now	استخدم الآن
 	Open file	فتح ملف
 	Recent	الأخيرة
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	الملفات التي تفتحها في PdfCraft تظهر هنا. أفلت ملف PDF في أي مكان لفتحه.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	تعمل السكربتات في بيئة معزولة دون وصول إلى الملفات أو الشبكة. عند إيقاف JavaScript تبقى دوال Acrobat القياسية للتنسيق والتحقق والحساب تعمل.
 	Back to all tools	العودة إلى كل الأدوات
 	Close panel	إغلاق اللوحة
 	View less	عرض أقل
@@ -300,7 +297,6 @@
 	Export a PDF	تصدير ملف PDF
 	Export to	تصدير إلى
 	Microsoft Word (.docx)	Microsoft Word (.docx)
-	Spreadsheet (.xlsx)	جدول بيانات (.xlsx)
 	Presentation (.pptx)	عرض تقديمي (.pptx)
 	Image (PNG)	صورة (PNG)
 	Export all images	تصدير كل الصور
@@ -423,7 +419,6 @@
 	Fix hairlines	إصلاح الخطوط الرفيعة
 	Measure objects	قياس الكائنات
 	Measure	قياس
-	Measuring tool	أداة القياس
 	Geospatial location	الموقع الجغرافي
 	Compare files	مقارنة الملفات
 	Select files to compare	تحديد الملفات للمقارنة
@@ -763,7 +758,6 @@
 	{verb} Header and Footer	{verb} الرأس والتذييل
 	{verb} Watermark	{verb} العلامة المائية
 	{verb} Background	{verb} الخلفية
-	Margins (in)	الهوامش (بوصة)
 	Left Header Text	نص الرأس الأيسر
 	Center Header Text	نص الرأس الأوسط
 	Right Header Text	نص الرأس الأيمن
@@ -1216,9 +1210,6 @@
 	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	التعرف على النص غير مثبت: ملفات نماذجه مفقودة. أعد تثبيت PdfCraft، أو اضبط PDFCRAFT_MODELS على المجلد الذي يحتويها.
 	Settings	الإعدادات
 	Optional	اختياري
-	Planned · {m}	مخطط له · {m}
-	Planned for milestone {m} — open to see what it will include	مخطط له في المرحلة {m} — افتح لترى ما سيتضمنه
-	Coming in milestone {m}. Items marked Ready work today.	قادم في المرحلة {m}. العناصر الموسومة بـ«جاهز» تعمل اليوم.
 	1 mark	علامة واحدة
 	{n} marks	{n} علامات
 	Dynamic	ديناميكي
@@ -1743,7 +1734,6 @@
 	At least one signature has problems.	توقيع واحد على الأقل فيه مشكلات.
 	This document is secured. Some changes are restricted by its security settings.	هذا المستند مؤمَّن. بعض التغييرات مقيدة بإعدادات أمانه.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	هذا نموذج XFA ديناميكي، لا يستطيع PdfCraft عرضه بعد. ما تراه هو الصفحة البديلة للملف.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	هذا النموذج يحتوي أيضًا على بيانات XFA، لا يقرؤها PdfCraft بعد. يمكنك تعبئة حقوله، لكن Acrobat قد يعرض قيم XFA بدلًا منها.
 	This document contains {n} interactive form fields.	هذا المستند يحتوي على {n} حقول نموذج تفاعلية.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	هذا الملف كان تالفًا وأُصلح. الحفظ يُبقي النسخة المُصلَحة.
 	Dismiss	تجاهل
@@ -1775,8 +1765,6 @@
 	Page	صفحة
 	None	لا شيء
 	Delete selected fields	حذف الحقول المحددة
-	Diagnostic details	تفاصيل التشخيص
-	The operation failed.	فشلت العملية.
 	no such document	لا يوجد مستند كهذا
 	nothing to undo	لا شيء للتراجع عنه
 	nothing to redo	لا شيء لإعادته
@@ -1927,10 +1915,7 @@
 	Set status Cancelled	تعيين الحالة: ملغى
 	Set status Completed	تعيين الحالة: مكتمل
 	Set status None	تعيين الحالة: لا شيء
-	Set status Unmarked	تعيين الحالة: غير معلَّم
-	Save as PDF/A-1b	حفظ بصيغة PDF/A-1b
 	Save as PDF/A-2b	حفظ بصيغة PDF/A-2b
-	Save as PDF/A-3b	حفظ بصيغة PDF/A-3b
 	Fill & Sign: change signature	تعبئة وتوقيع: تغيير التوقيع
 	Fill & Sign: change initials	تعبئة وتوقيع: تغيير الأحرف الأولى
 	Fill & Sign: remove saved signature	تعبئة وتوقيع: إزالة التوقيع المحفوظ
@@ -2034,12 +2019,10 @@
 	Save these pages as one PDF	حفظ هذه الصفحات كملف PDF واحد
 	No changes to save	لا تغييرات لحفظها
 	Created a PDF from {n} files; left out: {names}	أُنشئ ملف PDF من {n} ملفات؛ استُبعد: {names}
-	Created a PDF from the first {n} files	أُنشئ ملف PDF من أول {n} ملفات
 	Go to page…	الانتقال إلى صفحة…
 	Optimization is already running	التحسين قيد التشغيل بالفعل
 	Optimization cancelled	أُلغي التحسين
 	Couldn't optimize the file	تعذّر تحسين الملف
-	Files are combined in this order. Leave Pages empty to take every page.	تُدمج الملفات بهذا الترتيب. اترك «الصفحات» فارغًا لأخذ كل الصفحات.
 	Portable mode is off: {folder} can't be written ({error}). Settings are kept in your user folder instead.	الوضع المحمول متوقف: تتعذر الكتابة في {folder} ({error}). تُحفظ الإعدادات في مجلد المستخدم بدلًا منه.
 	PdfCraft is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.	يرسم PdfCraft دون معالج رسوميات، لذا قد يكون بطيئًا. تحديث تعريف بطاقة الرسوميات قد يفيد.
 	Show	إظهار
@@ -2147,7 +2130,6 @@ calendar date	December	ديسمبر
 	Reverse closed arrow	سهم مغلق معكوس
 	Slash	شرطة مائلة
 	The PDF text fonts can't draw “{c}” ({code}). Choose supported text.	لا تستطيع خطوط نص PDF عرض «{c}» ({code}). اختر نصًا مدعومًا.
-	The standard fonts can't draw “{c}” ({code}). Only Western European characters can be added as text for now.	الخطوط القياسية لا تستطيع رسم «{c}» ({code}). حاليًا يمكن إضافة محارف أوروبا الغربية فقط كنص.
 	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	خط هذا الحقل لا يستطيع رسم «{c}» ({code})، لذا يعرض PdfCraft علامة ? مكانه. القيمة محفوظة، وتعيد برامج عرض PDF الأخرى رسم الحقل منها.
 	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	الخطوط التي يكتب بها PdfCraft لا تستطيع رسم «{c}» ({code})، لذا يظهر بشكل ? في كل برامج عرض PDF. النص محفوظ.
 	Larger pages	صفحات أكبر
@@ -2189,7 +2171,6 @@ certificate	Subject	صاحب الشهادة
 	The selected fields could not be found. Select them again.	تعذّر العثور على الحقول المحددة. حددها من جديد.
 	The field {name} no longer exists.	الحقل {name} لم يعد موجودًا.
 	A selected field has no widget on any page, so the fields can't be edited together.	أحد الحقول المحددة ليس له عنصر واجهة في أي صفحة، لذا لا يمكن تحرير الحقول معًا.
-	Text recognition isn't installed: its models are missing (run `cargo xtask models`, or set PDFCRAFT_MODELS).	التعرف على النص غير مثبت: نماذجه مفقودة (شغّل `cargo xtask models`، أو اضبط PDFCRAFT_MODELS).
 	 ({n} at {dpi} dpi, the largest size they can be drawn at)	 ({n} بدقة {dpi} dpi، وهي أكبر دقة يمكن رسمها بها)
 	Margins	الهوامش
 	For page sizes and margins.	لأحجام الصفحات والهوامش.

@@ -409,7 +409,6 @@
 	{verb} Header and Footer	{verb} cabeçalho e rodapé
 	{verb} Watermark	{verb} marca-d'água
 	{verb} Background	{verb} plano de fundo
-	Margins (in)	Margens (pol)
 	Left Header Text	Texto do cabeçalho à esquerda
 	Center Header Text	Texto do cabeçalho centralizado
 	Right Header Text	Texto do cabeçalho à direita
@@ -845,7 +844,6 @@
 	Document JavaScripts	JavaScripts do documento
 	Script Name:	Nome do script:
 	This document has no document-level scripts.	Este documento não possui scripts em nível de documento.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Os scripts são executados em um sandbox sem acesso a arquivos ou rede. Com o JavaScript desativado, as funções padrão de formatação, validação e cálculo do Acrobat ainda funcionam.
 	No form fields were detected	Nenhum campo de formulário foi detectado
 	Detected 1 form field	1 campo de formulário detectado
 	Detected {n} form fields	{n} campos de formulário detectados
@@ -958,7 +956,6 @@
 	Convert colors	Converter cores
 	Add printer marks	Adicionar marcas de impressora
 	Fix hairlines	Corrigir linhas finas
-	Measuring tool	Ferramenta de medição
 	Geospatial location	Localização geoespacial
 	Select files to compare	Selecionar arquivos para comparar
 	Action Wizard	Assistente de ações
@@ -980,10 +977,7 @@
 	Optional	Opcional
 	Ready	Pronto
 	Available	Disponível
-	Planned · {m}	Planejado · {m}
-	Planned for milestone {m} — open to see what it will include	Planejado para o marco {m} — abra para ver o que incluirá
 	Optional: needs an AI provider you configure	Opcional: necessita de um provedor de IA configurado por você
-	Coming in milestone {m}. Items marked Ready work today.	Previsto para o marco {m}. Itens marcados como Pronto já funcionam hoje.
 	1 mark	1 marca
 	{n} marks	{n} marcas
 	Back to all tools	Voltar para todas as ferramentas
@@ -1040,7 +1034,6 @@
 	Previous page	Página anterior
 	Current page — type a page number or label (such as iv) and press Enter	Página atual — digite o número da página ou rótulo (como iv) e pressione Enter
 	Open a PDF ({key})	Abrir um PDF ({key})
-	Dark gray theme	Tema cinza escuro
 	Light theme	Tema claro
 	Appearance mode	Modo de aparência
 	Light	Claro
@@ -1478,7 +1471,6 @@
 	Looking for printers…	Procurando impressoras…
 	Sending to {printer}…	Enviando para {printer}…
 	Choose a folder for the searchable files	Escolha uma pasta para os arquivos pesquisáveis
-	Files are combined in this order. Leave Pages empty to take every page.	Os arquivos são combinados nesta ordem. Deixe Páginas em branco para incluir todas as páginas.
 	Pages of {name} to combine, e.g. 1-3, 6	Páginas de {name} a combinar, ex.: 1-3, 6
 	Remove {name}	Remover {name}
 	Add files…	Adicionar arquivos…
@@ -1591,7 +1583,6 @@
 	At least one signature has problems.	Pelo menos uma assinatura apresenta problemas.
 	This document is secured. Some changes are restricted by its security settings.	Este documento está protegido. Algumas alterações são restritas por suas configurações de segurança.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Este é um formulário XFA dinâmico, que o PdfCraft ainda não pode exibir. O que você vê é a página de espaço reservado do arquivo.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Este formulário também contém dados XFA, que o PdfCraft ainda não lê. Você pode preencher seus campos, mas o Acrobat pode exibir os valores XFA em vez disso.
 	This document contains {n} interactive form fields.	Este documento contém {n} campos de formulário interativos.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Este arquivo estava danificado e foi reparado. Salvar manterá a versão reparada.
 	Dismiss	Dispensar
@@ -1630,7 +1621,6 @@
 	Read	Ler
 	Convert	Converter
 	E-Sign	Assinatura eletrônica
-	Use now	Usar agora
 	Recent	Recentes
 	Export to image…	Exportar para imagem…
 	Reduce file size…	Reduzir tamanho do arquivo…
@@ -1786,7 +1776,6 @@
 	Delete page	Excluir página
 	Device colour is used, but there is no PDF/A output intent	A cor do dispositivo foi usada, mas não há intenção de saída PDF/A
 	DeviceCMYK is used: it needs a CMYK output intent (not added automatically)	O DeviceCMYK foi usado: ele necessita de uma intenção de saída CMYK (não adicionada automaticamente)
-	Diagnostic details	Detalhes de diagnóstico
 	Diamond	Losango
 	Double-click	Clique duplo
 	Draw your {what} below.	Desenhe seu(sua) {what} abaixo.
@@ -1847,9 +1836,7 @@
 	Rotate image	Girar imagem
 	Rotate page	Girar página
 	Run JavaScript	Executar JavaScript
-	Save as PDF/A-1b	Salvar como PDF/A-1b
 	Save as PDF/A-2b	Salvar como PDF/A-2b
-	Save as PDF/A-3b	Salvar como PDF/A-3b
 	Save as PDF/UA	Salvar como PDF/UA
 	Save as PDF/X	Salvar como PDF/X
 	Select a file for the stamp	Selecionar um arquivo para o carimbo
@@ -1860,10 +1847,8 @@
 	Set status Completed	Definir status como Concluído
 	Set status None	Definir status como Nenhum
 	Set status Rejected	Definir status como Rejeitado
-	Set status Unmarked	Definir status como Não marcado
 	Set tab order	Definir ordem de tabulação
 	Set the image of {name}	Definir a imagem de {name}
-	Spreadsheet (.xlsx)	Planilha (.xlsx)
 	Square	Quadrado
 	Star	Estrela
 	The document has additional actions (/AA)	O documento contém ações adicionais (/AA)
@@ -1876,7 +1861,6 @@
 	the document is protected by a password	o documento está protegido por senha
 	The form asks viewers to make appearances (NeedAppearances)	O formulário solicita que os visualizadores gerem aparências (NeedAppearances)
 	the image is empty	a imagem está vazia
-	The operation failed.	A operação falhou.
 	the password is incorrect	a senha está incorreta
 	The title in the metadata and the document information differ	O título nos metadados e nas informações do documento são diferentes
 	the title must not be empty	o título não deve estar vazio
@@ -2000,7 +1984,6 @@
 	Selected pages	Páginas selecionadas
 	No pages selected	Nenhuma página selecionada
 	Created a PDF from {n} files; left out: {names}	Criado um PDF de {n} arquivos; deixando de fora: {names}
-	Created a PDF from the first {n} files	Criado um PDF dos primeiros {n} arquivos
 	Created a PDF from {n} files	Criado um PDF de {n} arquivos
 	Folders	Pastas
 	Pin a folder…	Fixar uma pasta…
@@ -2027,7 +2010,6 @@
 	This web address uses letters from another alphabet, which can look like familiar ones.	Este endereço da web usa letras de outro alfabeto, que podem parecer familiares.
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Continue apenas se você confiar neste documento. Um endereço pode carregar informações do documento, como o que você digitou no formulário dele.
 	The PDF text fonts can't draw “{c}” ({code}). Choose supported text.	As fontes de texto PDF não podem exibir “{c}” ({code}). Escolha um texto compatível.
-	The standard fonts can't draw “{c}” ({code}). Only Western European characters can be added as text for now.	As fontes padrão não conseguem desenhar “{c}” ({code}). Por enquanto, apenas caracteres da Europa Ocidental podem ser adicionados como texto.
 	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	A fonte deste campo não consegue desenhar “{c}” ({code}), então o PdfCraft mostra ? no lugar. O valor foi salvo, e outros leitores de PDF redesenham o campo a partir dele.
 	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	As fontes que o PdfCraft usa para escrever não conseguem desenhar “{c}” ({code}), então ele aparece como ? em qualquer leitor de PDF. O texto foi salvo.
 	Line ending	Fim de linha

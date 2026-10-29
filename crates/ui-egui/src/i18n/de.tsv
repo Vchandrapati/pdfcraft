@@ -81,7 +81,6 @@
 	Home	Start
 	Open	Öffnen
 	Open a PDF ({key})	PDF öffnen ({key})
-	Dark gray theme	Dunkelgraues Design
 	Light theme	Helles Design
 	Appearance mode	Darstellungsmodus
 	Light	Hell
@@ -131,11 +130,9 @@
 	Next page	Nächste Seite
 	Previous page	Vorherige Seite
 	Current page — type a page number or label (such as iv) and press Enter	Aktuelle Seite – gib eine Seitenzahl oder -beschriftung ein (z. B. iv) und drücke die Eingabetaste
-	Use now	Jetzt verwenden
 	Open file	Datei öffnen
 	Recent	Zuletzt geöffnet
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Dateien, die du in PdfCraft öffnest, erscheinen hier. Zieh ein PDF an eine beliebige Stelle, um es zu öffnen.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Skripte laufen in einer Sandbox ohne Datei- oder Netzwerkzugriff. Auch bei deaktiviertem JavaScript funktionieren die Acrobat-Standardfunktionen zum Formatieren, Prüfen und Berechnen weiterhin.
 	Back to all tools	Zurück zu allen Werkzeugen
 	Close panel	Bereich schließen
 	View less	Weniger anzeigen
@@ -273,7 +270,6 @@
 	Export a PDF	PDF exportieren
 	Export to	Exportieren nach
 	Microsoft Word (.docx)	Microsoft Word (.docx)
-	Spreadsheet (.xlsx)	Tabelle (.xlsx)
 	Presentation (.pptx)	Präsentation (.pptx)
 	Image (PNG)	Bild (PNG)
 	Export all images	Alle Bilder exportieren
@@ -396,7 +392,6 @@
 	Fix hairlines	Haarlinien korrigieren
 	Measure objects	Objekte messen
 	Measure	Messen
-	Measuring tool	Messwerkzeug
 	Geospatial location	Geografische Position
 	Compare files	Dateien vergleichen
 	Select files to compare	Dateien zum Vergleichen auswählen
@@ -741,7 +736,6 @@
 	{verb} Header and Footer	Kopf- und Fußzeile: {verb}
 	{verb} Watermark	Wasserzeichen: {verb}
 	{verb} Background	Hintergrund: {verb}
-	Margins (in)	Ränder (Zoll)
 	Left Header Text	Kopfzeile links
 	Center Header Text	Kopfzeile Mitte
 	Right Header Text	Kopfzeile rechts
@@ -1202,9 +1196,6 @@
 	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	Die Texterkennung ist nicht installiert: ihre Modelldateien fehlen. Installiere PdfCraft neu oder setze PDFCRAFT_MODELS auf den Ordner, der sie enthält.
 	Settings	Einstellungen
 	Optional	Optional
-	Planned · {m}	Geplant · {m}
-	Planned for milestone {m} — open to see what it will include	Geplant für Meilenstein {m} – öffnen, um zu sehen, was enthalten sein wird
-	Coming in milestone {m}. Items marked Ready work today.	Kommt in Meilenstein {m}. Als „Bereit“ markierte Elemente funktionieren schon heute.
 	1 mark	1 Markierung
 	{n} marks	{n} Markierungen
 	Dynamic	Dynamisch
@@ -1564,7 +1555,6 @@
 	Looking for printers…	Drucker werden gesucht…
 	Sending to {printer}…	Wird an {printer} gesendet…
 	Choose a folder for the searchable files	Wähle einen Ordner für die durchsuchbaren Dateien
-	Files are combined in this order. Leave Pages empty to take every page.	Die Dateien werden in dieser Reihenfolge kombiniert. Lass „Seiten“ leer, um alle Seiten zu übernehmen.
 	Pages of {name} to combine, e.g. 1-3, 6	Zu kombinierende Seiten von {name}, z. B. 1-3, 6
 	Remove {name}	{name} entfernen
 	Add files…	Dateien hinzufügen…
@@ -1679,7 +1669,6 @@
 	At least one signature has problems.	Mindestens eine Signatur weist Probleme auf.
 	This document is secured. Some changes are restricted by its security settings.	Dieses Dokument ist geschützt. Einige Änderungen sind durch seine Sicherheitseinstellungen eingeschränkt.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Dies ist ein dynamisches XFA-Formular, das PdfCraft noch nicht anzeigen kann. Du siehst die Platzhalterseite der Datei.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Dieses Formular enthält auch XFA-Daten, die PdfCraft noch nicht liest. Du kannst die Felder ausfüllen, aber Acrobat zeigt eventuell stattdessen die XFA-Werte an.
 	This document contains {n} interactive form fields.	Dieses Dokument enthält {n} interaktive Formularfelder.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Diese Datei war beschädigt und wurde repariert. Beim Speichern bleibt die reparierte Version erhalten.
 	Dismiss	Ausblenden
@@ -1711,8 +1700,6 @@
 	Page	Seite
 	None	Keine
 	Delete selected fields	Ausgewählte Felder löschen
-	Diagnostic details	Diagnosedetails
-	The operation failed.	Der Vorgang ist fehlgeschlagen.
 	no such document	Dokument nicht vorhanden
 	nothing to undo	nichts rückgängig zu machen
 	nothing to redo	nichts zu wiederholen
@@ -1863,10 +1850,7 @@
 	Set status Cancelled	Status „Abgebrochen“ festlegen
 	Set status Completed	Status „Abgeschlossen“ festlegen
 	Set status None	Status „Keine“ festlegen
-	Set status Unmarked	Status „Nicht markiert“ festlegen
-	Save as PDF/A-1b	Als PDF/A-1b speichern
 	Save as PDF/A-2b	Als PDF/A-2b speichern
-	Save as PDF/A-3b	Als PDF/A-3b speichern
 	Fill & Sign: change signature	Ausfüllen und unterschreiben: Unterschrift ändern
 	Fill & Sign: change initials	Ausfüllen und unterschreiben: Initialen ändern
 	Fill & Sign: remove saved signature	Ausfüllen und unterschreiben: Gespeicherte Unterschrift entfernen
@@ -1995,7 +1979,6 @@
 	Save these pages as one PDF	Diese Seiten als ein PDF speichern
 	No changes to save	Keine Änderungen zu speichern
 	Created a PDF from {n} files; left out: {names}	PDF aus {n} Dateien erstellt; ausgelassen: {names}
-	Created a PDF from the first {n} files	PDF aus den ersten {n} Dateien erstellt
 	None of those files can be made into a PDF; use PDFs, images or .txt files	Keine dieser Dateien lässt sich in ein PDF umwandeln; verwende PDFs, Bilder oder .txt-Dateien
 	1 file	1 Datei
 	1 file needs attention	1 Datei erfordert Aufmerksamkeit
@@ -2131,7 +2114,6 @@ action wizard	Start	Starten
 	Remove from Recent	Aus „Zuletzt geöffnet“ entfernen
 	Remove {name} from Recent	{name} aus „Zuletzt geöffnet“ entfernen
 	The PDF text fonts can't draw “{c}” ({code}). Choose supported text.	Die PDF-Textschriften können „{c}“ ({code}) nicht darstellen. Wählen Sie unterstützten Text.
-	The standard fonts can't draw “{c}” ({code}). Only Western European characters can be added as text for now.	Die Standardschriften können „{c}“ ({code}) nicht darstellen. Derzeit lassen sich nur westeuropäische Zeichen als Text hinzufügen.
 	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	Die Schrift dieses Felds kann „{c}“ ({code}) nicht darstellen, daher zeigt PdfCraft an dieser Stelle ? an. Der Wert ist gespeichert, und andere PDF-Viewer zeichnen das Feld anhand des Werts neu.
 	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	Die Schriften, mit denen PdfCraft schreibt, können „{c}“ ({code}) nicht darstellen, daher erscheint es in jedem PDF-Viewer als ?. Der Text ist gespeichert.
 	Larger pages	Größere Seiten

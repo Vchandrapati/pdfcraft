@@ -85,7 +85,6 @@ comment menu	Edit	సవరించు
 	Home	హోమ్
 	Open	తెరువు
 	Open a PDF ({key})	PDFను తెరువు ({key})
-	Dark gray theme	ముదురు బూడిద రంగు థీమ్
 	Light theme	లేత థీమ్
 	Appearance mode	రూపం మోడ్
 	Light	లైట్
@@ -135,11 +134,9 @@ comment menu	Edit	సవరించు
 	Next page	తదుపరి పేజీ
 	Previous page	మునుపటి పేజీ
 	Current page — type a page number or label (such as iv) and press Enter	ప్రస్తుత పేజీ — పేజీ సంఖ్యను లేదా లేబుల్‌ను (iv వంటిది) టైప్ చేసి Enter నొక్కండి
-	Use now	ఇప్పుడే ఉపయోగించు
 	Open file	ఫైల్‌ను తెరువు
 	Recent	ఇటీవలి
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	PdfCraftలో మీరు తెరిచే ఫైల్‌లు ఇక్కడ కనిపిస్తాయి. PDFను తెరవడానికి దాన్ని ఎక్కడైనా లాగి వదలండి.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	స్క్రిప్ట్‌లు ఫైల్ లేదా నెట్‌వర్క్ యాక్సెస్ లేని శాండ్‌బాక్స్‌లో నడుస్తాయి. JavaScript ఆఫ్‌లో ఉన్నా, Acrobat ప్రామాణిక ఫార్మాట్, ధృవీకరణ, గణన ఫంక్షన్‌లు పనిచేస్తాయి.
 	Back to all tools	అన్ని సాధనాలకు తిరిగి వెళ్లు
 	Close panel	ప్యానెల్‌ను మూసివేయి
 	View less	తక్కువ చూపించు
@@ -277,7 +274,6 @@ comment menu	Edit	సవరించు
 	Export a PDF	PDFను ఎగుమతి చేయి
 	Export to	ఎగుమతి ఫార్మాట్
 	Microsoft Word (.docx)	Microsoft Word పత్రం (.docx)
-	Spreadsheet (.xlsx)	స్ప్రెడ్‌షీట్ (.xlsx)
 	Presentation (.pptx)	ప్రెజెంటేషన్ (.pptx)
 	Image (PNG)	చిత్రం (PNG)
 	Export all images	అన్ని చిత్రాలను ఎగుమతి చేయి
@@ -400,7 +396,6 @@ comment menu	Edit	సవరించు
 	Fix hairlines	అతి సన్నని గీతలను సరిచేయి
 	Measure objects	ఆబ్జెక్ట్‌లను కొలుచు
 	Measure	కొలత
-	Measuring tool	కొలత సాధనం
 	Geospatial location	భౌగోళిక స్థానం
 	Compare files	ఫైల్‌లను పోల్చు
 	Select files to compare	పోల్చడానికి ఫైల్‌లను ఎంచుకో
@@ -1187,9 +1182,6 @@ comment menu	Edit	సవరించు
 	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	టెక్స్ట్ గుర్తింపు ఇన్‌స్టాల్ కాలేదు: దాని మోడల్ ఫైల్‌లు లేవు. PdfCraftను మళ్లీ ఇన్‌స్టాల్ చేయండి, లేదా వాటిని కలిగి ఉన్న ఫోల్డర్‌కు PDFCRAFT_MODELSను సెట్ చేయండి.
 	Settings	సెట్టింగ్‌లు
 	Optional	ఐచ్ఛికం
-	Planned · {m}	ప్రణాళికలో ఉంది · {m}
-	Planned for milestone {m} — open to see what it will include	మైల్‌స్టోన్ {m}కి ప్రణాళిక చేయబడింది — ఇందులో ఏమేమి ఉంటాయో చూడటానికి తెరవండి
-	Coming in milestone {m}. Items marked Ready work today.	మైల్‌స్టోన్ {m}లో వస్తుంది. సిద్ధం అని గుర్తించిన అంశాలు ఇప్పటికే పని చేస్తాయి.
 	1 mark	1 గుర్తు
 	{n} marks	{n} గుర్తులు
 	Dynamic	డైనమిక్
@@ -1551,7 +1543,6 @@ action wizard	Start	ప్రారంభించు
 	Looking for printers…	ప్రింటర్ల కోసం వెతుకుతోంది…
 	Sending to {printer}…	{printer}కు పంపుతోంది…
 	Choose a folder for the searchable files	వెతకగలిగే ఫైల్‌ల కోసం ఒక ఫోల్డర్‌ను ఎంచుకోండి
-	Files are combined in this order. Leave Pages empty to take every page.	ఫైల్‌లు ఈ క్రమంలో కలపబడతాయి. అన్ని పేజీలను తీసుకోవడానికి పేజీలు ఫీల్డ్‌ను ఖాళీగా వదలండి.
 	Pages of {name} to combine, e.g. 1-3, 6	కలపాల్సిన {name} పేజీలు, ఉదా. 1-3, 6
 	Remove {name}	{name}ను తీసివేయి
 	Add files…	ఫైల్‌లను జోడించు…
@@ -1664,7 +1655,6 @@ action wizard	Start	ప్రారంభించు
 	At least one signature has problems.	కనీసం ఒక సంతకంలో సమస్యలు ఉన్నాయి.
 	This document is secured. Some changes are restricted by its security settings.	ఈ పత్రం రక్షించబడింది. దీని భద్రతా సెట్టింగ్‌లు కొన్ని మార్పులను పరిమితం చేస్తాయి.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	ఇది డైనమిక్ XFA ఫారం, దీన్ని ప్రదర్శించడానికి PdfCraftలో ఇంకా మద్దతు లేదు. మీరు చూస్తున్నది ఫైల్‌లోని ప్లేస్‌హోల్డర్ పేజీ.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	ఈ ఫారంలో XFA డేటా కూడా ఉంది, దాన్ని చదవడానికి PdfCraftలో ఇంకా మద్దతు లేదు. మీరు దీని ఫీల్డ్‌లను నింపవచ్చు, కానీ Acrobat బదులుగా XFA విలువలను చూపించవచ్చు.
 	This document contains {n} interactive form fields.	ఈ పత్రంలో {n} ఇంటరాక్టివ్ ఫారం ఫీల్డ్‌లు ఉన్నాయి.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	ఈ ఫైల్ పాడైంది, దాన్ని సరిచేయడం జరిగింది. సేవ్ చేస్తే సరిచేసిన వెర్షన్ ఉంచబడుతుంది.
 	Dismiss	మూసివేయి
@@ -1696,8 +1686,6 @@ action wizard	Start	ప్రారంభించు
 	Page	పేజీ
 	None	ఏదీ లేదు
 	Delete selected fields	ఎంచుకున్న ఫీల్డ్‌లను తొలగించు
-	Diagnostic details	డయాగ్నస్టిక్ వివరాలు
-	The operation failed.	చర్య విఫలమైంది.
 	no such document	అటువంటి పత్రం లేదు
 	nothing to undo	రద్దు చేయడానికి ఏమీ లేదు
 	nothing to redo	మళ్లీ చేయడానికి ఏమీ లేదు
@@ -1848,10 +1836,7 @@ action wizard	Start	ప్రారంభించు
 	Set status Cancelled	స్థితిని సెట్ చేయి: రద్దు చేయబడింది
 	Set status Completed	స్థితిని సెట్ చేయి: పూర్తయింది
 	Set status None	స్థితిని సెట్ చేయి: ఏదీ లేదు
-	Set status Unmarked	స్థితిని సెట్ చేయి: గుర్తు లేదు
-	Save as PDF/A-1b	PDF/A-1bగా సేవ్ చేయి
 	Save as PDF/A-2b	PDF/A-2bగా సేవ్ చేయి
-	Save as PDF/A-3b	PDF/A-3bగా సేవ్ చేయి
 	Fill & Sign: change signature	నింపడం & సంతకం: సంతకాన్ని మార్చు
 	Fill & Sign: change initials	నింపడం & సంతకం: పొడి అక్షరాలను మార్చు
 	Fill & Sign: remove saved signature	నింపడం & సంతకం: సేవ్ చేసిన సంతకాన్ని తీసివేయి

@@ -231,14 +231,12 @@ key	Space	Mezerník
 	Home	Domů
 	Open	Otevřít
 	Open a PDF ({key})	Otevřít PDF ({key})
-	Dark gray theme	Tmavě šedý motiv
 	Light theme	Světlý motiv
 	All tools	Všechny nástroje
 	Read	Čtení
 	Convert	Převod
 	E-Sign	E-podpis
 	Print ({key})	Tisk ({key})
-	Save (M4)	Uložit (M4)
 	Document properties ({key})	Vlastnosti dokumentu ({key})
 	Find tools and commands	Najít nástroje a příkazy
 	Fit to height	Přizpůsobit výšce
@@ -270,11 +268,9 @@ key	Space	Mezerník
 	Next page	Další stránka
 	Previous page	Předchozí stránka
 	Current page — type a page number or label (such as iv) and press Enter	Aktuální stránka — zadejte číslo nebo označení stránky (třeba iv) a stiskněte Enter
-	Use now	Použít
 	Open file	Otevřít soubor
 	Recent	Nedávné
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Zde se zobrazí soubory, které otevřete v PdfCraftu. Soubor PDF otevřete přetažením kamkoli do okna.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Skripty běží v izolovaném prostředí bez přístupu k souborům a síti. S vypnutým JavaScriptem dál fungují standardní funkce Acrobatu pro formátování, ověření a výpočty.
 	Back to all tools	Zpět na všechny nástroje
 	Close panel	Zavřít panel
 	View less	Zobrazit méně
@@ -381,7 +377,6 @@ key	Space	Mezerník
 	Export a PDF	Exportovat PDF
 	Export to	Exportovat do
 	Microsoft Word (.docx)	Microsoft Word (.docx)
-	Spreadsheet (.xlsx)	Tabulka (.xlsx)
 	Presentation (.pptx)	Prezentace (.pptx)
 	Image (PNG)	Obrázek (PNG)
 	Export all images	Exportovat všechny obrázky
@@ -504,7 +499,6 @@ key	Space	Mezerník
 	Fix hairlines	Opravit vlasové čáry
 	Measure objects	Měřit objekty
 	Measure	Měření
-	Measuring tool	Nástroj pro měření
 	Geospatial location	Geoprostorová poloha
 	Compare files	Porovnat soubory
 	Select files to compare	Vyberte soubory k porovnání
@@ -838,7 +832,6 @@ key	Space	Mezerník
 	{verb} Header and Footer	{verb} záhlaví a zápatí
 	{verb} Watermark	{verb} vodoznak
 	{verb} Background	{verb} pozadí
-	Margins (in)	Okraje (palce)
 	Left Header Text	Text záhlaví vlevo
 	Center Header Text	Text záhlaví uprostřed
 	Right Header Text	Text záhlaví vpravo
@@ -1284,9 +1277,6 @@ key	Space	Mezerník
 	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	Rozpoznávání textu není nainstalováno: chybí soubory jeho modelů. Přeinstalujte PdfCraft nebo nastavte PDFCRAFT_MODELS na složku, ve které jsou.
 	Settings	Nastavení
 	Optional	Volitelné
-	Planned · {m}	Plánováno · {m}
-	Planned for milestone {m} — open to see what it will include	Plánováno pro milník {m} — otevřete a uvidíte, co bude obsahovat
-	Coming in milestone {m}. Items marked Ready work today.	Přijde v milníku {m}. Položky označené Připraveno fungují už dnes.
 	1 mark	1 značka
 	{n} marks	Značky: {n}
 	Dynamic	Dynamická
@@ -1757,7 +1747,6 @@ key	Space	Mezerník
 	watermark	vodoznak
 	background	pozadí
 	This document isn't password-protected	Tento dokument není chráněný heslem
-	Only the document's owner can change its security (open it with the permissions password)	Zabezpečení může změnit jen vlastník dokumentu (otevřete ho heslem oprávnění)
 	The document's security settings don't allow this change	Nastavení zabezpečení dokumentu tuto změnu nedovoluje
 	The document's security settings don't allow copying text and images	Nastavení zabezpečení dokumentu nedovoluje kopírovat text a obrázky
 	Open a document first	Nejdřív otevřete dokument
@@ -1792,7 +1781,6 @@ key	Space	Mezerník
 	At least one signature has problems.	Alespoň jeden podpis má problémy.
 	This document is secured. Some changes are restricted by its security settings.	Tento dokument je zabezpečený. Některé změny omezuje jeho nastavení zabezpečení.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Toto je dynamický formulář XFA, který PdfCraft zatím neumí zobrazit. Vidíte zástupnou stránku souboru.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Tento formulář obsahuje také data XFA, která PdfCraft zatím nečte. Pole můžete vyplnit, ale Acrobat může místo nich zobrazit hodnoty XFA.
 	This document contains {n} interactive form fields.	Tento dokument obsahuje interaktivní formulářová pole (počet: {n}).
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Tento soubor byl poškozený a byl opraven. Uložením se zachová opravená verze.
 	Dismiss	Zavřít
@@ -1824,8 +1812,6 @@ key	Space	Mezerník
 	Page	Stránka
 	None	Žádné
 	Delete selected fields	Odstranit vybraná pole
-	Diagnostic details	Diagnostické podrobnosti
-	The operation failed.	Operace selhala.
 	no such document	takový dokument neexistuje
 	nothing to undo	není co vrátit zpět
 	nothing to redo	není co provést znovu
@@ -1976,10 +1962,7 @@ key	Space	Mezerník
 	Set status Cancelled	Nastavit stav Zrušeno
 	Set status Completed	Nastavit stav Dokončeno
 	Set status None	Nastavit stav Žádný
-	Set status Unmarked	Nastavit stav Neoznačeno
-	Save as PDF/A-1b	Uložit jako PDF/A-1b
 	Save as PDF/A-2b	Uložit jako PDF/A-2b
-	Save as PDF/A-3b	Uložit jako PDF/A-3b
 	Fill & Sign: change signature	Vyplnit a podepsat: změnit podpis
 	Fill & Sign: change initials	Vyplnit a podepsat: změnit iniciály
 	Fill & Sign: remove saved signature	Vyplnit a podepsat: odebrat uložený podpis
@@ -2072,11 +2055,9 @@ key	Space	Mezerník
 	Save these pages as one PDF	Uložit tyto stránky jako jedno PDF
 	No changes to save	Žádné změny k uložení
 	Created a PDF from {n} files; left out: {names}	PDF vytvořeno ze souborů (počet: {n}); vynecháno: {names}
-	Created a PDF from the first {n} files	PDF vytvořeno z prvních souborů (počet: {n})
 	Optimization is already running	Optimalizace už běží
 	Optimization cancelled	Optimalizace zrušena
 	Couldn't optimize the file	Soubor nelze optimalizovat
-	Files are combined in this order. Leave Pages empty to take every page.	Soubory se slučují v tomto pořadí. Ponecháte-li Stránky prázdné, použijí se všechny stránky.
 	Show	Zobrazit
 	Sort	Seřadit
 	Reverse the order	Obrátit pořadí
@@ -2198,7 +2179,6 @@ certificate	Subject	Subjekt
 	The selected fields could not be found. Select them again.	Vybraná pole nebyla nalezena. Vyberte je znovu.
 	The field {name} no longer exists.	Pole {name} už neexistuje.
 	A selected field has no widget on any page, so the fields can't be edited together.	Vybrané pole nemá na žádné stránce widget, takže pole nelze upravit společně.
-	Text recognition isn't installed: its models are missing (run `cargo xtask models`, or set PDFCRAFT_MODELS).	Rozpoznávání textu není nainstalováno: chybí jeho modely (spusťte `cargo xtask models` nebo nastavte PDFCRAFT_MODELS).
 	 ({n} at {dpi} dpi, the largest size they can be drawn at)	 (stránky: {n}, s rozlišením {dpi} dpi, největším, v jakém je lze vykreslit)
 
 # Labels added upstream since the catalog was completed: the Combine grid, printing, the comment
