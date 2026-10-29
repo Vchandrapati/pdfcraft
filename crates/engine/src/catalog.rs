@@ -225,8 +225,8 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
                     item("Oval", "circle", "comment.circle", Ready),
                     item("Line", "minus", "comment.line", Ready),
                     item("Arrow", "move-right", "comment.arrow", Ready),
-                    item("Cloud", "cloud", "comment.cloud", Planned("M5")),
-                    item("Stamp", "stamp", "comment.stamp", Planned("M5")),
+                    item("Cloud", "cloud", "comment.cloud", Ready),
+                    item("Stamp", "stamp", "comment.stamp", Ready),
                 ],
             },
             ToolSection {
