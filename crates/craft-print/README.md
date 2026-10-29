@@ -13,7 +13,6 @@ let receipt = craft_print::submit(&pdf_bytes, &job)?;
 The caller generates the PDF, checks document permissions, and handles page selection,
 imposition, marks and bleed. This crate discovers printers, exposes CUPS driver options,
 opens Windows printer preferences and submits jobs with copies, collation, duplex and colour.
-`command_preview` returns diagnostics without creating files or starting a process.
 
 - **macOS/Linux:** CUPS `lpstat`, `lpoptions` and `lp`. Jobs stream through stdin. Exact-size
   sheets use `fit-to-page=false`; shrink-to-fit uses IPP `print-scaling=auto-fit`.
@@ -42,14 +41,9 @@ printer parsing, PPD options and argument mapping. On Windows it also parses the
 PowerShell, checks physical sheet geometry, duplex and raster bounds without hardware,
 renders a mixed-orientation PDF through WinRT, and attempts submission to a temporary paused
 queue. The queue portion explicitly skips if the driver or administrative rights are absent;
-rendering and geometry tests do not skip. Windows CI installs the inbox test driver and sets
-`CRAFT_PRINT_REQUIRE_QUEUE=1`, making queue preparation/submission mandatory on its runner.
+rendering and geometry tests do not skip. With the inbox test driver installed, setting
+`CRAFT_PRINT_REQUIRE_QUEUE=1` makes queue preparation and submission mandatory.
 Physical printer fidelity remains a hardware check.
-
-The cross-platform GitHub Actions workflow is defined in `.github/workflows/print.yml`.
-It runs formatting, Clippy and this crate's own tests on Windows, Linux and macOS when print
-code changes, and supports manual runs. The Windows job executes the WinRT and spooler
-regressions above; physical printer fidelity still requires hardware verification.
 
 Windows discovery reports driver duplex support in `Printer::two_sided`; CUPS leaves it unknown.
 Callers can warn when a Windows driver ignores the job’s duplex choice.

@@ -474,19 +474,6 @@ fn windows_job_files_are_distinct_and_removed_on_drop() {
 }
 
 #[test]
-fn command_previews_do_not_require_pdf_files() {
-    let job = Job { printer: Some("Office (east)".into()), copies: 2, ..Job::default() };
-    let preview = command_preview(&job).unwrap();
-    if backend() == Some(Backend::Cups) {
-        assert_eq!(preview[0], "lp");
-        assert_eq!(preview[1..], lp_args(&job));
-    } else {
-        assert_eq!(preview[0], "powershell");
-        assert!(!preview.join(" ").contains(".pdf"));
-    }
-}
-
-#[test]
 fn queue_duplex_defaults_and_explicit_scaling_reach_the_spooler() {
     let default_args = lp_args(&Job::default());
     assert!(!default_args.iter().any(|a| a.starts_with("sides=")));

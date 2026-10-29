@@ -595,33 +595,3 @@ pub(crate) fn job_message(stdout: &[u8]) -> String {
     let s = s.trim();
     s.strip_suffix("(0 file(s))").map_or(s, str::trim_end).to_string()
 }
-
-/// The platform backend. No backend is available in the browser.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Backend {
-    Cups,
-    WindowsPdf,
-}
-
-pub const fn backend() -> Option<Backend> {
-    if cfg!(windows) {
-        Some(Backend::WindowsPdf)
-    } else if cfg!(all(unix, not(target_arch = "wasm32"))) {
-        Some(Backend::Cups)
-    } else {
-        None
-    }
-}
-
-/// A diagnostic command preview; creates no job file and starts no process.
-/// On Windows the last element describes the embedded script. Submit with [`submit`],
-/// rather than executing this preview. PDF bytes are supplied separately.
-pub fn command_preview(job: &Job) -> Result<Vec<String>, Error> {
-    match backend() {
-        Some(Backend::Cups) => Ok(std::iter::once("lp".to_string()).chain(lp_args(job)).collect()),
-        Some(Backend::WindowsPdf) => {
-            Ok(["powershell", "-NoProfile", "-NonInteractive", "-Command", "<embedded craft-print PDF spooler>"].map(str::to_string).to_vec())
-        }
-        None => Err(Error::Spool("printing to a printer isn't available on this platform yet; save the print-ready PDF instead".into())),
-    }
-}
