@@ -151,125 +151,23 @@ pub fn cancel_drag<P: Clone + Send + Sync + 'static>(ctx: &Context, area_id: Id)
     }
 }
 
-/// One mutable application adapter owns bodies, menus and shaped text, avoiding competing
-/// mutable closures. Logical labels remain separate and are used for tab accessibility.
-pub trait DockContent<P> {
-    fn body(&mut self, ui: &mut Ui, panel: &P);
-    fn label(&mut self, _ui: &Ui, _panel: &P, logical: &str, _font: &FontId, _color: Color32) -> egui::WidgetText {
-        logical.into()
-    }
-    /// Shape stock Float/Move/Close action text independently of panel identity.
-    /// The renderer preserves `logical` for accessibility, even when the visual text differs.
-    fn action_label(&mut self, _ui: &Ui, logical: &str, _font: &FontId, _color: Color32) -> egui::WidgetText {
-        logical.into()
-    }
-    fn panel_menu(&mut self, _ui: &mut Ui, _panel: &P) {}
-    fn group_header_width(&self, _panels: &[P], _active: &P, _floating: bool) -> f32 {
-        0.0
-    }
-    fn group_header(&mut self, _ui: &mut Ui, _panels: &[P], _active: &P, _floating: bool) {}
-}
-
-struct BodyContent<F>(F);
-impl<P, F: FnMut(&mut Ui, &P)> DockContent<P> for BodyContent<F> {
-    fn body(&mut self, ui: &mut Ui, panel: &P) {
-        (self.0)(ui, panel);
-    }
-}
-
 /// Optional renderer for applications without an existing docking surface. Apps with custom
 /// chrome can instead use the model, target resolver and resize/tab primitives independently.
-pub struct DockArea<P = ()> {
+pub struct DockArea {
     id: Id,
-    activation: Option<P>,
-    blockers: Vec<Rect>,
 }
 
-impl<P: Clone + Eq + Hash + Debug + Send + Sync + 'static> DockArea<P> {
+impl DockArea {
     pub fn new(id: Id) -> Self {
-        Self { id, activation: None, blockers: Vec::new() }
+        Self { id }
     }
 
-    /// Whether keyboard focus belongs to a rendered docking control in this layout.
-    /// Panel bodies and application-provided header/menu widgets are excluded. Hosts may
-    /// route nonconflicting global shortcuts through chrome while retaining widget ownership
-    /// of activation, traversal, resize and cancellation keys. Invalid layouts return false.
-    pub fn chrome_has_focus(&self, ctx: &egui::Context, layout: &Layout<P>) -> bool {
-        let Some(focused) = ctx.memory(|memory| memory.focused()) else { return false };
-        if layout.validate().is_err() || ctx.read_response(focused).is_none() {
-            return false;
-        }
-        let matches = |id: Id| id == focused;
-        let group = |panels: &[P]| {
-            panels.iter().any(|panel| matches(self.id.with(("tab", panel))) || matches(self.id.with(("overflow", panel))))
-                || matches(self.id.with(("move-group", panels.first())))
-        };
-        for floating in &layout.floating {
-            if group(&floating.panels) || floating.panels.first().is_some_and(|first| matches(self.id.with(("floating", first)).with("resize"))) {
-                return true;
-            }
-        }
-        let mut nodes = layout.root.as_ref().map(|root| vec![(root, Vec::<bool>::new())]).unwrap_or_default();
-        while let Some((node, path)) = nodes.pop() {
-            match node {
-                Node::Tabs { panels, .. } if group(panels) => return true,
-                Node::Stack { entries } => {
-                    if entries.iter().any(|entry| {
-                        matches(self.id.with(("tab", &entry.panel)))
-                            || matches(self.id.with(("collapse", &entry.panel)))
-                            || matches(self.id.with(("stack-resize", &entry.panel)))
-                    }) {
-                        return true;
-                    }
-                }
-                Node::Split { first, second, .. } => {
-                    if matches(self.id.with(("split", &path))) {
-                        return true;
-                    }
-                    let mut second_path = path.clone();
-                    second_path.push(true);
-                    let mut first_path = path;
-                    first_path.push(false);
-                    nodes.push((second, second_path));
-                    nodes.push((first, first_path));
-                }
-                _ => {}
-            }
-        }
-        false
-    }
-
-    /// Raise and focus a panel's owning floating area on this frame. Apply Activate through
-    /// the application's command path as well to select its tab.
-    pub fn raise_panel(mut self, panel: P) -> Self {
-        self.activation = Some(panel);
-        self
-    }
-
-    /// Host overlays that must reject docking gestures, including floating fallback.
-    pub fn blocked_rects(mut self, rects: &[Rect]) -> Self {
-        self.blockers = rects.to_vec();
-        self
-    }
-
-    /// Render a validated snapshot and return requested actions for the app's command handler.
-    /// No action is applied here. Panel contents get a global stable egui ID across moves.
-    /// Floating groups are egui areas inside this viewport; this does not create native windows.
-    pub fn show(
-        self,
-        ui: &mut Ui,
-        layout: &Layout<P>,
-        style: &DockStyle,
-        label: impl Fn(&P) -> String,
-        permissions: impl Fn(&P) -> Permissions,
-        body: impl FnMut(&mut Ui, &P),
-    ) -> DockOutput<P> {
-        self.show_with_limits(ui, layout, style, label, permissions, |_| PanelLimits::default(), body)
-    }
-
-    /// Like [`Self::show`], with per-panel size policies supplied by the application.
+    /// Render a validated snapshot and return requested actions for the app's command handler,
+    /// with per-panel size policies supplied by the application. No action is applied here.
+    /// Panel contents get a global stable egui ID across moves. Floating groups are egui areas
+    /// inside this viewport; this does not create native windows.
     #[allow(clippy::too_many_arguments)]
-    pub fn show_with_limits(
+    pub fn show_with_limits<P: Clone + Eq + Hash + Debug + Send + Sync + 'static>(
         self,
         ui: &mut Ui,
         layout: &Layout<P>,
@@ -277,23 +175,7 @@ impl<P: Clone + Eq + Hash + Debug + Send + Sync + 'static> DockArea<P> {
         label: impl Fn(&P) -> String,
         permissions: impl Fn(&P) -> Permissions,
         limits: impl Fn(&P) -> PanelLimits,
-        body: impl FnMut(&mut Ui, &P),
-    ) -> DockOutput<P> {
-        self.show_customized(ui, layout, style, label, permissions, limits, &mut BodyContent(body))
-    }
-
-    /// Render with application-owned chrome and shaped labels. Header callbacks queue app
-    /// commands; structural changes are applied after rendering, like DockOutput actions.
-    #[allow(clippy::too_many_arguments)]
-    pub fn show_customized(
-        self,
-        ui: &mut Ui,
-        layout: &Layout<P>,
-        style: &DockStyle,
-        label: impl Fn(&P) -> String,
-        permissions: impl Fn(&P) -> Permissions,
-        limits: impl Fn(&P) -> PanelLimits,
-        content: &mut impl DockContent<P>,
+        mut body: impl FnMut(&mut Ui, &P),
     ) -> DockOutput<P> {
         let rect = ui.available_rect_before_wrap();
         if let Err(error) = layout.validate() {
@@ -310,9 +192,7 @@ impl<P: Clone + Eq + Hash + Debug + Send + Sync + 'static> DockArea<P> {
             label: &label,
             permissions: &permissions,
             limits: &limits,
-            content,
-            activation: self.activation,
-            blockers: self.blockers,
+            body: &mut body,
             layout,
             targets: Vec::new(),
             owned_interactions: Vec::new(),
@@ -336,9 +216,7 @@ struct Renderer<'a, P> {
     label: &'a dyn Fn(&P) -> String,
     permissions: &'a dyn Fn(&P) -> Permissions,
     limits: &'a dyn Fn(&P) -> PanelLimits,
-    content: &'a mut dyn DockContent<P>,
-    activation: Option<P>,
-    blockers: Vec<Rect>,
+    body: &'a mut dyn FnMut(&mut Ui, &P),
     layout: &'a Layout<P>,
     targets: Vec<DropTarget<P>>,
     owned_interactions: Vec<Id>,
@@ -538,7 +416,7 @@ impl<P: Clone + Eq + Hash + Debug + Send + Sync + 'static> Renderer<'_, P> {
         let mut child =
             ui.new_child(UiBuilder::new().id(self.id.with(("body", panel))).max_rect(rect).layout(egui::Layout::top_down(egui::Align::Min)));
         child.set_clip_rect(rect.intersect(ui.clip_rect()));
-        self.content.body(&mut child, panel);
+        (self.body)(&mut child, panel);
         if child.rect_contains_pointer(rect) && child.input(|i| i.pointer.primary_pressed()) {
             self.output.focused = Some(panel.clone());
         }
@@ -593,26 +471,17 @@ impl<P: Clone + Eq + Hash + Debug + Send + Sync + 'static> Renderer<'_, P> {
             ui.painter().line_segment([grip.center() - vec2(0.0, 5.0), grip.center() + vec2(0.0, 5.0)], self.style.border);
             strip.min.x = grip.right();
         }
-        let requested = self.content.group_header_width(panels, selected, floating);
-        let header_width = if requested.is_finite() { requested.clamp(0.0, strip.width()) } else { 0.0 };
-        if header_width > 0.0 {
-            let header = Rect::from_min_max(pos2(strip.right() - header_width, strip.top()), strip.max);
-            let mut child = ui.new_child(UiBuilder::new().id(self.id.with(("header", selected))).max_rect(header));
-            child.set_clip_rect(header.intersect(ui.clip_rect()));
-            self.content.group_header(&mut child, panels, selected, floating);
-        }
         let widths: Vec<f32> = panels
             .iter()
             .map(|p| {
-                self.content
-                    .label(ui, p, &(self.label)(p), &self.style.font, self.style.text)
+                egui::WidgetText::from((self.label)(p))
                     .into_galley(ui, Some(egui::TextWrapMode::Extend), f32::INFINITY, self.style.font.clone())
                     .size()
                     .x
                     + 24.0
             })
             .collect();
-        let fit = tabs::fit(&widths, active, (strip.width() - header_width).max(0.0), 40.0, 22.0);
+        let fit = tabs::fit(&widths, active, strip.width(), 40.0, 22.0);
         let mut x = strip.left();
         let mut targets = Vec::new();
         for (index, width) in &fit.shown {
@@ -661,8 +530,7 @@ impl<P: Clone + Eq + Hash + Debug + Send + Sync + 'static> Renderer<'_, P> {
 
     fn menu_label(&mut self, ui: &mut Ui, panel: &P) -> egui::Response {
         let logical = (self.label)(panel);
-        let text = self.content.label(ui, panel, &logical, &self.style.font, self.style.text);
-        let response = ui.button(text);
+        let response = ui.button(logical.as_str());
         response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), &logical));
         response
     }
@@ -671,12 +539,7 @@ impl<P: Clone + Eq + Hash + Debug + Send + Sync + 'static> Renderer<'_, P> {
         let policy = (self.permissions)(panel);
         let label = (self.label)(panel);
         let color = if active { self.style.text } else { self.style.inactive_text };
-        let galley = self.content.label(ui, panel, &label, &self.style.font, color).into_galley(
-            ui,
-            Some(egui::TextWrapMode::Extend),
-            f32::INFINITY,
-            self.style.font.clone(),
-        );
+        let galley = egui::WidgetText::from(label.as_str()).into_galley(ui, Some(egui::TextWrapMode::Extend), f32::INFINITY, self.style.font.clone());
         let response = tabs::Tab::new(self.id.with(("tab", panel)), &label, active)
             .sense(if policy.movable { Sense::click_and_drag() } else { Sense::click() })
             .focus_stroke(Stroke::new(1.0, self.style.accent))
@@ -694,11 +557,8 @@ impl<P: Clone + Eq + Hash + Debug + Send + Sync + 'static> Renderer<'_, P> {
             begin_drag(ui.ctx(), self.id, panel.clone(), group);
         }
         response.context_menu(|ui| {
-            self.content.panel_menu(ui, panel);
             if policy.movable && policy.floatable {
-                let text = self.content.action_label(ui, &self.style.float_label, &self.style.font, self.style.text);
-                let response = ui.button(text);
-                response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), &self.style.float_label));
+                let response = ui.button(self.style.float_label.as_str());
                 if response.clicked() {
                     let rect = clamp_float(group.translate(vec2(24.0, 24.0)), ui.ctx().content_rect());
                     self.output.actions.push(Action::Float { panel: panel.clone(), rect: [rect.left(), rect.top(), rect.width(), rect.height()] });
@@ -706,8 +566,7 @@ impl<P: Clone + Eq + Hash + Debug + Send + Sync + 'static> Renderer<'_, P> {
                 }
             }
             if policy.movable {
-                let text = self.content.action_label(ui, &self.style.move_label, &self.style.font, self.style.text);
-                let response = ui.menu_button(text, |ui| {
+                ui.menu_button(self.style.move_label.as_str(), |ui| {
                     egui::ScrollArea::vertical().max_height(360.0).show(ui, |ui| {
                         for target in self.layout.panels() {
                             if target != panel && (self.permissions)(target).accepts_tabs && self.menu_label(ui, target).clicked() {
@@ -721,12 +580,9 @@ impl<P: Clone + Eq + Hash + Debug + Send + Sync + 'static> Renderer<'_, P> {
                         }
                     });
                 });
-                response.response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), &self.style.move_label));
             }
             if policy.closable {
-                let text = self.content.action_label(ui, &self.style.close_label, &self.style.font, self.style.text);
-                let response = ui.button(text);
-                response.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, ui.is_enabled(), &self.style.close_label));
+                let response = ui.button(self.style.close_label.as_str());
                 if response.clicked() {
                     self.output.actions.push(Action::Close { panel: panel.clone() });
                     ui.close();
@@ -753,11 +609,6 @@ impl<P: Clone + Eq + Hash + Debug + Send + Sync + 'static> Renderer<'_, P> {
             let size = vec2(width, height).max(limits.min).min(limits.max);
             let rect = clamp_float(Rect::from_min_size(pos2(x, y), size), screen);
             let id = self.id.with(("floating", first));
-            if self.activation.as_ref().is_some_and(|panel| group.panels.contains(panel)) {
-                ctx.move_to_top(egui::LayerId::new(egui::Order::Middle, id));
-                ctx.memory_mut(|memory| memory.request_focus(self.id.with(("tab", self.activation.as_ref().unwrap_or(first)))));
-                self.output.focused = self.activation.clone();
-            }
             egui::Area::new(id).order(egui::Order::Middle).fixed_pos(rect.min).movable(false).constrain_to(screen).show(ctx, |ui| {
                 ui.set_min_size(rect.size());
                 let rect = Rect::from_min_size(ui.min_rect().min, rect.size());
@@ -816,13 +667,10 @@ impl<P: Clone + Eq + Hash + Debug + Send + Sync + 'static> Renderer<'_, P> {
             ctx.data_mut(|d| d.remove::<GroupDrag<P>>(self.id.with("group-drag")));
             if escape || !focused {
                 self.output.actions.push(Action::MoveFloating { panel: drag.panel, rect: drag.original });
-            } else if released
-                && let Some(pointer) = pointer.filter(|p| p.is_finite())
-                && !self.blockers.iter().any(|r| r.contains(pointer))
-            {
+            } else if released && let Some(pointer) = pointer.filter(|p| p.is_finite()) {
                 self.output.group_drop = Some((drag.panel, pointer));
             }
-        } else if pointer.is_some_and(|p| !self.blockers.iter().any(|r| r.contains(p))) {
+        } else if pointer.is_some() {
             self.output.group_drag = Some(drag.panel);
         }
     }
@@ -842,12 +690,6 @@ impl<P: Clone + Eq + Hash + Debug + Send + Sync + 'static> Renderer<'_, P> {
             }
             return;
         };
-        if self.blockers.iter().any(|rect| rect.contains(pointer)) {
-            if released {
-                cancel_drag::<P>(ctx, self.id);
-            }
-            return;
-        }
         let proposal = resolve_drop(&drag.panel, pointer, &self.targets);
         if released {
             cancel_drag::<P>(ctx, self.id);

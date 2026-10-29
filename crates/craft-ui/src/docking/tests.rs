@@ -305,12 +305,13 @@ fn frame(ctx: &Context, layout: &Layout<u32>, events: Vec<Event>, focused: bool)
     let input = RawInput { screen_rect: Some(Rect::from_min_size(pos2(0.0, 0.0), vec2(800.0, 600.0))), events, focused, ..Default::default() };
     ctx.run_ui(input, |ui| {
         let style = DockStyle::from_ui(ui);
-        output = DockArea::new(Id::new("test-area")).show(
+        output = DockArea::new(Id::new("test-area")).show_with_limits(
             ui,
             layout,
             &style,
             |p| format!("Panel {p}"),
             |_| Permissions::default(),
+            |_| PanelLimits::default(),
             |ui, _| {
                 ids.push(ui.id());
                 ui.label("Actual panel content");
@@ -525,12 +526,13 @@ fn split_inner_edge_remains_draggable_beside_a_scrollbar() {
         let mut output = DockOutput::default();
         let mut sidebar = Rect::NOTHING;
         ctx.run_ui(RawInput { screen_rect: Some(Rect::from_min_size(pos2(0.0, 0.0), vec2(800.0, 600.0))), events, ..Default::default() }, |ui| {
-            output = DockArea::new(Id::new("scrolling-dock")).show(
+            output = DockArea::new(Id::new("scrolling-dock")).show_with_limits(
                 ui,
                 layout,
                 &DockStyle::from_ui(ui),
                 |p| format!("Panel {p}"),
                 |_| Permissions::default(),
+                |_| PanelLimits::default(),
                 |ui, panel| {
                     if *panel == 1 {
                         sidebar = ui.max_rect();
@@ -597,12 +599,13 @@ fn floating_only_surface_does_not_allocate_the_callers_document_region() {
     let layout = Layout { root: None, floating: vec![Floating { panels: vec![1u32], active: 0, rect: [30.0, 40.0, 200.0, 200.0] }] };
     ctx.run_ui(RawInput { screen_rect: Some(Rect::from_min_size(pos2(0.0, 0.0), vec2(800.0, 600.0))), ..Default::default() }, |ui| {
         let before = ui.available_rect_before_wrap();
-        let out = DockArea::new(Id::new("float-only")).show(
+        let out = DockArea::new(Id::new("float-only")).show_with_limits(
             ui,
             &layout,
             &DockStyle::from_ui(ui),
             |p| p.to_string(),
             |_| Permissions::default(),
+            |_| PanelLimits::default(),
             |ui, _| {
                 ui.label("Panel");
             },
@@ -643,13 +646,6 @@ fn floating_group_grip_moves_every_member_while_tab_drag_detaches_one() {
     assert_eq!(layout.floating[0].panels, vec![6]);
 }
 
-struct CustomContent {
-    labels: Vec<String>,
-    headers: usize,
-    menus: usize,
-    bodies: usize,
-}
-
 #[test]
 fn host_cancel_discards_group_drag_before_workspace_replacement() {
     let ctx = Context::default();
@@ -669,108 +665,10 @@ fn host_cancel_discards_group_drag_before_workspace_replacement() {
     let actions = step(&ctx, &mut layout, vec![Event::PointerMoved(moved + vec2(20.0, 10.0))]);
     assert!(actions.is_empty());
     assert_eq!(layout, replacement);
-    let mut content = CustomContent { labels: vec![], headers: 0, menus: 0, bodies: 0 };
-    let output = custom_frame(&ctx, &layout, &mut content, vec![pointer_button(moved + vec2(20.0, 10.0), false)], &[], false);
+    let (output, _) = frame(&ctx, &layout, vec![pointer_button(moved + vec2(20.0, 10.0), false)], true);
     assert!(output.group_drag.is_none());
     assert!(output.group_drop.is_none());
 }
-impl DockContent<u32> for CustomContent {
-    fn body(&mut self, ui: &mut egui::Ui, _: &u32) {
-        self.bodies += 1;
-        ui.label("Editable content");
-    }
-    fn label(&mut self, ui: &egui::Ui, _: &u32, logical: &str, font: &egui::FontId, color: egui::Color32) -> egui::WidgetText {
-        self.labels.push(logical.to_owned());
-        ui.painter().layout_no_wrap("Custom visual label".into(), font.clone(), color).into()
-    }
-    fn action_label(&mut self, ui: &egui::Ui, logical: &str, font: &egui::FontId, color: egui::Color32) -> egui::WidgetText {
-        ui.painter().layout_no_wrap(format!("Action visual: {logical}"), font.clone(), color).into()
-    }
-    fn panel_menu(&mut self, ui: &mut egui::Ui, _: &u32) {
-        self.menus += 1;
-        ui.button("App menu").clicked();
-    }
-    fn group_header_width(&self, _: &[u32], _: &u32, _: bool) -> f32 {
-        40.0
-    }
-    fn group_header(&mut self, ui: &mut egui::Ui, _: &[u32], _: &u32, _: bool) {
-        self.headers += 1;
-        assert!(ui.max_rect().width() <= 40.0);
-        ui.label("⋮");
-    }
-}
-
-fn custom_frame(
-    ctx: &Context,
-    layout: &Layout<u32>,
-    content: &mut CustomContent,
-    events: Vec<Event>,
-    blockers: &[Rect],
-    raise: bool,
-) -> DockOutput<u32> {
-    let mut out = DockOutput::default();
-    ctx.run_ui(RawInput { screen_rect: Some(Rect::from_min_size(pos2(0.0, 0.0), vec2(800.0, 600.0))), events, ..Default::default() }, |ui| {
-        let style = DockStyle::from_ui(ui);
-        let mut area = DockArea::new(Id::new("test-area")).blocked_rects(blockers);
-        if raise {
-            area = area.raise_panel(5);
-        }
-        out = area.show_customized(ui, layout, &style, |p| format!("Logical {p}"), |_| Permissions::default(), |_| PanelLimits::default(), content);
-    })
-    .textures_delta
-    .clear();
-    out
-}
-
-#[test]
-fn custom_chrome_shaped_labels_and_programmatic_raise_are_available() {
-    let ctx = Context::default();
-    let layout = sample();
-    let mut content = CustomContent { labels: vec![], headers: 0, menus: 0, bodies: 0 };
-    for _ in 0..2 {
-        custom_frame(&ctx, &layout, &mut content, vec![], &[], false);
-    }
-    let out = custom_frame(&ctx, &layout, &mut content, vec![], &[], true);
-    assert_eq!(out.focused, Some(5));
-    assert!(out.actions.is_empty());
-    assert!(content.headers >= 3 && content.bodies >= 3);
-    assert!(content.labels.iter().any(|s| s == "Logical 5"));
-    let at = pos2(130.0, 82.0);
-    custom_frame(
-        &ctx,
-        &layout,
-        &mut content,
-        vec![Event::PointerMoved(at), Event::PointerButton { pos: at, button: PointerButton::Secondary, pressed: true, modifiers: Modifiers::NONE }],
-        &[],
-        false,
-    );
-    custom_frame(
-        &ctx,
-        &layout,
-        &mut content,
-        vec![Event::PointerButton { pos: at, button: PointerButton::Secondary, pressed: false, modifiers: Modifiers::NONE }],
-        &[],
-        false,
-    );
-    assert!(content.menus > 0);
-}
-
-#[test]
-fn overlay_appearing_mid_drag_blocks_release_and_float_fallback() {
-    let ctx = Context::default();
-    let layout = sample();
-    let mut content = CustomContent { labels: vec![], headers: 0, menus: 0, bodies: 0 };
-    let source = Rect::from_min_size(pos2(80.0, 70.0), vec2(300.0, 220.0));
-    custom_frame(&ctx, &layout, &mut content, vec![Event::PointerMoved(pos2(130.0, 82.0)), pointer_button(pos2(130.0, 82.0), true)], &[], false);
-    assert!(begin_drag(&ctx, Id::new("test-area"), 5, source));
-    let at = pos2(700.0, 400.0);
-    let blocker = Rect::from_min_size(pos2(650.0, 350.0), vec2(100.0, 100.0));
-    let out = custom_frame(&ctx, &layout, &mut content, vec![Event::PointerMoved(at), pointer_button(at, false)], &[blocker], false);
-    assert!(out.actions.is_empty());
-    let out = custom_frame(&ctx, &layout, &mut content, vec![], &[], false);
-    assert!(out.actions.is_empty());
-}
-
 #[test]
 fn group_move_escape_restores_original_geometry() {
     let ctx = Context::default();
@@ -792,34 +690,6 @@ fn group_move_escape_restores_original_geometry() {
 }
 
 #[test]
-fn custom_headers_and_labels_render_at_small_and_large_scales() {
-    for scale in [0.75, 1.0, 1.5, 2.0] {
-        let ctx = Context::default();
-        ctx.set_pixels_per_point(scale);
-        let mut content = CustomContent { labels: vec![], headers: 0, menus: 0, bodies: 0 };
-        let layout = Layout { root: Some(tabs(&[1, 2, 3, 4, 5, 6], 5)), floating: vec![] };
-        let mut out = DockOutput::default();
-        ctx.run_ui(RawInput { screen_rect: Some(Rect::from_min_size(pos2(0.0, 0.0), vec2(120.0 * scale, 160.0))), ..Default::default() }, |ui| {
-            let style = DockStyle::from_ui(ui);
-            out = DockArea::new(Id::new("scaled")).show_customized(
-                ui,
-                &layout,
-                &style,
-                |p| format!("Logical {p}"),
-                |_| Permissions::default(),
-                |_| PanelLimits::default(),
-                &mut content,
-            );
-        })
-        .textures_delta
-        .clear();
-        assert!(out.error.is_none());
-        assert!(content.headers > 0 && content.bodies > 0);
-        assert!(content.labels.iter().any(|s| s == "Logical 6"));
-    }
-}
-
-#[test]
 fn protected_group_member_blocks_whole_group_gesture_and_host_drop() {
     let ctx = Context::default();
     let layout = sample();
@@ -834,12 +704,13 @@ fn protected_group_member_blocks_whole_group_gesture_and_host_drop() {
         let mut out = DockOutput::default();
         ctx.run_ui(RawInput { screen_rect: Some(Rect::from_min_size(pos2(0.0, 0.0), vec2(800.0, 600.0))), events, ..Default::default() }, |ui| {
             let style = DockStyle::from_ui(ui);
-            out = DockArea::new(Id::new("test-area")).show(
+            out = DockArea::new(Id::new("test-area")).show_with_limits(
                 ui,
                 &layout,
                 &style,
                 |p| format!("Panel {p}"),
                 |p| if *p == 6 { Permissions::PROTECTED } else { Permissions::default() },
+                |_| PanelLimits::default(),
                 |ui, _| {
                     ui.label("Body");
                 },
@@ -849,82 +720,6 @@ fn protected_group_member_blocks_whole_group_gesture_and_host_drop() {
         .clear();
         assert!(out.group_drag.is_none() && out.group_drop.is_none());
         assert!(!out.actions.iter().any(|a| matches!(a, Action::MoveFloating { .. })));
-    }
-}
-
-#[test]
-fn chrome_focus_classifies_rendered_tab_but_excludes_body_text_field_and_invalid_layout() {
-    let ctx = Context::default();
-    let layout = sample();
-    let tab = Id::new("focus-area").with(("tab", 3u32));
-    let text = Id::new("body-text");
-    let mut value = String::new();
-    let mut paint = |focus: Id| {
-        let mut output =
-            ctx.run_ui(RawInput { screen_rect: Some(Rect::from_min_size(pos2(0.0, 0.0), vec2(800.0, 600.0))), ..Default::default() }, |ui| {
-                DockArea::new(Id::new("focus-area")).show(
-                    ui,
-                    &layout,
-                    &DockStyle::from_ui(ui),
-                    |p| format!("Panel {p}"),
-                    |_| Permissions::default(),
-                    |ui, p| {
-                        if *p == 3 {
-                            ui.add(egui::TextEdit::singleline(&mut value).id(text));
-                        }
-                    },
-                );
-                ui.memory_mut(|memory| memory.request_focus(focus));
-            });
-        output.textures_delta.clear();
-    };
-    paint(tab);
-    assert!(DockArea::new(Id::new("focus-area")).chrome_has_focus(&ctx, &layout));
-    paint(text);
-    assert!(!DockArea::new(Id::new("focus-area")).chrome_has_focus(&ctx, &layout));
-    paint(tab);
-    let mut invalid = layout.clone();
-    invalid.floating.push(Floating { panels: vec![3], active: 0, rect: [10.0, 10.0, 100.0, 100.0] });
-    assert!(!DockArea::new(Id::new("focus-area")).chrome_has_focus(&ctx, &invalid));
-    assert!(!DockArea::<u32>::new(Id::new("focus-area")).chrome_has_focus(&ctx, &Layout::default()));
-    ctx.memory_mut(|memory| memory.request_focus(Id::new("unrendered")));
-    assert!(!DockArea::new(Id::new("focus-area")).chrome_has_focus(&ctx, &layout));
-}
-
-#[test]
-fn chrome_focus_classifies_rendered_accordion_and_split_and_floating_resizers() {
-    let ctx = Context::default();
-    let area = Id::new("focus-chrome-controls");
-    let accordion = Layout {
-        root: Some(Node::Stack {
-            entries: vec![StackEntry { panel: 1u32, open: true, height: Some(150.0) }, StackEntry { panel: 2u32, open: true, height: Some(150.0) }],
-        }),
-        floating: Vec::new(),
-    };
-    for (layout, id) in [
-        (accordion.clone(), area.with(("tab", 1u32))),
-        (accordion.clone(), area.with(("collapse", 1u32))),
-        (accordion, area.with(("stack-resize", 1u32))),
-        (sample(), area.with(("split", Vec::<bool>::new()))),
-        (sample(), area.with(("floating", 5u32)).with("resize")),
-    ] {
-        let mut output =
-            ctx.run_ui(RawInput { screen_rect: Some(Rect::from_min_size(pos2(0.0, 0.0), vec2(800.0, 600.0))), ..Default::default() }, |ui| {
-                DockArea::new(area).show(
-                    ui,
-                    &layout,
-                    &DockStyle::from_ui(ui),
-                    |p| format!("Panel {p}"),
-                    |_| Permissions::default(),
-                    |ui, _| {
-                        ui.label("Body");
-                    },
-                );
-                ui.memory_mut(|memory| memory.request_focus(id));
-            });
-        output.textures_delta.clear();
-        assert!(ctx.read_response(id).is_some(), "the fixture must render the control");
-        assert!(DockArea::new(area).chrome_has_focus(&ctx, &layout));
     }
 }
 
@@ -997,12 +792,13 @@ fn workspace_cancel_preserves_other_area_and_body_drag_ownership() {
                 let style = DockStyle::from_ui(ui);
                 for (id, x) in [(area, 0.0), (other, 400.0)] {
                     let mut child = ui.new_child(egui::UiBuilder::new().max_rect(Rect::from_min_size(pos2(x, 0.0), vec2(390.0, 580.0))));
-                    outputs.push(DockArea::new(id).show(
+                    outputs.push(DockArea::new(id).show_with_limits(
                         &mut child,
                         &layout,
                         &style,
                         |p| format!("Panel {p}"),
                         |_| Permissions::default(),
+                        |_| PanelLimits::default(),
                         |ui, p| {
                             if body_drag && id == area && *p == 1 {
                                 let rect = Rect::from_min_size(ui.max_rect().min + vec2(10.0, 10.0), vec2(100.0, 40.0));
@@ -1036,57 +832,5 @@ fn workspace_cancel_preserves_other_area_and_body_drag_ownership() {
         } else {
             assert!(!outputs[1].actions.is_empty());
         }
-    }
-}
-
-#[test]
-fn popup_action_labels_use_custom_visual_text_and_logical_accessibility() {
-    use egui_kittest::{Harness, kittest::Queryable};
-    fn paints(shape: &egui::Shape, text: &str) -> bool {
-        match shape {
-            egui::Shape::Text(shape) => shape.galley.text() == text,
-            egui::Shape::Vec(shapes) => shapes.iter().any(|shape| paints(shape, text)),
-            _ => false,
-        }
-    }
-    let layout = sample();
-    let mut h = Harness::builder().with_size(vec2(800.0, 600.0)).build_ui_state(
-        move |ui, content: &mut CustomContent| {
-            DockArea::new(Id::new("action-label-test")).show_customized(
-                ui,
-                &layout,
-                &DockStyle::from_ui(ui),
-                |p| format!("Logical {p}"),
-                |_| Permissions::default(),
-                |_| PanelLimits::default(),
-                content,
-            );
-        },
-        CustomContent { labels: vec![], headers: 0, menus: 0, bodies: 0 },
-    );
-    h.run_steps(2);
-    let tab = Id::new("action-label-test").with(("tab", &5_u32));
-    let at = h.ctx.read_response(tab).unwrap().rect.center();
-    h.input_mut().events.extend([
-        Event::PointerMoved(at),
-        Event::PointerButton { pos: at, button: PointerButton::Secondary, pressed: true, modifiers: Modifiers::NONE },
-    ]);
-    h.run_steps(1);
-    h.input_mut().events.push(Event::PointerButton { pos: at, button: PointerButton::Secondary, pressed: false, modifiers: Modifiers::NONE });
-    h.run_steps(2);
-    assert!(egui::Popup::is_any_open(&h.ctx));
-    for logical in ["Float panel", "Move to group", "Close panel"] {
-        assert!(
-            h.output().shapes.iter().any(|shape| paints(&shape.shape, &format!("Action visual: {logical}"))),
-            "custom action must paint: {logical}"
-        );
-        // This sample also has a floating-group grip labeled Move to group.
-        let expected = if logical == "Move to group" { 2 } else { 1 };
-        assert_eq!(h.query_all_by_label(logical).count(), expected, "popup action must retain its own logical accessibility: {logical}");
-        assert_eq!(
-            h.query_all_by_label(&format!("Action visual: {logical}")).count(),
-            0,
-            "visual substitution must not replace logical accessibility"
-        );
     }
 }
