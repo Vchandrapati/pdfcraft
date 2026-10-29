@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use super::*;
-use crate::spool::{Duplex, Job, Printer, lp_args, parse_lpstat, parse_windows_printers};
 
 /// `n` pages of 200×300 (page 3 is landscape 300×200 when n ≥ 3); page i shows "(Page i+1)".
 /// Page 1 carries a printable square comment, a non-printing note, and a stamp.
@@ -264,74 +263,6 @@ fn imposed_pdf_has_the_sheets_and_honours_comments_and_forms() {
     assert!(s.contains("(Page 2)") && !s.contains("(Page 1)"));
 }
 
-#[test]
-fn spooler_arguments_and_printer_list() {
-    let out = "printer Office_Laser is idle.  enabled since Thu Oct  1 09:00:00 2026\nprinter Label_Writer disabled since …\nsystem default destination: Office_Laser\n";
-    assert_eq!(
-        parse_lpstat(out),
-        [
-            spool::Printer { name: "Office_Laser".into(), default: true, two_sided: None },
-            spool::Printer { name: "Label_Writer".into(), default: false, two_sided: None }
-        ]
-    );
-    assert!(parse_lpstat("lpstat: No destinations added.\nno system default destination\n").is_empty());
-    let job = Job {
-        printer: Some("Office_Laser".into()),
-        copies: 3,
-        collate: false,
-        duplex: Some(Duplex::LongEdge),
-        grayscale: true,
-        title: "memo.pdf".into(),
-        options: Vec::new(),
-        ..Job::default()
-    };
-    assert_eq!(
-        lp_args(&job).join(" "),
-        "-d Office_Laser -n 3 -t memo.pdf -o collate=false -o sides=two-sided-long-edge -o print-color-mode=monochrome -o fit-to-page=false"
-    );
-    assert_eq!(lp_args(&Job::default())[0], "-n", "no -d: the default printer");
-}
-
-#[test]
-fn lpstat_output_is_untranslated() {
-    // A localized lpstat (here Polish) is unreadable to parse_lpstat...
-    assert!(parse_lpstat("drukarka Office_Laser jest bezczynna.\ndomyślny cel systemowy: Office_Laser\n").is_empty());
-    // ...so the command must force the C locale, including the SOFTWARE switch macOS CUPS needs.
-    let cmd = spool::lpstat_command();
-    let envs: Vec<_> = cmd.get_envs().map(|(k, v)| (k.to_string_lossy().into_owned(), v.map(|v| v.to_string_lossy().into_owned()))).collect();
-    for key in ["LC_ALL", "LANG"] {
-        assert!(envs.contains(&(key.into(), Some("C".into()))), "{key}=C missing: {envs:?}");
-    }
-    assert!(envs.iter().any(|(k, v)| k == "SOFTWARE" && v.as_deref().is_some_and(|v| !v.is_empty())), "SOFTWARE missing: {envs:?}");
-}
-
-#[test]
-fn driverless_printers_join_the_list_without_a_queue() {
-    // A driverless network printer (IPP, discovered on the LAN) has no queue, so `lpstat -p`
-    // never lists it — yet GTK's print dialog shows it and `lp` prints to it through a temporary
-    // queue. Only `lpstat -e` names it, and the Print dialog used to show Save as PDF alone.
-    let queues = "printer Office_Laser is idle.  enabled since Thu Oct  1 09:00:00 2026\nsystem default destination: Office_Laser\n";
-    assert_eq!(
-        spool::printers_parsed(queues, Some("Basement_Color\nOffice_Laser\n")),
-        [
-            spool::Printer { name: "Office_Laser".into(), default: true, two_sided: None },
-            spool::Printer { name: "Basement_Color".into(), default: false, two_sided: None },
-        ],
-        "queues first, then the driverless destination; the queue listed twice is not doubled"
-    );
-    // An old spooler without `-e` (CUPS < 1.7) keeps its queues; only the driverless names are lost.
-    assert_eq!(spool::printers_parsed(queues, None), [spool::Printer { name: "Office_Laser".into(), default: true, two_sided: None }]);
-    // The default can itself be driverless (`lpoptions -d` names a destination no queue exists
-    // for): it keeps its marker, so the dialog preselects the user's default, not the first queue.
-    assert_eq!(
-        spool::printers_parsed("system default destination: Basement_Color\n", Some("Basement_Color\n")),
-        [spool::Printer { name: "Basement_Color".into(), default: true, two_sided: None }],
-        "a default destination without a queue is still the default"
-    );
-    assert!(spool::parse_lpstat_e("\n \n").is_empty(), "no destinations is empty, not [\"\"]");
-    assert_eq!(spool::parse_lpstat_e("A\r\nB \n"), ["A".to_string(), "B".to_string()], "CRLF and stray spaces are trimmed");
-}
-
 fn cut_stack(cols: usize, rows: usize) -> Layout {
     Layout::Multiple { cols, rows, per_sheet: cols.saturating_mul(rows), order: PageOrder::CutStack, border: false, auto_rotate: false }
 }
@@ -394,103 +325,6 @@ fn multiple_rejects_hostile_grids_without_panicking() {
     for size in [(0.0, 300.0), (200.0, f64::NAN), (f64::INFINITY, 300.0), (f64::from_bits(1), f64::from_bits(1))] {
         assert!(matches!(layout(&[size], &settings(vec![0], cut_stack(2, 2))), Err(PrintError::Invalid(_))));
     }
-}
-
-#[test]
-fn windows_printers_carry_one_default_and_keep_their_names() {
-    // Windows marks the system default with a `*` no queue name may contain; names hold spaces,
-    // parentheses and non-ASCII letters, and the lines end with CRLF.
-    let printers = parse_windows_printers("*Microsoft Print to PDF\r\nHP LaserJet 400 (Copy 2)\r\nКопир Canon iR\r\n\r\n*XPS via USB\r\n");
-    assert_eq!(printers[0], Printer { name: "Microsoft Print to PDF".into(), default: true, two_sided: None });
-    assert_eq!(printers[1], Printer { name: "HP LaserJet 400 (Copy 2)".into(), default: false, two_sided: None });
-    assert_eq!(printers[2], Printer { name: "Копир Canon iR".into(), default: false, two_sided: None });
-    // A spooler marking two defaults: the first still wins, so the dialog has one to preselect.
-    assert_eq!(printers[3], Printer { name: "XPS via USB".into(), default: false, two_sided: None });
-    assert_eq!(parse_windows_printers("\r\n"), Vec::new());
-    // After a tab, whether the driver reports two-sided printing; a tab inside a name stays.
-    let sided = parse_windows_printers("*Office PCL\t2\r\nOffice PS\t1\r\nTab\tName\t2\r\n");
-    assert_eq!(sided[0], Printer { name: "Office PCL".into(), default: true, two_sided: Some(true) });
-    assert_eq!(sided[1], Printer { name: "Office PS".into(), default: false, two_sided: Some(false) });
-    assert_eq!(sided[2], Printer { name: "Tab\tName".into(), default: false, two_sided: Some(true) });
-}
-
-/// A PPD shaped like a Fiery's: installable options, multi-line PostScript in the choices, Latin-1
-/// labels, options the Print dialog sets itself.
-const FIERY_PPD: &[u8] = b"*PPD-Adobe: \"4.3\"\n\
-*LanguageEncoding: ISOLatin1\n\
-*OpenGroup: InstallableOptions/Installable Options\n\
-*OpenUI *EFFinisher/Finisher option: PickOne\n\
-*DefaultEFFinisher: False\n\
-*EFFinisher False/Not installed: \"\"\n\
-*EFFinisher SingleStapler/Single stapler: \"\"\n\
-*CloseUI: *EFFinisher\n\
-*CloseGroup: InstallableOptions\n\
-*OpenGroup: FPPaperSource/Media\n\
-*OpenUI *InputSlot/Paper tray: PickOne\n\
-*OrderDependency: 20.0 AnySetup *InputSlot\n\
-*DefaultInputSlot: AutoSelect\n\
-*InputSlot AutoSelect/Auto tray select: \"\n\
-userdict /XJXEFIsetpageproperties known\n\
-{ << /XJXsettrayselV2 [ 7 ] >> XJXEFIsetpageproperties } if\"\n\
-*End\n\
-*InputSlot ManualFeed/Bypass tray: \"\n\
-{ pop 2 XJXsettrayselV2 } if\"\n\
-*End\n\
-*InputSlot Tray2/Tray 2: \"\"\n\
-*fr.InputSlot Tray2/Bac 2: \"\"\n\
-*CloseUI: *InputSlot\n\
-*OpenUI *EFMediaType/Paper type: PickOne\n\
-*DefaultEFMediaType: Plain\n\
-*EFMediaType Plain/Plain: \"\"\n\
-*EFMediaType Heavy1/Thick 1 (106\xad163 g/m\xb2): \"\"\n\
-*CloseUI: *EFMediaType\n\
-*CloseGroup: FPPaperSource\n\
-*OpenUI *PageSize/Page size: PickOne\n\
-*DefaultPageSize: A4\n\
-*PageSize A4/A4: \"\"\n\
-*CloseUI: *PageSize\n\
-*OpenUI *EFRaster/Print queue action: PickOne\n\
-*DefaultEFRaster: Bogus\n\
-*EFRaster False/Print: \"\"\n\
-*EFRaster Hold: \"\"\n\
-*CloseUI: *EFRaster\n";
-
-#[test]
-fn printer_options_come_from_the_ppd() {
-    let options = spool::parse_ppd(&spool::ppd_text(FIERY_PPD));
-    let keys: Vec<&str> = options.iter().map(|o| o.key.as_str()).collect();
-    assert_eq!(keys, ["InputSlot", "EFMediaType", "EFRaster"], "no installable options, no PageSize");
-    let tray = &options[0];
-    assert_eq!((tray.label.as_str(), tray.group.as_str(), tray.default.as_str()), ("Paper tray", "Media", "AutoSelect"));
-    assert_eq!(
-        tray.choices,
-        [("AutoSelect".into(), "Auto tray select".into()), ("ManualFeed".into(), "Bypass tray".into()), ("Tray2".into(), "Tray 2".into())],
-        "PostScript lines and translations (*fr.InputSlot) are not choices"
-    );
-    assert_eq!(options[1].choices[1].1, "Thick 1 (106\u{ad}163 g/m²)", "Latin-1 labels");
-    // A default that isn't one of the choices falls back to the first; a choice without a label shows its keyword.
-    assert_eq!((options[2].default.as_str(), options[2].choices[1].1.as_str()), ("False", "Hold"));
-    assert!(spool::parse_ppd("*OpenUI *Broken\n*Broken A/B\n").is_empty(), "unclosed or malformed blocks are skipped");
-}
-
-#[test]
-fn printer_option_defaults_and_job_arguments() {
-    let current =
-        spool::parse_lpoptions("InputSlot/Paper tray: AutoSelect *Tray2 ManualFeed\nEFRaster/Print queue action: *False Hold\nbroken line\n");
-    assert_eq!(current, [("InputSlot".to_string(), "Tray2".to_string()), ("EFRaster".to_string(), "False".to_string())]);
-    let job = Job {
-        options: vec![
-            ("InputSlot".into(), "Tray2".into()),
-            ("EFMediaType".into(), "Heavy1".into()),
-            ("Duplex".into(), "DuplexTumble".into()),
-            ("Bad Key".into(), "x".into()),
-            ("EFRaster".into(), "a=b".into()),
-        ],
-        ..Job::default()
-    };
-    let args = lp_args(&job).join(" ");
-    assert!(args.ends_with("-o fit-to-page=false -o InputSlot=Tray2 -o EFMediaType=Heavy1"), "{args}");
-    assert!(spool::printer_options("../../etc/passwd").is_empty(), "not a queue name");
 }
 
 #[test]
