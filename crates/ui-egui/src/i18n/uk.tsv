@@ -2024,43 +2024,11 @@
 	Portable mode is off: {folder} can't be written ({error}). Settings are kept in your user folder instead.	Портативний режим вимкнено: неможливо записати в {folder} ({error}). Налаштування зберігаються у вашій користувацькій теці.
 	PdfCraft is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.	PdfCraft малює без графічного процесора, тому може працювати повільно. Оновлення графічного драйвера може допомогти.
 	Show	Показувати
-	Sort	Сортувати
-	Reverse the order	Зворотний порядок
-	Grab bag	Добірка
 	Table	Таблиця
-	Username	Ім’я користувача
-	Display name	Відображуване ім’я
-	Real name	Справжнє ім’я
-	Name (A–Z)	Ім’я (А–Я)
-	Merged PRs	Злиті PR
-	PRs	PR
-	Commits	Коміти
-	Lines added	Додано рядків
-	+LOC	+LOC
-	Lines deleted	Видалено рядків
-	−LOC	−LOC
-	Line delta	Зміна кількості рядків
-	ΔLOC	ΔLOC
-	Binary assets added	Додано бінарних ресурсів
-	+Bin	+Bin
-	Binary assets removed	Видалено бінарних ресурсів
-	−Bin	−Bin
-	First commit	Перший коміт
 	First	Перший
-	Last commit	Останній коміт
 	Last	Останній
-	No contributor data was built into this copy.	У цю копію не вбудовано даних про учасників.
-	No model credits were built into this copy.	У цю копію не вбудовано відомостей про моделі.
-	{n} contributors · {c} commits	Учасників: {n} · Комітів: {c}
-	Company	Компанія
-	Model	Модель
-	% of all commits	% усіх комітів
-	Lines +/−	Рядків +/−
-	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login}: PR: {prs}, комітів: {commits}, +{added} / −{deleted} рядків (Δ {delta}), +{bin_added} / −{bin_deleted} бінарних ресурсів, {first} – {last}
 	None of those files can be made into a PDF; use PDFs, images or .txt files	Жоден із цих файлів неможливо перетворити на PDF; використовуйте PDF, зображення або файли .txt
 	About	Про застосунок
-	Contributors	Учасники
-	Models	Моделі
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Продовжуйте лише якщо довіряєте цьому документу. Адреса може містити інформацію з документа, наприклад дані, введені у форму.
 	Print single-sided. Keep the sheets in order, cut at the marks, then stack the piles left to right, top to bottom.	Друкуйте з одного боку. Зберігайте порядок аркушів, розріжте за мітками, а потім складіть стоси зліва направо, згори донизу.
 comment menu	Edit	Редагувати

@@ -10,7 +10,7 @@
 # org.freedesktop.Platform.GL extension.
 #
 # ai.storyteller.pdfcraft.yml (same directory) is the from-source manifest for Flathub. Keep
-# runtime-version and finish-args identical in both (packaging-lint checks this).
+# runtime-version and finish-args identical in both.
 id: ai.storyteller.pdfcraft
 runtime: org.freedesktop.Platform
 runtime-version: '25.08'

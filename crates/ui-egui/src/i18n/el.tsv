@@ -361,7 +361,6 @@
 	Rotate counterclockwise	Αριστερόστροφη περιστροφή
 	Open link	Άνοιγμα συνδέσμου
 	Add link	Προσθήκη συνδέσμου
-	Contributors	Συντελεστές
 	Auto	Αυτόματα
 	Don't save	Να μην αποθηκευτεί
 	Ready	Έτοιμο
@@ -1427,10 +1426,6 @@
 	Printer properties	Ιδιότητες εκτυπωτή
 	Reset to printer defaults	Επαναφορά προεπιλογών εκτυπωτή
 	This printer offers no settings of its own.	Αυτός ο εκτυπωτής δεν διαθέτει πρόσθετες ρυθμίσεις.
-	% of all commits	% όλων των καταχωρίσεων
-	+Bin	+Δυαδ.
-	+LOC	+Γραμμές
-	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login}: {prs} αιτήματα συγχώνευσης, {commits} καταχωρίσεις, +{added} / −{deleted} γραμμές (Δ {delta}), +{bin_added} / −{bin_deleted} δυαδικά στοιχεία, {first} – {last}
 	A button	Ένα κουμπί
 	A link	Ένας σύνδεσμος
 	A script	Μια δέσμη ενεργειών
@@ -1438,12 +1433,8 @@
 	Align fields	Στοίχιση πεδίων
 	Another file dialog is still open. Finish with it first.	Ένα άλλο παράθυρο επιλογής αρχείου παραμένει ανοιχτό. Ολοκληρώστε πρώτα τη διαδικασία εκεί.
 	Basic constraints	Βασικοί περιορισμοί
-	Binary assets added	Δυαδικά στοιχεία που προστέθηκαν
-	Binary assets removed	Δυαδικά στοιχεία που αφαιρέθηκαν
 	Change document properties	Αλλαγή ιδιοτήτων εγγράφου
 	Change {what}	Αλλαγή {what}
-	Commits	Καταχωρίσεις
-	Company	Εταιρεία
 	Couldn't show the file picker. Please try again.	Δεν ήταν δυνατή η εμφάνιση του παραθύρου επιλογής αρχείου. Δοκιμάστε ξανά.
 	Create PDF from images	Δημιουργία PDF από εικόνες
 	Cut and stack	Κοπή και στοίβαξη
@@ -1451,41 +1442,24 @@
 	Default page display	Προεπιλεγμένη εμφάνιση σελίδων
 	Default workspace mode	Προεπιλεγμένη λειτουργία χώρου εργασίας
 	Default zoom	Προεπιλεγμένη μεγέθυνση
-	Display name	Εμφανιζόμενο όνομα
 	Distribute fields	Ισοκατανομή πεδίων
 	Documents and view	Έγγραφα και προβολή
 	Dynamic XFA form laid out from its template: {pages}, {fields}.	Δυναμική φόρμα XFA με διάταξη από το πρότυπό της: {pages}, {fields}.
 	First	Πρώτο
-	First commit	Πρώτη καταχώριση
-	Grab bag	Διάφορα
 	H / Space (hold)	H / Διάστημα (κρατήστε πατημένο)
 	Home / End	Home / End
 	Last	Τελευταίο
-	Last commit	Τελευταία καταχώριση
-	Line delta	Μεταβολή γραμμών
 	Line ending	Τέλος γραμμής
-	Lines +/−	Γραμμές +/−
-	Lines added	Γραμμές που προστέθηκαν
-	Lines deleted	Γραμμές που διαγράφηκαν
 	Mark differences	Επισήμανση διαφορών
 	Mark for redaction	Σήμανση για οριστική απόκρυψη
 	Mark pages for redaction	Σήμανση σελίδων για οριστική απόκρυψη
 	Match field sizes	Εξίσωση μεγεθών πεδίων
-	Merged PRs	Συγχωνευμένα αιτήματα αλλαγών
-	Model	Μοντέλο
-	Models	Μοντέλα
-	Name (A–Z)	Όνομα (Α–Ω)
-	No contributor data was built into this copy.	Αυτή η έκδοση δεν περιλαμβάνει δεδομένα συντελεστών.
-	No model credits were built into this copy.	Αυτή η έκδοση δεν περιλαμβάνει πληροφορίες αναγνώρισης συνεισφορών μοντέλων.
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Συνεχίστε μόνο αν εμπιστεύεστε αυτό το έγγραφο. Μια διεύθυνση μπορεί να μεταφέρει πληροφορίες από το έγγραφο, όπως όσα πληκτρολογήσατε στη φόρμα του.
 	Open email app	Άνοιγμα εφαρμογής ηλεκτρονικού ταχυδρομείου
 	Open this web page?	Άνοιγμα αυτής της ιστοσελίδας;
-	PRs	Αιτήματα αλλαγών
 	Place saved {what}	Τοποθέτηση αποθηκευμένου στοιχείου: {what}
 	Print single-sided. Keep the sheets in order, cut at the marks, then stack the piles left to right, top to bottom.	Εκτυπώστε στη μία όψη. Κρατήστε τα φύλλα με τη σωστή σειρά, κόψτε στις ενδείξεις και στοιβάξτε τις ομάδες από αριστερά προς τα δεξιά και από πάνω προς τα κάτω.
-	Real name	Πραγματικό όνομα
 	Remove saved {what}	Αφαίρεση αποθηκευμένου στοιχείου: {what}
-	Reverse the order	Αντιστροφή σειράς
 	Run form script	Εκτέλεση δέσμης ενεργειών φόρμας
 	SHA-1 digest	Σύνοψη SHA-1
 	SHA-256 digest	Σύνοψη SHA-256
@@ -1493,7 +1467,6 @@
 	Scripts run in a sandbox without file or network access. A script that asks to open a web page needs your permission first. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Οι δέσμες ενεργειών εκτελούνται σε απομονωμένο περιβάλλον χωρίς πρόσβαση σε αρχεία ή δίκτυο. Για το άνοιγμα ιστοσελίδας απαιτείται πρώτα η άδειά σας. Ακόμη και με απενεργοποιημένη τη JavaScript, οι τυπικές συναρτήσεις μορφοποίησης, επικύρωσης και υπολογισμού του Acrobat εξακολουθούν να λειτουργούν.
 	Selected image files: {count}	Επιλεγμένα αρχεία εικόνας: {count}
 	Sign yourself	Υπογράψτε εσείς
-	Sort	Ταξινόμηση
 	Table	Πίνακας
 	Table rows belong directly in a table or its head, body or foot. Fix the table's tags.	Οι γραμμές πίνακα πρέπει να ανήκουν απευθείας στον πίνακα ή στην κεφαλίδα, το σώμα ή το υποσέλιδό του. Διορθώστε τις ετικέτες δομής του πίνακα.
 	That didn't work: an internal error stopped it ({m}).	Η ενέργεια απέτυχε λόγω εσωτερικού σφάλματος ({m}).
@@ -1510,17 +1483,12 @@
 	Use {what}	Χρήση {what}
 	Used when a PDF doesn't ask for a layout or zoom. Continuous scrolling never snaps between pages.	Χρησιμοποιείται όταν το PDF δεν ορίζει διάταξη ή μεγέθυνση. Η συνεχής κύλιση δεν προσκολλάται στις σελίδες.
 	Used when opening PDFs. An explicit launch or control mode takes precedence for the session.	Χρησιμοποιείται κατά το άνοιγμα PDF. Μια ρητά επιλεγμένη λειτουργία εκκίνησης ή ελέγχου υπερισχύει για την τρέχουσα συνεδρία.
-	Username	Όνομα χρήστη
 	Write this email?	Σύνταξη αυτού του email;
 	XFA form: its fields and its XFA data are kept in step, so other viewers show what you fill in.	Φόρμα XFA: τα πεδία και τα δεδομένα XFA συγχρονίζονται, ώστε άλλα προγράμματα προβολής να εμφανίζουν όσα συμπληρώνετε.
-	{n} contributors · {c} commits	{n} συντελεστές · {c} καταχωρίσεις
 	{who} in this document tried to open an address PdfCraft won't open: {e}.	Το στοιχείο {who} σε αυτό το έγγραφο προσπάθησε να ανοίξει διεύθυνση που το PdfCraft δεν επιτρέπει: {e}.
 	{who} in this document tried to open an address PdfCraft won't open: {e}. Only web (http, https) and email (mailto) links open from documents.	Το στοιχείο {who} σε αυτό το έγγραφο προσπάθησε να ανοίξει μη επιτρεπόμενη διεύθυνση: {e}. Από τα έγγραφα ανοίγουν μόνο σύνδεσμοι ιστού (http, https) και ηλεκτρονικού ταχυδρομείου (mailto).
 	{who} in this document wants to open this address in your browser:	Το στοιχείο {who} σε αυτό το έγγραφο θέλει να ανοίξει αυτή τη διεύθυνση στο πρόγραμμα περιήγησης:
 	{who} in this document wants to open your email app with this address:	Το στοιχείο {who} σε αυτό το έγγραφο θέλει να ανοίξει την εφαρμογή ηλεκτρονικού ταχυδρομείου με αυτή τη διεύθυνση:
-	ΔLOC	Δγραμμές
-	−Bin	−Δυαδ.
-	−LOC	−Γραμμές
 	Scroll tabs left	Κύλιση καρτελών προς τα αριστερά
 	Scroll tabs right	Κύλιση καρτελών προς τα δεξιά
 	Shared Field Properties	Κοινές ιδιότητες πεδίων

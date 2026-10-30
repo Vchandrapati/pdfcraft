@@ -24,10 +24,7 @@
 	 ({s} not exported: {first})	 (neizvoženih: {s}; {first})
 	 on page {p}	 na strani {p}
 	 · password-protected	 · zaščiteno z geslom
-	% of all commits	% vseh commitov
 	(none)	(brez)
-	+Bin	+Bin
-	+LOC	+LOC
 	, Expires: 	, poteče: 
 	1 difference found	1 razlika najdena
 	1 file	1 datoteka
@@ -45,7 +42,6 @@
 	; failed: {list}	; neuspelo: {list}
 	; {n} pages already had text	; strani, ki so že imele besedilo: {n}
 	? of {n}	? od {n}
-	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login}: {prs} PR-jev, {commits} commitov, +{added} / −{deleted} vrstic (Δ {delta}), +{bin_added} / −{bin_deleted} binarnih virov, {first} – {last}
 	A button	Gumb
 	A clean-room, open-source PDF application written in Rust. MIT OR Apache-2.0.	Odprtokodna aplikacija za PDF, razvita po postopku clean-room in napisana v jeziku Rust. MIT OR Apache-2.0.
 	A diagonal CONFIDENTIAL watermark on every page.	Diagonalni vodni žig ZAUPNO na vsaki strani.
@@ -257,8 +253,6 @@
 	Before the number	Pred številko
 	Beveled	Prirezan rob
 	Bicubic downsampling to	Bicubic zmanjšanje vzorčenja na
-	Binary assets added	Dodani binarni viri
-	Binary assets removed	Odstranjeni binarni viri
 	Binding	Vezava
 	Binding:	Vezava:
 	Black	Črna
@@ -402,9 +396,7 @@
 	Comments panel	Razdelek s komentarji
 	Comments, links and fields must be in the tag tree to be announced. Tag the annotations.	Komentarji, povezave in polja morajo biti v drevesu oznak, da jih podporne tehnologije izgovorijo. Označite opombe.
 	Commit selected value immediately	Takoj potrdi izbrano vrednost
-	Commits	Commiti
 	Common Properties	Skupne lastnosti
-	Company	Podjetje
 	Compare	Primerjaj
 	Compare Files	Primerjava datotek
 	Compare files	Primerjaj datoteke
@@ -426,7 +418,6 @@
 	Content copying for accessibility	Kopiranje vsebine za dostopnost
 	Continue	Nadaljuj
 	Continuous scrolling	Neprekinjeno pomikanje
-	Contributors	Sodelavci
 	Convert	Pretvori
 	Convert colors	Pretvori barve
 	Copied {what}	Kopirano: {what}
@@ -576,7 +567,6 @@
 	Discard hidden text	Zavrzi skrito besedilo
 	Discard private data of other applications	Zavrzi zasebne podatke drugih programov
 	Dismiss	Opusti
-	Display name	Prikazno ime
 	Display theme	Tema prikaza
 	Distance	Razdalja
 	Distinguished name	Razločevalno ime
@@ -784,7 +774,6 @@
 	Find…	Poišči…
 	First	Prva
 	First / last page	Prva / zadnja stran
-	First commit	Prvi commit
 	Fit	Prilagodi
 	Fit Height	Prilagodi višini
 	Fit Page	Prilagodi strani
@@ -850,7 +839,6 @@
 	Go to page…	Pojdi na stran…
 	Go to the page	Pojdi na stran
 	Go to this result	Pojdi na ta rezultat
-	Grab bag	Razno
 	Gray	Siva
 	Grayscale Images	Sivinske slike
 	Green	Zelena
@@ -970,7 +958,6 @@
 	Landscape pages	Ležeče strani
 	Language	Jezik
 	Last	Zadnja
-	Last commit	Zadnji commit
 	Later	Prekliči
 	Later in tab order	Pozneje v vrstnem redu tabulatorja
 	Layers	Plasti
@@ -990,12 +977,8 @@
 	Line	Črta
 	Line Style:	Slog črte:
 	Line Thickness:	Debelina črte:
-	Line delta	Sprememba vrstic
 	Line spacing	Razmik med vrsticami
 	Line thickness	Debelina črte
-	Lines +/−	Vrstice +/−
-	Lines added	Dodane vrstice
-	Lines deleted	Izbrisane vrstice
 	Link	Povezava
 	Link Action	Dejanje povezave
 	Link Appearance	Videz povezave
@@ -1049,7 +1032,6 @@
 	Medium	Srednja
 	Merge data files into spreadsheet…	Združi podatkovne datoteke v preglednico…
 	Merged 1 file into {path}	Združena je 1 datoteka v {path}
-	Merged PRs	Združeni PR-ji
 	Merged {n} files into {path}	Združenih datotek: {n}, v {path}
 	Merging data files needs the desktop app	Združevanje podatkovnih datotek zahteva namizno aplikacijo
 	Metadata	Metapodatki
@@ -1057,8 +1039,6 @@
 	Midpoint	Središčna točka
 	Midpoints	Središčne točke
 	Minimum	Najmanj
-	Model	Model
-	Models	Modeli
 	Modified	Spremenjeno
 	Modify page	Spremeni stran
 	More	Več
@@ -1084,7 +1064,6 @@
 	Separate PDFs	Ločeni PDF-ji
 	Multiple selection	Večkratna izbira
 	Name	Ime
-	Name (A–Z)	Ime (A–Ž)
 	Name on new comments	Ime na novih komentarjih
 	Name:	Ime:
 	Named Destinations	Poimenovani cilji
@@ -1115,7 +1094,6 @@
 	No colour	Brez barve
 	No comments match.	Noben komentar se ne ujema.
 	No comments yet.	Komentarjev še ni.
-	No contributor data was built into this copy.	V to kopijo ni vgrajenih podatkov o sodelujočih.
 	No differences in the text.	V besedilu ni razlik.
 	No digital IDs yet.	Digitalnih identitet še ni.
 	No documents are open	Noben dokument ni odprt
@@ -1128,7 +1106,6 @@
 	No matches	Ni zadetkov
 	No matches.	Ni zadetkov.
 	No matching tools	Ni ustreznih orodij
-	No model credits were built into this copy.	V to kopijo ni vgrajenih zahval modelom.
 	No pages match those choices	Nobena stran se ne ujema s temi izbirami
 	No pages selected	Nobena stran ni izbrana
 	No preview	Ni predogleda
@@ -1226,7 +1203,6 @@
 	PDF version	Različica PDF
 	PDF, images and text	PDF, slike in besedilo
 	PDF/A…	PDF/A…
-	PRs	PR-ji
 	Page	Stran
 	Page Content	Vsebina strani
 	Page Only	Samo stran
@@ -1350,7 +1326,6 @@
 	Read Only	Samo za branje
 	Read mode	Način branja
 	Ready	Omogočeno
-	Real name	Pravo ime
 	Reason	Razlog
 	Recent	Nedavno
 	Recognize Text	Prepoznaj besedilo
@@ -1442,7 +1417,6 @@
 	Restrictions	Omejitve
 	Retain existing	Ohrani obstoječe
 	Reverse pages	Obrni vrstni red strani
-	Reverse the order	Obrni vrstni red
 	Revert	Povrni
 	Revert to the previously saved version of “{name}”? Changes since then can't be undone afterwards.	Povrniti na prej shranjeno različico dokumenta „{name}“? Sprememb od takrat pozneje ni mogoče razveljaviti.
 	Reverted to the last saved version	Povrnjeno na zadnjo shranjeno različico
@@ -1630,7 +1604,6 @@
 	Social Security Numbers	Številke socialnega zavarovanja
 	Solid	Polno
 	Some page content couldn't be read; snapping uses the rest.	Nekaterih vsebin strani ni bilo mogoče prebrati; pripenjanje uporablja preostale.
-	Sort	Razvrsti
 	Sort by	Razvrsti po
 	Sort comments by:	Razvrsti komentarje po:
 	Sort items	Razvrsti elemente
@@ -1862,7 +1835,6 @@
 	Used when opening PDFs. An explicit launch or control mode takes precedence for the session.	Uporabi se pri odpiranju datotek PDF. Izrecen način zagona ali upravljanja ima za sejo prednost.
 	User Interface Options	Možnosti uporabniškega vmesnika
 	User password	Geslo uporabnika
-	Username	Uporabniško ime
 	Valid	Veljavno
 	Valid for 5 years, for digital signatures. Self-signed IDs are usually not trusted by others.	Velja 5 let, za digitalne podpise. Samopodpisanim identitetam drugi običajno ne zaupajo.
 	Valid from	Velja od
@@ -1996,7 +1968,6 @@
 	{name} — unsaved changes	{name} — neshranjene spremembe
 	{name}: choosing images arrives on the web with file pickers for images	{name}: izbiranje slik bo v spletni različici na voljo z izbirniki slikovnih datotek
 	{name}: the {other} action isn't supported yet	{name}: dejanje {other} še ni podprto
-	{n} contributors · {c} commits	Sodelujočih: {n} · commitov: {c}
 	{n} days ago	pred {n} dnevi
 	{n} differences found	Najdenih razlik: {n}
 	{n} files	Datotek: {n}
@@ -2026,11 +1997,8 @@
 	{who} in this document wants to open this address in your browser:	{who} v tem dokumentu želi ta naslov odpreti v vašem brskalniku:
 	{who} in this document wants to open your email app with this address:	{who} v tem dokumentu želi odpreti vaš e-poštni program s tem naslovom:
 	{words} on {pages}	{words} na {pages}
-	ΔLOC	ΔLOC
 	— (protection is applied when you save)	— (zaščita se uporabi ob shranjevanju)
 	“{name}” is protected. Enter a password to open it.	„{name}“ je zaščiten. Za odpiranje vnesite geslo.
-	−Bin	−Bin
-	−LOC	−LOC
 action wizard	Start	Začni
 certificate	Subject	Imetnik
 comment menu	Edit	Uredi

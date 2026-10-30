@@ -2017,39 +2017,9 @@
 	Default zoom	Ingrandimento predefinito
 	Used when a PDF doesn't ask for a layout or zoom. Continuous scrolling never snaps between pages.	Usati quando un PDF non richiede un layout o un ingrandimento. Lo scorrimento continuo non si aggancia mai alle pagine.
 	Show	Mostra
-	Sort	Ordina
-	Reverse the order	Inverti l'ordine
-	Grab bag	Alla rinfusa
 	Table	Tabella
-	Username	Nome utente
-	Display name	Nome visualizzato
-	Real name	Nome reale
-	Name (A–Z)	Nome (A–Z)
-	Merged PRs	PR unite
-	PRs	PR
-	Commits	Commit
-	Lines added	Righe aggiunte
-	+LOC	+LOC
-	Lines deleted	Righe eliminate
-	−LOC	−LOC
-	Line delta	Differenza righe
-	ΔLOC	ΔLOC
-	Binary assets added	Risorse binarie aggiunte
-	+Bin	+Bin
-	Binary assets removed	Risorse binarie rimosse
-	−Bin	−Bin
-	First commit	Primo commit
 	First	Primo
-	Last commit	Ultimo commit
 	Last	Ultimo
-	No contributor data was built into this copy.	Questa copia non include dati sui contributori.
-	No model credits were built into this copy.	Questa copia non include riconoscimenti per i modelli.
-	{n} contributors · {c} commits	{n} contributori · {c} commit
-	Company	Azienda
-	Model	Modello
-	% of all commits	% di tutti i commit
-	Lines +/−	Righe +/−
-	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login}: {prs} PR, {commits} commit, +{added} / −{deleted} righe (Δ {delta}), +{bin_added} / −{bin_deleted} risorse binarie, {first} – {last}
 @plural	{n} page|{n} pages	{n} pagina|{n} pagine
 @plural	{n} field|{n} fields	{n} campo|{n} campi
 @plural	{n} field name collides with earlier files and will be renamed: {list}|{n} field names collide with earlier files and will be renamed: {list}	{n} nome di campo è in conflitto con i file precedenti e verrà rinominato: {list}|{n} nomi di campo sono in conflitto con i file precedenti e verranno rinominati: {list}
@@ -2067,7 +2037,6 @@
 	Change document properties	Modifica le proprietà del documento
 	Clear Recent Files	Svuota elenco recenti
 	Closed arrow	Freccia chiusa
-	Contributors	Contributori
 	Couldn't open the printer's preferences: {e}	Impossibile aprire le preferenze della stampante: {e}
 	Couldn't show the file picker. Please try again.	Impossibile mostrare la finestra di selezione file. Riprova.
 	Date format	Formato data
@@ -2083,7 +2052,6 @@
 	Mark for redaction	Contrassegna per l'oscuramento
 	Mark pages for redaction	Contrassegna pagine per l'oscuramento
 	Match field sizes	Uniforma dimensioni dei campi
-	Models	Modelli
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Continua solo se ti fidi di questo documento. Un indirizzo può trasmettere informazioni del documento, come ciò che hai digitato nel modulo.
 	Open arrow	Freccia aperta
 	Opens the printer driver's preferences. They are saved for every print from this computer; the copies, two-sided, grayscale and paper chosen here still apply.	Apre le preferenze del driver della stampante. Vengono salvate per ogni stampa da questo computer; copie, fronte-retro, scala di grigi e carta scelti qui restano validi.

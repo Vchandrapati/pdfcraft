@@ -2059,43 +2059,11 @@ key	Space	Mezerník
 	Optimization cancelled	Optimalizace zrušena
 	Couldn't optimize the file	Soubor nelze optimalizovat
 	Show	Zobrazit
-	Sort	Seřadit
-	Reverse the order	Obrátit pořadí
-	Grab bag	Volný seznam
 	Table	Tabulka
-	Username	Uživatelské jméno
-	Display name	Zobrazované jméno
-	Real name	Skutečné jméno
-	Name (A–Z)	Jméno (A–Z)
-	Merged PRs	Sloučené PR
-	PRs	PR
-	Commits	Commity
-	Lines added	Přidané řádky
-	+LOC	+LOC
-	Lines deleted	Odstraněné řádky
-	−LOC	−LOC
-	Line delta	Rozdíl řádků
-	ΔLOC	ΔLOC
-	Binary assets added	Přidané binární soubory
-	+Bin	+Bin
-	Binary assets removed	Odstraněné binární soubory
-	−Bin	−Bin
-	First commit	První commit
 	First	První
-	Last commit	Poslední commit
 	Last	Poslední
-	No contributor data was built into this copy.	Tato kopie neobsahuje údaje o přispěvatelích.
-	No model credits were built into this copy.	Tato kopie neobsahuje uvedení modelů.
-	{n} contributors · {c} commits	Přispěvatelé: {n} · commity: {c}
-	Company	Společnost
-	Model	Model
-	% of all commits	% všech commitů
-	Lines +/−	Řádky +/−
-	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login}: PR: {prs}, commity: {commits}, +{added} / −{deleted} řádků (Δ {delta}), +{bin_added} / −{bin_deleted} binárních souborů, {first} – {last}
 	None of those files can be made into a PDF; use PDFs, images or .txt files	Ze žádného z těchto souborů nelze vytvořit PDF; použijte soubory PDF, obrázky nebo soubory .txt
 	About	O aplikaci
-	Contributors	Přispěvatelé
-	Models	Modely
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Pokračujte, jen pokud tomuto dokumentu důvěřujete. Adresa může nést informace z dokumentu, například to, co jste zadali do jeho formuláře.
 	Print single-sided. Keep the sheets in order, cut at the marks, then stack the piles left to right, top to bottom.	Tiskněte jednostranně. Listy udržujte v pořadí, rozřežte je podle značek a pak stohy skládejte zleva doprava a shora dolů.
 comment menu	Edit	Upravit

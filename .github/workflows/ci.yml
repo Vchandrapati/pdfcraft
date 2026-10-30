@@ -1,12 +1,12 @@
 name: CI
 
+# One Linux job runs the same gates as `cargo xtask ci`. Windows and macOS are built and tested
+# locally.
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
-  schedule:
-    - cron: "17 3 * * *" # nightly fuzzing
 
 env:
   CARGO_TERM_COLOR: always
@@ -16,30 +16,26 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
-  test:
-    name: test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        # No macOS runner: macOS is built and tested locally.
-        os: [ubuntu-latest, windows-latest]
+  check:
+    name: fmt, clippy, tests, wasm, assets
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # The optional craft-fonts build input (Japanese fonts), so the Japanese font tests run on
-      # Linux; Windows tests the build without it (AGENTS.md §1.4).
-      - name: Check out craft-fonts (Linux)
-        if: runner.os == 'Linux'
+      # The optional craft-fonts build input (Japanese fonts), so the Japanese font tests run
+      # (AGENTS.md §1.4).
+      - name: Check out craft-fonts
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: storytold/craft-fonts
           ref: 3d9ab3a132ed0eff457e424226a435a901da30d3
           path: craft-fonts
 
-      - name: Install Linux system dependencies (egui/winit/rfd)
-        if: runner.os == 'Linux'
+      - name: Install system dependencies (egui/winit/rfd)
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -50,57 +46,33 @@ jobs:
         with:
           toolchain: stable
           components: clippy, rustfmt
-
-      - name: Require Windows executable resources
-        if: runner.os == 'Windows'
-        run: Add-Content -Path $env:GITHUB_ENV -Value 'PDFCRAFT_REQUIRE_WINRES=1'
-        shell: pwsh
+          targets: wasm32-unknown-unknown
 
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
 
       - name: Format
-        if: runner.os == 'Linux'
         run: cargo fmt --all -- --check
 
       - name: Clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 
       - name: Test
-        if: runner.os != 'Linux'
-        run: cargo test --workspace
-
-      - name: Test (with craft-fonts)
-        if: runner.os == 'Linux'
         env:
           CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
           CRAFT_FONTS_REQUIRED: "1"
         run: cargo test --workspace
 
+      - name: wasm32
+        run: cargo xtask wasm
+
       - name: Layering
         run: cargo xtask layers
 
       - name: Assets (licences and attribution)
-        if: runner.os == 'Linux'
         run: cargo xtask assets
 
       - name: CLI without the MCP server still builds
-        if: runner.os == 'Linux'
         run: cargo check -p pdfcraft-cli --no-default-features
-
-  wasm:
-    name: wasm32 check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
-        with:
-          toolchain: stable
-          targets: wasm32-unknown-unknown
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
-        with:
-          key: wasm32
-      - name: Check library crates for wasm32
-        run: cargo xtask wasm
 
   deny:
     name: dependency licences and advisories
@@ -113,7 +85,7 @@ jobs:
 
   fuzz:
     name: fuzz (mutation, 15 min)
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

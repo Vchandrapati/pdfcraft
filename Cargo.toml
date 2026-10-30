@@ -9,7 +9,7 @@ version = "0.6.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 rust-version = "1.95"
-repository = "https://github.com/storytold/pdfcraft"
+repository = "https://github.com/Vchandrapati/pdfcraft"
 
 [workspace.dependencies]
 # Shared frontend components (owned copy, crates/craft-ui); engines remain independent of egui.
@@ -90,7 +90,7 @@ debug = "line-tables-only"
 
 [profile.dev]
 # Unoptimised for the fastest compiles; dependencies stay at opt-level 2 above (built once and
-# cached by sccache), so rendering and decoding run at usable speed.
+# cached), so rendering and decoding run at usable speed.
 opt-level = 0
 # File and line numbers in panics and backtraces, without full debug info: the UI test
 # binaries' PDBs were hundreds of MB each, slowing links and filling the disk.

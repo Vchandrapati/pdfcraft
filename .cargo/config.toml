@@ -1,8 +1,5 @@
-# sccache caches compiled crates across builds and `cargo clean` (installed with
-# `winget install Mozilla.sccache`, with sccache.exe copied into ~/.cargo/bin so every shell and
-# RustRover find it; remove this line to build without it).
-[build]
-rustc-wrapper = "sccache"
+# sccache, if you use it, belongs in your user-level ~/.cargo/config.toml (`[build] rustc-wrapper =
+# "sccache"`), so machines without it (CI) still build.
 
 [alias]
 xtask = "run -p xtask --"

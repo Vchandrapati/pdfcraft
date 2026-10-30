@@ -797,7 +797,7 @@ fn ukrainian_preferences_and_search_keep_command_ids() {
         ok(&mut h, &c, "ui.key", json!({ "key": "Escape" }));
         h.state_mut().palette_query.clear();
     }
-    for (dialog, label) in [("properties", "Властивості документа"), ("protect", "Захистити паролем"), ("about", "Учасники")]
+    for (dialog, label) in [("properties", "Властивості документа"), ("protect", "Захистити паролем"), ("about", "Версія")]
     {
         ok(&mut h, &c, "ui.set", json!({ "key": "dialog", "value": dialog }));
         let found = ok(&mut h, &c, "ui.inspect", json!({ "query": label }));
@@ -887,29 +887,17 @@ fn japanese_dialogs_errors_and_custom_action_names() {
 }
 
 #[test]
-fn simplified_chinese_about_tabs_and_credit_controls() {
+fn simplified_chinese_about_has_no_credit_tabs() {
     let (mut h, c) = harness();
     let documents = ok(&mut h, &c, "ui.state", json!({}))["documents"].clone();
     ok(&mut h, &c, "ui.set", json!({"key": "language", "value": "zh-hans"}));
     ok(&mut h, &c, "ui.set", json!({"key": "dialog", "value": "about"}));
-    for label in ["关于", "贡献者", "模型"] {
+    let name = ok(&mut h, &c, "ui.inspect", json!({"query": "PdfCraft"}));
+    assert!(name["count"].as_u64().unwrap() > 0, "{name}");
+    for label in ["贡献者", "模型"] {
         let found = ok(&mut h, &c, "ui.inspect", json!({"query": label}));
-        assert!(found["widgets"].as_array().unwrap().iter().any(|w| w["label"] == label), "{found}");
+        assert_eq!(found["count"].as_u64(), Some(0), "{label}: {found}");
     }
-    ok(&mut h, &c, "ui.click", json!({"label": "贡献者"}));
-    for label in ["用户名", "显示名称", "真实姓名", "排序", "名称列表", "表格", "首次提交"] {
-        let found = ok(&mut h, &c, "ui.inspect", json!({"query": label}));
-        assert!(found["count"].as_u64().unwrap() > 0, "{label}: {found}");
-    }
-    ok(&mut h, &c, "ui.click", json!({"label": "表格"}));
-    for label in ["新增行", "删除行", "净增行", "新增资源", "删除资源"] {
-        let found = ok(&mut h, &c, "ui.inspect", json!({"query": label}));
-        assert!(found["count"].as_u64().unwrap() > 0, "{label}: {found}");
-    }
-    ok(&mut h, &c, "ui.click", json!({"label": "模型"}));
-    let columns = ok(&mut h, &c, "ui.inspect", json!({"query": "占全部提交的比例"}));
-    let empty = ok(&mut h, &c, "ui.inspect", json!({"query": "此版本未包含模型贡献记录。"}));
-    assert!(columns["count"].as_u64().unwrap() > 0 || empty["count"].as_u64().unwrap() > 0, "{columns}, {empty}");
     assert_eq!(ok(&mut h, &c, "ui.state", json!({}))["documents"], documents);
 }
 

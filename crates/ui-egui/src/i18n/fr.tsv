@@ -1938,39 +1938,9 @@
 	Reload	Recharger
 	Couldn't reload {name}: {e}	Impossible de recharger {name} : {e}
 	Show	Afficher
-	Sort	Trier
-	Reverse the order	Inverser l'ordre
-	Grab bag	En vrac
 	Table	Tableau
-	Username	Nom d'utilisateur
-	Display name	Nom affiché
-	Real name	Nom réel
-	Name (A–Z)	Nom (A–Z)
-	Merged PRs	PR fusionnées
-	PRs	PR
-	Commits	Commits
-	Lines added	Lignes ajoutées
-	+LOC	+LOC
-	Lines deleted	Lignes supprimées
-	−LOC	−LOC
-	Line delta	Écart de lignes
-	ΔLOC	ΔLOC
-	Binary assets added	Fichiers binaires ajoutés
-	+Bin	+Bin
-	Binary assets removed	Fichiers binaires retirés
-	−Bin	−Bin
-	First commit	Premier commit
 	First	Premier
-	Last commit	Dernier commit
 	Last	Dernier
-	No contributor data was built into this copy.	Cette copie ne contient aucune donnée sur les contributeurs.
-	No model credits were built into this copy.	Cette copie ne contient aucun crédit de modèle.
-	{n} contributors · {c} commits	{n} contributeurs · {c} commits
-	Company	Société
-	Model	Modèle
-	% of all commits	% de tous les commits
-	Lines +/−	Lignes +/−
-	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login} : {prs} PR, {commits} commits, +{added} / −{deleted} lignes (Δ {delta}), +{bin_added} / −{bin_deleted} fichiers binaires, {first} – {last}
 	Set layer visibility	Définir la visibilité des calques
 	Created a PDF from {n} files	PDF créé à partir de {n} fichiers
 	PDF, images and text	PDF, images et texte
@@ -2097,7 +2067,6 @@
 	Another file dialog is still open. Finish with it first.	Une autre boîte de dialogue de fichier est encore ouverte. Terminez d'abord avec celle-ci.
 	Basic constraints	Contraintes de base
 	Change document properties	Modifier les propriétés du document
-	Contributors	Contributeurs
 	Couldn't show the file picker. Please try again.	Impossible d'afficher le sélecteur de fichiers. Veuillez réessayer.
 	Distribute fields	Répartir les champs
 	H / Space (hold)	H / Espace (maintenir)
@@ -2107,7 +2076,6 @@
 	Mark for redaction	Marquer pour biffure
 	Mark pages for redaction	Marquer des pages pour biffure
 	Match field sizes	Uniformiser la taille des champs
-	Models	Modèles
 	No PDFs, images or text files found in {folder}	Aucun PDF, image ou fichier texte trouvé dans {folder}
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Ne continuez que si vous faites confiance à ce document. Une adresse peut transmettre des informations du document, par exemple ce que vous avez saisi dans son formulaire.
 	Place saved {what}	Placer {what} (version enregistrée)

@@ -1926,42 +1926,10 @@ action wizard	Start	ప్రారంభించు
 	Reload	మళ్లీ లోడ్ చేయి
 	Couldn't reload {name}: {e}	{name}ను మళ్లీ లోడ్ చేయడం సాధ్యం కాలేదు: {e}
 	About	పరిచయం
-	Contributors	సహకారులు
-	Models	మోడల్‌లు
 	Show	చూపించు
-	Username	వినియోగదారు పేరు
-	Display name	ప్రదర్శించే పేరు
-	Real name	అసలు పేరు
-	Sort	క్రమపరిచే విధానం
-	Name (A–Z)	పేరు (A–Z)
-	Merged PRs	విలీనం చేసిన PRలు
-	PRs	PRలు
-	Commits	కమిట్‌లు
-	Lines added	జోడించిన పంక్తులు
-	Lines deleted	తొలగించిన పంక్తులు
-	Line delta	పంక్తుల నికర మార్పు
-	Binary assets added	జోడించిన బైనరీ ఫైల్‌లు
-	Binary assets removed	తీసివేసిన బైనరీ ఫైల్‌లు
-	First commit	మొదటి కమిట్
-	Last commit	చివరి కమిట్
-	+LOC	+పంక్తులు
-	−LOC	−పంక్తులు
-	ΔLOC	Δపంక్తులు
-	+Bin	+బైనరీ
-	−Bin	−బైనరీ
 	First	మొదటి
 	Last	చివరి
-	Reverse the order	వ్యతిరేక క్రమానికి మార్చు
-	Grab bag	జాబితా
 	Table	పట్టిక
-	{n} contributors · {c} commits	సహకారులు: {n} · కమిట్‌లు: {c}
-	No contributor data was built into this copy.	ఈ కాపీలో సహకారుల డేటా ఏదీ చేర్చబడలేదు.
-	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login}: PRలు {prs}, కమిట్‌లు {commits}, పంక్తులు +{added} / −{deleted} (Δ {delta}), బైనరీ ఫైల్‌లు +{bin_added} / −{bin_deleted}, {first} – {last}
-	No model credits were built into this copy.	ఈ కాపీలో మోడల్‌ల సహకార వివరాలు ఏవీ చేర్చబడలేదు.
-	Company	సంస్థ
-	Model	మోడల్
-	% of all commits	మొత్తం కమిట్‌లలో %
-	Lines +/−	పంక్తులు +/−
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	ఈ పత్రాన్ని మీరు విశ్వసిస్తేనే కొనసాగించండి. ఒక చిరునామా పత్రంలోని సమాచారాన్ని, ఉదాహరణకు దాని ఫారంలో మీరు టైప్ చేసినదాన్ని, తనతో పాటు తీసుకెళ్లగలదు.
 	Print single-sided. Keep the sheets in order, cut at the marks, then stack the piles left to right, top to bottom.	ఒక వైపు మాత్రమే ముద్రించండి. షీట్‌ల క్రమం మారకుండా ఉంచి, గుర్తుల వద్ద కత్తిరించండి, ఆపై కుప్పలను ఎడమ నుండి కుడికి, పై నుండి కిందికి ఒకదానిపై ఒకటి పేర్చండి.
 	Windows store  ·  	Windows స్టోర్  ·  

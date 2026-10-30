@@ -1942,43 +1942,11 @@
 	Couldn't optimize the file	Файлды оңтайландыру мүмкін болмады
 	Portable mode is off: {folder} can't be written ({error}). Settings are kept in your user folder instead.	Портативті режим өшірулі: {folder} ішіне жазу мүмкін емес ({error}). Параметрлер орнына пайдаланушы қалтаңызда сақталады.
 	Show	Көрсету
-	Sort	Сұрыптау
-	Reverse the order	Ретін кері өзгерту
-	Grab bag	Әр түрлі
 	Table	Кесте
-	Username	Пайдаланушы аты
-	Display name	Көрсетілетін аты
-	Real name	Шын аты
-	Name (A–Z)	Аты (А–Я)
-	Merged PRs	Біріктірілген PR-лер
-	PRs	PR-лер
-	Commits	Коммиттер
-	Lines added	Қосылған жолдар
-	+LOC	+LOC
-	Lines deleted	Жойылған жолдар
-	−LOC	−LOC
-	Line delta	Жолдар айырмасы
-	ΔLOC	ΔLOC
-	Binary assets added	Қосылған бинарлы ресурстар
-	+Bin	+Bin
-	Binary assets removed	Жойылған бинарлы ресурстар
-	−Bin	−Bin
-	First commit	Алғашқы коммит
 	First	Алғашқы
-	Last commit	Соңғы коммит
 	Last	Соңғы
-	No contributor data was built into this copy.	Бұл көшірмеге үлес қосушылар туралы деректер ендірілмеген.
-	No model credits were built into this copy.	Бұл көшірмеге модельдер туралы деректер ендірілмеген.
-	{n} contributors · {c} commits	{n} үлес қосушы · {c} коммит
-	Company	Компания
-	Model	Модель
-	% of all commits	Барлық коммиттердің пайызы
-	Lines +/−	Жолдар +/−
-	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login}: {prs} PR, {commits} коммит, +{added} / −{deleted} жол (Δ {delta}), +{bin_added} / −{bin_deleted} бинарлы ресурс, {first} – {last}
 	None of those files can be made into a PDF; use PDFs, images or .txt files	Осы файлдардың ешбірінен PDF жасауға болмайды; PDF, суреттер немесе .txt файлдарын қолданыңыз
 	About	Туралы
-	Contributors	Үлес қосушылар
-	Models	Модельдер
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Тек осы құжатқа сенетін болсаңыз ғана жалғастырыңыз. Адрес құжаттан ақпарат алып жүруі мүмкін, мысалы формаға енгізгендеріңіз.
 	Print single-sided. Keep the sheets in order, cut at the marks, then stack the piles left to right, top to bottom.	Бір жақты басып шығарыңыз. Парақтардың ретін бұзбай, белгілер бойынша кесіңіз, содан кейін топтамаларды солдан оңға, үстінен астына үйіңіз.
 comment menu	Edit	Түзету
