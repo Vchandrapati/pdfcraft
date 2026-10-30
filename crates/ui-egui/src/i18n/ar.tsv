@@ -2026,43 +2026,11 @@
 	Portable mode is off: {folder} can't be written ({error}). Settings are kept in your user folder instead.	الوضع المحمول متوقف: تتعذر الكتابة في {folder} ({error}). تُحفظ الإعدادات في مجلد المستخدم بدلًا منه.
 	PdfCraft is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.	يرسم PdfCraft دون معالج رسوميات، لذا قد يكون بطيئًا. تحديث تعريف بطاقة الرسوميات قد يفيد.
 	Show	إظهار
-	Sort	فرز
-	Reverse the order	عكس الترتيب
-	Grab bag	متفرقات
 	Table	جدول
-	Username	اسم المستخدم
-	Display name	الاسم المعروض
-	Real name	الاسم الحقيقي
-	Name (A–Z)	الاسم (أ–ي)
-	Merged PRs	طلبات السحب المدموجة
-	PRs	طلبات السحب
-	Commits	الإيداعات
-	Lines added	الأسطر المضافة
-	+LOC	+LOC
-	Lines deleted	الأسطر المحذوفة
-	−LOC	−LOC
-	Line delta	فرق الأسطر
-	ΔLOC	ΔLOC
-	Binary assets added	الأصول الثنائية المضافة
-	+Bin	+Bin
-	Binary assets removed	الأصول الثنائية المُزالة
-	−Bin	−Bin
-	First commit	أول إيداع
 	First	الأول
-	Last commit	آخر إيداع
 	Last	الأخير
-	No contributor data was built into this copy.	لم تُضمَّن بيانات المساهمين في هذه النسخة.
-	No model credits were built into this copy.	لم يُضمَّن ذكر النماذج في هذه النسخة.
-	{n} contributors · {c} commits	{n} مساهمين · {c} إيداعات
-	Company	الشركة
-	Model	النموذج
-	% of all commits	% من كل الإيداعات
-	Lines +/−	الأسطر +/−
-	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login}: {prs} طلبات سحب، {commits} إيداعات، +{added} / −{deleted} أسطر (Δ {delta})، +{bin_added} / −{bin_deleted} أصول ثنائية، {first} – {last}
 	None of those files can be made into a PDF; use PDFs, images or .txt files	لا يمكن تحويل أي من هذه الملفات إلى PDF؛ استخدم ملفات PDF أو صورًا أو ملفات .txt
 	About	حول
-	Contributors	المساهمون
-	Models	النماذج
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	تابع فقط إن كنت تثق بهذا المستند. العنوان قد يحمل معلومات من المستند، مثل ما كتبته في نموذجه.
 	Print single-sided. Keep the sheets in order, cut at the marks, then stack the piles left to right, top to bottom.	اطبع على وجه واحد. أبقِ الأوراق بترتيبها، وقص عند العلامات، ثم كدّس الرزم من اليسار إلى اليمين ومن الأعلى إلى الأسفل.
 comment menu	Edit	تحرير

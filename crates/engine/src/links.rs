@@ -57,7 +57,7 @@ fn hides_text(c: char) -> bool {
 
 /// Check an address that came from a document (a link, a button's URI action or a script's
 /// `app.launchURL`) before PdfCraft offers to open it. Returns the address trimmed of
-/// surrounding whitespace. PdfCraft's own links (the contributor profiles in About) don't come
+/// surrounding whitespace.
 /// through here.
 pub fn document_url(raw: &str) -> Result<String, BlockedLink> {
     let url = raw.trim();

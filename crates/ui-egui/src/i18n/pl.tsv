@@ -1993,10 +1993,6 @@
 	Printer properties	Właściwości drukarki
 	Reset to printer defaults	Przywróć domyślne ustawienia drukarki
 	This printer offers no settings of its own.	Ta drukarka nie udostępnia własnych ustawień.
-	% of all commits	% wszystkich commitów
-	+Bin	+Bin
-	+LOC	+LOC
-	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login}: PR: {prs}, commitów: {commits}, +{added} / −{deleted} wierszy (Δ {delta}), +{bin_added} / −{bin_deleted} zasobów binarnych, {first} – {last}
 	A button	Przycisk
 	A link	Łącze
 	A script	Skrypt
@@ -2005,13 +2001,8 @@
 	Align fields	Wyrównaj pola
 	Another file dialog is still open. Finish with it first.	Inne okno wyboru pliku jest nadal otwarte. Najpierw je zamknij.
 	Basic constraints	Podstawowe ograniczenia
-	Binary assets added	Dodane zasoby binarne
-	Binary assets removed	Usunięte zasoby binarne
 	Change document properties	Zmień właściwości dokumentu
 	Change {what}	Zmień {what}
-	Commits	Commity
-	Company	Firma
-	Contributors	Współtwórcy
 	Couldn't show the file picker. Please try again.	Nie można wyświetlić okna wyboru pliku. Spróbuj ponownie.
 	Create	Utwórz
 	Create PDF from images	Utwórz PDF z obrazów
@@ -2020,42 +2011,25 @@
 	Default page display	Domyślne wyświetlanie stron
 	Default workspace mode	Domyślny tryb obszaru roboczego
 	Default zoom	Domyślne powiększenie
-	Display name	Nazwa wyświetlana
 	Distribute fields	Rozmieść pola równomiernie
 	Documents and view	Dokumenty i widok
 	Dynamic XFA form laid out from its template: {pages}, {fields}.	Dynamiczny formularz XFA z układem według szablonu: {pages}, {fields}.
 	First	Pierwszy
-	First commit	Pierwszy commit
-	Grab bag	Różne
 	H / Space (hold)	H / Spacja (przytrzymaj)
 	Home / End	Home / End
 	Last	Ostatni
-	Last commit	Ostatni commit
-	Line delta	Zmiana liczby wierszy
 	Line ending	Zakończenie linii
-	Lines +/−	Wiersze +/−
-	Lines added	Dodane wiersze
-	Lines deleted	Usunięte wiersze
 	Mark differences	Oznacz różnice
 	Mark for redaction	Oznacz do utajnienia
 	Mark pages for redaction	Oznacz strony do utajnienia
 	Match field sizes	Dopasuj rozmiary pól
-	Merged PRs	Scalone PR
-	Model	Model
-	Models	Modele
-	Name (A–Z)	Nazwa (A–Z)
-	No contributor data was built into this copy.	Ta kopia nie zawiera danych o współtwórcach.
-	No model credits were built into this copy.	Ta kopia nie zawiera informacji o modelach.
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Kontynuuj tylko wtedy, gdy ufasz temu dokumentowi. Adres może zawierać informacje z dokumentu, np. dane wpisane w formularzu.
 	Open email app	Otwórz aplikację pocztową
 	Open link	Otwórz łącze
 	Open this web page?	Otworzyć tę stronę internetową?
-	PRs	PR
 	Place saved {what}	Umieść zapisane: {what}
 	Print single-sided. Keep the sheets in order, cut at the marks, then stack the piles left to right, top to bottom.	Drukuj jednostronnie. Zachowaj kolejność arkuszy, przetnij w miejscach oznaczeń, a następnie ułóż stosy od lewej do prawej i od góry do dołu.
-	Real name	Imię i nazwisko
 	Remove saved {what}	Usuń zapisane: {what}
-	Reverse the order	Odwróć kolejność
 	Run form script	Uruchom skrypt formularza
 	SHA-1 digest	Skrót SHA-1
 	SHA-256 digest	Skrót SHA-256
@@ -2064,7 +2038,6 @@
 	Selected image files: {count}	Wybrane pliki obrazów: {count}
 	Show	Pokaż
 	Sign yourself	Podpisz samodzielnie
-	Sort	Sortuj
 	Squiggly	Faliste podkreślenie
 	Table	Tabela
 	Table rows belong directly in a table or its head, body or foot. Fix the table's tags.	Wiersze tabeli należą bezpośrednio do tabeli lub jej nagłówka, treści albo stopki. Popraw tagi tabeli.
@@ -2082,17 +2055,12 @@
 	Use {what}	Użyj {what}
 	Used when a PDF doesn't ask for a layout or zoom. Continuous scrolling never snaps between pages.	Używane, gdy PDF nie określa układu ani powiększenia. Przewijanie ciągłe nie przeskakuje między stronami.
 	Used when opening PDFs. An explicit launch or control mode takes precedence for the session.	Używane przy otwieraniu PDF. Jawnie wybrany tryb uruchomienia lub sterowania ma pierwszeństwo w bieżącej sesji.
-	Username	Nazwa użytkownika
 	Write this email?	Napisać tę wiadomość e-mail?
 	XFA form: its fields and its XFA data are kept in step, so other viewers show what you fill in.	Formularz XFA: pola i dane XFA są synchronizowane, aby inne przeglądarki wyświetlały wpisane wartości.
-	{n} contributors · {c} commits	Współtwórców: {n} · Commitów: {c}
 	{who} in this document tried to open an address PdfCraft won't open: {e}.	Element „{who}” w tym dokumencie próbował otworzyć adres, którego PdfCraft nie otworzy: {e}.
 	{who} in this document tried to open an address PdfCraft won't open: {e}. Only web (http, https) and email (mailto) links open from documents.	Element „{who}” w tym dokumencie próbował otworzyć adres, którego PdfCraft nie otworzy: {e}. Z dokumentów otwierane są tylko łącza internetowe (http, https) i pocztowe (mailto).
 	{who} in this document wants to open this address in your browser:	Element „{who}” w tym dokumencie chce otworzyć ten adres w przeglądarce:
 	{who} in this document wants to open your email app with this address:	Element „{who}” w tym dokumencie chce otworzyć aplikację pocztową z tym adresem:
-	ΔLOC	ΔLOC
-	−Bin	−Bin
-	−LOC	−LOC
 @plural	{n} field|{n} fields	{n} pole|{n} pola|{n} pól
 @plural	{n} field name collides with earlier files and will be renamed: {list}|{n} field names collide with earlier files and will be renamed: {list}	Nazwa {n} pola koliduje z wcześniejszymi plikami i zostanie zmieniona: {list}|Nazwy {n} pól kolidują z wcześniejszymi plikami i zostaną zmienione: {list}|{n} nazw pól koliduje z wcześniejszymi plikami i zostanie zmienionych: {list}
 @plural	{n} page|{n} pages	{n} strona|{n} strony|{n} stron

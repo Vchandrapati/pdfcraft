@@ -41,7 +41,6 @@ mod compare_ui;
 pub mod control;
 mod create_multiple_ui;
 mod create_ui;
-mod credits;
 mod crop;
 mod drag_pointer;
 mod export_ui;

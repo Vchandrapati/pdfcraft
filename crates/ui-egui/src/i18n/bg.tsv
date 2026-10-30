@@ -8,42 +8,10 @@
 # the trailing "…" of dialog commands is kept.
 
 	About	За програмата
-	Contributors	Сътрудници
-	Models	Модели
 	Show	Покажи
-	Username	Потребителско име
-	Display name	Показвано име
-	Real name	Истинско име
-	Sort	Сортиране
-	Name (A–Z)	Име (А–Я)
-	Merged PRs	Обединени PR
-	PRs	PR
-	Commits	Къмитове
-	Lines added	Добавени редове
-	Lines deleted	Изтрити редове
-	Line delta	Разлика в редовете
-	Binary assets added	Добавени двоични ресурси
-	Binary assets removed	Премахнати двоични ресурси
-	First commit	Първи къмит
-	Last commit	Последен къмит
-	+LOC	+LOC
-	−LOC	−LOC
-	ΔLOC	ΔLOC
-	+Bin	+Bin
-	−Bin	−Bin
 	First	Първи
 	Last	Последен
-	Reverse the order	Обърни реда
-	Grab bag	Смесица
 	Table	Таблица
-	{n} contributors · {c} commits	{n} сътрудници · {c} къмита
-	No contributor data was built into this copy.	В това копие няма вградени данни за сътрудниците.
-	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login}: {prs} PR, {commits} къмита, +{added} / −{deleted} реда (Δ {delta}), +{bin_added} / −{bin_deleted} двоични ресурса, {first} – {last}
-	No model credits were built into this copy.	В това копие няма вградени данни за моделите.
-	Company	Компания
-	Model	Модел
-	% of all commits	% от всички къмитове
-	Lines +/−	Редове +/−
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Продължете само ако имате доверие на този документ. Адресът може да пренася информация от документа, например въведеното във формуляра му.
 	Print single-sided. Keep the sheets in order, cut at the marks, then stack the piles left to right, top to bottom.	Отпечатайте едностранно. Запазете реда на листовете, изрежете по маркировките, след което подредете купчините отляво надясно и отгоре надолу.
 	Menu	Меню

@@ -1937,39 +1937,9 @@
 	Default zoom	Standardzoom
 	Used when a PDF doesn't ask for a layout or zoom. Continuous scrolling never snaps between pages.	Wird verwendet, wenn ein PDF kein Layout und keinen Zoom vorgibt. Fortlaufendes Scrollen rastet nie zwischen Seiten ein.
 	Show	Anzeigen
-	Sort	Sortieren
-	Reverse the order	Reihenfolge umkehren
-	Grab bag	Bunt gemischt
 	Table	Tabelle
-	Username	Benutzername
-	Display name	Anzeigename
-	Real name	Echter Name
-	Name (A–Z)	Name (A–Z)
-	Merged PRs	Gemergte PRs
-	PRs	PRs
-	Commits	Commits
-	Lines added	Hinzugefügte Zeilen
-	+LOC	+LOC
-	Lines deleted	Gelöschte Zeilen
-	−LOC	−LOC
-	Line delta	Zeilendifferenz
-	ΔLOC	ΔLOC
-	Binary assets added	Hinzugefügte Binärdateien
-	+Bin	+Bin
-	Binary assets removed	Entfernte Binärdateien
-	−Bin	−Bin
-	First commit	Erster Commit
 	First	Erster
-	Last commit	Letzter Commit
 	Last	Letzter
-	No contributor data was built into this copy.	In diese Version wurden keine Mitwirkendendaten eingebaut.
-	No model credits were built into this copy.	In diese Version wurden keine Modellnachweise eingebaut.
-	{n} contributors · {c} commits	{n} Mitwirkende · {c} Commits
-	Company	Unternehmen
-	Model	Modell
-	% of all commits	% aller Commits
-	Lines +/−	Zeilen +/−
-	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login}: {prs} PRs, {commits} Commits, +{added} / −{deleted} Zeilen (Δ {delta}), +{bin_added} / −{bin_deleted} Binärdateien, {first} – {last}
 	Set layer visibility	Sichtbarkeit der Ebene festlegen
 	Created a PDF from {n} files	PDF aus {n} Dateien erstellt
 	PDF, images and text	PDF, Bilder und Text
@@ -2062,8 +2032,6 @@
 	No recent files	Keine zuletzt geöffneten Dateien
 	Go to page…	Gehe zu Seite…
 	About	Über
-	Contributors	Mitwirkende
-	Models	Modelle
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Fahre nur fort, wenn du diesem Dokument vertraust. Eine Adresse kann Informationen aus dem Dokument übermitteln, etwa was du in sein Formular eingegeben hast.
 	Print single-sided. Keep the sheets in order, cut at the marks, then stack the piles left to right, top to bottom.	Einseitig drucken. Halte die Blätter in Reihenfolge, schneide an den Marken und lege die Stapel dann von links nach rechts, von oben nach unten aufeinander.
 	Unlocked {n} of {m} files	{n} von {m} Dateien entsperrt

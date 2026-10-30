@@ -1922,39 +1922,9 @@
 	Default zoom	Alapértelmezett nagyítás
 	Used when a PDF doesn't ask for a layout or zoom. Continuous scrolling never snaps between pages.	Akkor érvényes, ha a PDF nem kér elrendezést vagy nagyítást. A folyamatos görgetés soha nem ugrik oldalak közé.
 	Show	Megjelenítés
-	Sort	Rendezés
-	Reverse the order	Sorrend megfordítása
-	Grab bag	Vegyes
 	Table	Táblázat
-	Username	Felhasználónév
-	Display name	Megjelenített név
-	Real name	Valódi név
-	Name (A–Z)	Név (A–Z)
-	Merged PRs	Beolvasztott PR-ek
-	PRs	PR-ek
-	Commits	Commitok
-	Lines added	Hozzáadott sorok
-	+LOC	+LOC
-	Lines deleted	Törölt sorok
-	−LOC	−LOC
-	Line delta	Sorok különbsége
-	ΔLOC	ΔLOC
-	Binary assets added	Hozzáadott bináris fájlok
-	+Bin	+Bin
-	Binary assets removed	Eltávolított bináris fájlok
-	−Bin	−Bin
-	First commit	Első commit
 	First	Első
-	Last commit	Utolsó commit
 	Last	Utolsó
-	No contributor data was built into this copy.	Ebben a példányban nincsenek beépített közreműködői adatok.
-	No model credits were built into this copy.	Ebben a példányban nincsenek beépített modelladatok.
-	{n} contributors · {c} commits	{n} közreműködő · {c} commit
-	Company	Cég
-	Model	Modell
-	% of all commits	Az összes commit %-a
-	Lines +/−	Sorok +/−
-	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login}: {prs} PR, {commits} commit, +{added} / −{deleted} sor (Δ {delta}), +{bin_added} / −{bin_deleted} bináris fájl, {first} – {last}
 	Set layer visibility	Réteg láthatóságának beállítása
 	Created a PDF from {n} files	PDF létrehozva {n} fájlból
 	PDF, images and text	PDF, képek és szöveg
@@ -2047,8 +2017,6 @@
 	No recent files	Nincs legutóbbi fájl
 	Go to page…	Ugrás oldalra…
 	About	Névjegy
-	Contributors	Közreműködők
-	Models	Modellek
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Csak akkor folytasd, ha megbízol ebben a dokumentumban. Egy cím adatokat vihet a dokumentumból, például azt, amit az űrlapjába írtál.
 	Print single-sided. Keep the sheets in order, cut at the marks, then stack the piles left to right, top to bottom.	Nyomtass egyoldalasan. Tartsd a lapokat sorrendben, vágd el a jeleknél, majd rakd a kötegeket balról jobbra, fentről lefelé egymásra.
 	Unlocked {n} of {m} files	{n} / {m} fájl feloldva

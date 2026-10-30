@@ -1896,39 +1896,9 @@
 	Default zoom	Varsayılan yakınlaştırma
 	Used when a PDF doesn't ask for a layout or zoom. Continuous scrolling never snaps between pages.	Bir PDF belirli bir düzen veya yakınlaştırma istemediğinde kullanılır. Sürekli kaydırma sayfalar arasında atlama yapmaz.
 	Show	Göster
-	Sort	Sırala
-	Reverse the order	Sırayı tersine çevir
-	Grab bag	Karışık
 	Table	Tablo
-	Username	Kullanıcı adı
-	Display name	Görünen ad
-	Real name	Gerçek ad
-	Name (A–Z)	Ad (A–Z)
-	Merged PRs	Birleştirilen PR'lar
-	PRs	PR'lar
-	Commits	İşlemeler
-	Lines added	Eklenen satırlar
-	+LOC	+LOC
-	Lines deleted	Silinen satırlar
-	−LOC	−LOC
-	Line delta	Satır farkı
-	ΔLOC	ΔLOC
-	Binary assets added	Eklenen ikili varlıklar
-	+Bin	+Bin
-	Binary assets removed	Kaldırılan ikili varlıklar
-	−Bin	−Bin
-	First commit	İlk işleme
 	First	İlk
-	Last commit	Son işleme
 	Last	Son
-	No contributor data was built into this copy.	Bu kopyaya hiçbir katkıda bulunan verisi dahil edilmedi.
-	No model credits were built into this copy.	Bu kopyaya hiçbir model kredisi dahil edilmedi.
-	{n} contributors · {c} commits	{n} katkıda bulunan · {c} işleme
-	Company	Şirket
-	Model	Model
-	% of all commits	Tüm işlemelerin %'si
-	Lines +/−	Satırlar +/−
-	@{login}: {prs} PRs, {commits} commits, +{added} / −{deleted} lines (Δ {delta}), +{bin_added} / −{bin_deleted} binary assets, {first} – {last}	@{login}: {prs} PR, {commits} işleme, +{added} / −{deleted} satır (Δ {delta}), +{bin_added} / −{bin_deleted} ikili varlık, {first} – {last}
 	Set layer visibility	Katman görünürlüğünü ayarla
 	Created a PDF from {n} files	{n} dosyadan bir PDF oluşturuldu
 	PDF, images and text	PDF, resimler ve metin
@@ -2013,8 +1983,6 @@
 	No recent files	Son kullanılan dosya yok
 	Go to page…	Sayfaya git…
 	About	Hakkında
-	Contributors	Katkıda Bulunanlar
-	Models	Modeller
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Yalnızca bu belgeye güveniyorsanız devam edin. Bir adres, formuna yazdıklarınız gibi belgeden bilgi taşıyabilir.
 	Print single-sided. Keep the sheets in order, cut at the marks, then stack the piles left to right, top to bottom.	Tek taraflı yazdırın. Sayfaları sırayla tutun, işaretlerden kesin, ardından desteleri soldan sağa, yukarıdan aşağıya istifleyin.
 	Unlocked {n} of {m} files	{n} / {m} dosyanın kilidi açıldı
