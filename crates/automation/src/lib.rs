@@ -1,4 +1,4 @@
-//! pdfcraft-automation — agent control for PdfCraft (architecture §13).
+//! pdfcraft-automation — agent control for PdfCraft (Agent control in `docs/architecture.md`).
 //!
 //! - **Layer:** L7. Headless: depends on the engine, never on a UI toolkit.
 //! - [`Automation`] is a tool set over an engine [`Session`]: open, inspect, render, extract and
@@ -97,6 +97,10 @@ const FIND_MAX_BATCH: usize = 128;
 /// Page texts of one document version: (the working bytes, one slot per page).
 type TextCache = (Arc<Vec<u8>>, Vec<Option<Arc<PageText>>>);
 
+/// Page texts kept per document between calls: enough for repeated work on one section, while a
+/// whole-document search or extraction keeps only its last pages instead of every page's glyphs.
+const MAX_CACHED_TEXTS: usize = 64;
+
 /// A headless PdfCraft session driven by tool calls.
 pub struct Automation {
     session: Session,
@@ -173,7 +177,15 @@ impl Automation {
             "doc_close" => self.doc_close(&a)?,
             "doc_save" => self.doc_save(&a)?,
             "doc_set_info" => {
-                let edit = Edit::SetInfo { key: a.str("key")?.into(), value: a.str("value")?.into() };
+                // The key becomes a PDF name: something to read back, without the characters a
+                // name can't hold (NUL) or that would be written escaped and look different.
+                let key = a.str("key")?;
+                if key.is_empty() || key.len() > 127 || key.chars().any(|c| c.is_whitespace() || c.is_control() || "()<>[]{}/%#".contains(c)) {
+                    return Err(ToolError::InvalidArgs(format!(
+                        "key {key:?} can't be a document information entry: use 1–127 characters without spaces, control characters or ()<>[]{{}}/%# (for example Title, Author or a custom name such as Department)"
+                    )));
+                }
+                let edit = Edit::SetInfo { key: key.into(), value: a.str("value")?.into() };
                 self.apply(&a, edit)?
             }
             "page_render" => return self.page_render(&a).map(|c| vec![c]),
@@ -1763,7 +1775,16 @@ impl Automation {
                 *slot = Some(text);
             }
         }
-        pages.iter().map(|p| entry.1.get(*p).cloned().flatten().ok_or_else(|| failed(format!("page {} has no text", p + 1)))).collect()
+        let result = pages.iter().map(|p| entry.1.get(*p).cloned().flatten().ok_or_else(|| failed(format!("page {} has no text", p + 1)))).collect();
+        if entry.1.iter().filter(|slot| slot.is_some()).count() > MAX_CACHED_TEXTS {
+            let keep: std::collections::HashSet<usize> = pages.iter().rev().take(MAX_CACHED_TEXTS).copied().collect();
+            for (p, slot) in entry.1.iter_mut().enumerate() {
+                if !keep.contains(&p) {
+                    *slot = None;
+                }
+            }
+        }
+        result
     }
 
     fn text_extract(&mut self, a: &Args) -> Result<Value> {
@@ -2343,6 +2364,22 @@ mod tests {
     }
 
     #[test]
+    fn the_page_text_cache_is_bounded_per_document() {
+        let dir = std::env::temp_dir().join(format!("pdfcraft-text-cache-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("many.pdf"), numbered_pages(150)).unwrap();
+        let mut a = Automation::new().with_root(&dir).unwrap();
+        let doc = json(&mut a, "doc_open", json!({ "path": "many.pdf" }))["doc"].as_u64().unwrap();
+        let out = json(&mut a, "text_extract", json!({ "doc": doc }));
+        assert_eq!(out["pages"].as_array().unwrap().len(), 150, "every page is still returned");
+        let cached = a.texts.values().map(|(_, slots)| slots.iter().filter(|s| s.is_some()).count()).sum::<usize>();
+        assert!(cached <= MAX_CACHED_TEXTS, "{cached} pages stay cached");
+        let found = json(&mut a, "text_find", json!({ "doc": doc, "query": "Page 140" }));
+        assert!(found["count"].as_u64().unwrap() >= 1, "{found}");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
     fn a_bounded_text_find_reads_only_the_pages_it_needs_and_says_it_stopped() {
         let dir = std::env::temp_dir().join(format!("pdfcraft-automation-find-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
@@ -2572,7 +2609,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// Windows refuses to replace a read-only file, so the rename fails: the staging file must not
+    /// A read-only file is refused (Windows would refuse the rename anyway): no staging file may
     /// be left behind.
     #[cfg(windows)]
     #[test]

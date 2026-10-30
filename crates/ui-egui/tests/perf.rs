@@ -1,4 +1,4 @@
-//! Frame-time budget on a 500-page document (parity view.large-document-performance): scrolling
+//! Frame-time budget on a 500-page document: scrolling
 //! continuously must keep the UI's own per-frame work far below a 60 fps frame. Rendering runs on
 //! worker threads and is not part of the measurement.
 

@@ -90,12 +90,13 @@ impl Harness {
         let mut actions = Vec::new();
         self.output = self.ctx.run_ui(input, |ui| {
             let style = DockStyle::from_ui(ui);
-            let out = DockArea::new(Id::new("workflow")).show(
+            let out = DockArea::new(Id::new("workflow")).show_with_limits(
                 ui,
                 &self.layout,
                 &style,
                 label,
                 |panel| if *panel == CANVAS { Permissions::PROTECTED } else { Permissions::default() },
+                |_| craft_ui::docking::PanelLimits::default(),
                 |ui, panel| {
                     self.body_ids.insert(*panel, ui.id());
                     if *panel == CANVAS {

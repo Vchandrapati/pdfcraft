@@ -4,7 +4,7 @@ PdfCraft is a clean-room, open-source, Rust-native PDF application. It runs nati
 
 ## Start every session here
 1. Read `docs/architecture.md` (crates, layers, the editing model) and the README of the crate you're touching.
-2. The user decides what to work on. Upstream's planning files (`plan/`, the milestone/progress logs in `ROADMAP.md` and `docs/roadmap.md`, `docs/gaps.md`, `docs/target-app-parity.md` and `parity/`) are historical reference only: you don't need to read or update them.
+2. The user decides what to work on.
 
 ## Non-negotiables
 - **Assets: read `AGENTS.md` §1 before adding or showing any icon, image, font or document.** No assets from Adobe products, ever. Only openly licensed or contributor-original assets are allowed, each with an entry in `ATTRIBUTION.toml`. `cargo xtask assets` enforces this. `AGENTS.md` overrides this file.
@@ -25,7 +25,7 @@ PdfCraft is a clean-room, open-source, Rust-native PDF application. It runs nati
   - No `unsafe` (`unsafe_code = "forbid"`).
   - Every crash fix gets a synthetic regression test. See `AGENTS.md` §4.
 - **Rust only** in the product and build (`xtask`). No handwritten JS/TS.
-- **Quality gates** before every commit: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, `cargo test --workspace` and `cargo xtask wasm` (all run by `cargo xtask ci`).
+- **Quality gates** before every commit: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, the tests (`cargo nextest run --workspace` plus `cargo test --workspace --doc`; plain `cargo test --workspace` without nextest) and `cargo xtask wasm`, all run by `cargo xtask ci`.
 - **Commits:** one focused change per commit, with a short descriptive message. Commit only green states. End messages with the attribution line required by the environment.
 
 ## Engineering Principles
@@ -44,10 +44,11 @@ PdfCraft is a clean-room, open-source, Rust-native PDF application. It runs nati
 ## Running and looking at the app
 - `cargo run -p pdfcraft -- <file.pdf>` opens the desktop app.
 - `cargo run -p pdfcraft-cli -- run --script steps.json --root DIR` drives the engine headlessly through the automation tools (`pdfcraft-cli tools` lists them). Use it, together with `page_render`, to check engine changes. `pdfcraft-cli mcp` is the opt-in MCP server (AGENTS.md §3).
+- `cargo xtask clif build -p pdfcraft`, `cargo xtask clif run -p pdfcraft -- file.pdf` and `cargo xtask clif test` are the fast debug loop: the Cranelift backend on nightly, in `target/clif/` (setup and limits in `xtask/src/clif.rs`). `cargo xtask ci` stays the gate before committing.
 - `cargo xtask fuzz --time 300` mutation-fuzzes open/render/edit/save in child processes. Findings land in `fuzz-out/findings/` (git-ignored; never commit corpus-derived files). Turn every real finding into a small synthetic regression test before fixing it.
 - `cargo xtask demo-pdf` builds `dist/demo/pdfcraft-showcase.pdf` (needs Chrome) for visual checks.
 - For UI work, **look at the result**. Either launch `pdfcraft --control FILE doc.pdf` and use `pdfcraft-cli ui --control FILE screenshot --out x.png` (plus `inspect`, `click`, `key`, `type`, `command`, `set`), or take a headless shot with `cargo run -p pdfcraft-ui-egui --example shot`. Control-channel tests use kittest (`crates/ui-egui/tests/control.rs`).
 - Parallel agents: use a separate `CARGO_TARGET_DIR` per agent and separate git worktrees.
 
 ## Current bootstrap debt
-- `pdfcraft-render` renders through the vendored `hayro` crate directly and inspects documents through `lopdf` (`vendor/README.md`).
+- `pdfcraft-render` renders through the vendored `hayro` crate directly (`vendor/README.md`); inspection already reads through `cos`.

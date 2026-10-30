@@ -1,0 +1,44 @@
+# cargo-nextest (https://nexte.st): each test runs in its own process, scheduled across every
+# test binary at once. `cargo xtask ci` uses it when it's installed.
+
+[profile.default]
+# Run everything and report every failure, as `cargo test --no-fail-fast` would.
+fail-fast = false
+# One more try for a failed test: a pass on retry is reported as FLAKY, not hidden. Covers the
+# timing-budget UI tests and the rare native crash under heavy parallel load.
+retries = 1
+# Flag tests slower than a minute; stop one that hangs past five.
+slow-timeout = { period = "60s", terminate-after = 5 }
+
+# The XFA recalculation budgets are timed: run them with the machine to themselves, or a busy
+# parallel run makes them miss the budget the user would get.
+[[profile.default.overrides]]
+filter = "test(/hundreds_of_xfa_calculations/)"
+threads-required = "num-cpus"
+
+# `cargo xtask clif test` (Cranelift debug builds): everything except the tests Cranelift can't
+# run as written. `cargo xtask ci` (LLVM) still runs them all.
+[profile.clif]
+default-filter = """
+not (
+    test(=mcp::tests::conventions_panic_is_a_tool_error)
+    | test(=tests::guard_turns_a_panic_into_an_error)
+    | test(=logging::tests::a_poisoned_lock_does_not_stop_logging)
+    | test(=raster::tests::initializer_panic_publishes_one_failure_and_wakes_waiters)
+    | test(=raster::tests::page_panic_retires_shared_generation_and_healthy_pages_use_private_parsers)
+    | test(=inspect::tests::structure_failure_preserves_renderer_pages)
+    | test(/^pickers::tests::a_panicking_/)
+    | test(/^tests::hundreds_of_xfa_calculations/)
+    | test(=hundreds_of_xfa_calculations_open_and_recalculate_within_their_budgets)
+    | test(=tests::hostile_xfa_open_scripts_are_merged_capped_kept_from_printing_and_noted)
+    | test(=raster::tests::mesh_shadings_with_many_patches_or_no_rows_finish)
+    | test(=raster::tests::type3_glyphs_that_fan_out_into_themselves_finish)
+    | binary(perf)
+    | test(=switching_to_the_list_lets_renders_under_way_finish)
+    | test(=the_preview_closes_when_its_file_leaves_and_keeps_to_three_render_threads)
+    | test(=tests::hostile_templates_fail_without_panicking)
+    | test(=tests::template_at_the_depth_limit_parses_on_a_worker_thread)
+    | test(=tests::deeply_nested_xml_is_refused_before_parsing)
+    | test(=tests::formcalc::hostile_formcalc_scripts_end_with_an_error_and_bounded_output)
+)
+"""

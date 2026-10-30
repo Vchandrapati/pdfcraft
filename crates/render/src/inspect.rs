@@ -46,7 +46,7 @@ pub struct DocInfo {
     pub encrypted: bool,
     pub tagged: bool,
     pub has_javascript: bool,
-    /// The form is (also) an XFA form, which isn't read yet (`form.xfa-*` in the parity list).
+    /// The form is (also) an XFA form. The inspector only notes it; `pdfcraft-xfa` reads XFA.
     pub xfa: Option<Xfa>,
     pub pages: Vec<PageInfo>,
     pub outline: Vec<OutlineItem>,

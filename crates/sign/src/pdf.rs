@@ -554,10 +554,6 @@ fn annot_pages(doc: &Document) -> HashMap<ObjRef, usize> {
     map
 }
 
-fn nums(doc: &Document, d: &Dict, key: &[u8]) -> Option<Vec<f64>> {
-    doc.resolve(d.get(key)?).as_array().map(|a| a.iter().filter_map(|x| doc.resolve(x).as_f64()).collect())
-}
-
 /// List and validate every signature field. `bytes` is the file as stored (the ranges index it).
 pub fn list(doc: &Document, bytes: &[u8], trust: &TrustStore) -> Vec<SignatureInfo> {
     list_cached(doc, bytes, trust, &DigestCache::default())
@@ -576,7 +572,7 @@ pub fn list_cached(doc: &Document, bytes: &[u8], trust: &TrustStore, cache: &Dig
         let widget = f.widgets.first();
         let page = widget.and_then(|(r, w)| r.and_then(|r| pages.get(&r).copied()).or_else(|| w.reference(b"P").and_then(|p| page_index(doc, p))));
         let rect = widget
-            .and_then(|(_, w)| nums(doc, w, b"Rect"))
+            .and_then(|(_, w)| doc.numbers(w.get(b"Rect")))
             .filter(|r| r.len() == 4)
             .map(|r| [r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])]);
         let visible = rect.is_some_and(|r| r[2] - r[0] > 0.5 && r[3] - r[1] > 0.5);
@@ -711,7 +707,7 @@ fn validate_into(doc: &Document, bytes: &[u8], trust: &TrustStore, v: &Dict, inf
         info.details.push(why);
     };
     // Byte ranges: [0 a b c] with the gap holding exactly the hex /Contents.
-    let Some(br) = nums(doc, v, b"ByteRange").filter(|b| b.len() == 4 && b.iter().all(|x| *x >= 0.0)) else {
+    let Some(br) = doc.numbers(v.get(b"ByteRange")).filter(|b| b.len() == 4 && b.iter().all(|x| *x >= 0.0)) else {
         return invalid(info, Detail::plain("The signature has no valid byte range."));
     };
     let [o0, l0, o1, l1] = [br[0] as usize, br[1] as usize, br[2] as usize, br[3] as usize];
@@ -999,7 +995,7 @@ fn validate_doc_timestamp(doc: &Document, bytes: &[u8], v: &Dict, info: &mut Sig
         info.status = Status::Invalid;
         info.details.push(why);
     };
-    let Some(br) = nums(doc, v, b"ByteRange").filter(|b| b.len() == 4 && b.iter().all(|x| *x >= 0.0)) else {
+    let Some(br) = doc.numbers(v.get(b"ByteRange")).filter(|b| b.len() == 4 && b.iter().all(|x| *x >= 0.0)) else {
         return invalid(info, Detail::plain("The timestamp has no valid byte range."));
     };
     let [o0, l0, o1, l1] = [br[0] as usize, br[1] as usize, br[2] as usize, br[3] as usize];
@@ -1076,42 +1072,6 @@ fn validate_doc_timestamp(doc: &Document, bytes: &[u8], v: &Dict, info: &mut Sig
     }
 }
 
-/// The DER `/Contents` of every signature dictionary in the file (field signatures and
-/// document timestamps), for `/VRI` keys and evidence selection.
-pub(crate) fn signature_contents(doc: &Document) -> Vec<Vec<u8>> {
-    let mut out = Vec::new();
-    let mut seen: HashSet<ObjRef> = HashSet::new();
-    let mut add = |d: &Dict, r: Option<ObjRef>| {
-        if let Some(r) = r
-            && !seen.insert(r)
-        {
-            return;
-        }
-        let contents = d.get(b"Contents").map(|c| doc.resolve(c));
-        let Some(s) = contents.as_deref().and_then(Object::as_string) else { return };
-        // Hex strings decode to the DER when parsed; a literal string carries hex text.
-        let der = if s.hex { Some(s.bytes.clone()) } else { unhex(&s.bytes) };
-        if let Some(der) = der {
-            out.push(der);
-        }
-    };
-    for f in sig_fields(doc) {
-        if let Some(v) = f.dict.get(b"V") {
-            let d = doc.resolve(v);
-            if let Some(dd) = d.as_dict() {
-                add(dd, v.as_ref());
-            }
-        }
-    }
-    for (r, o) in doc.scan_objects() {
-        let Some(d) = o.as_dict() else { continue };
-        if is_doc_timestamp(d) {
-            add(d, Some(r));
-        }
-    }
-    out
-}
-
 /// `adbe.x509.rsa_sha1` (ISO 32000-2 §12.8.3.2, deprecated): `/Contents` is the PKCS #1
 /// signature as a DER OCTET STRING over the SHA-1 digest of the byte ranges, and `/Cert` holds the
 /// signer's certificate (then any others) as DER byte strings.
@@ -1162,7 +1122,7 @@ fn validate_x509_rsa_sha1(
             info.certificate = Some(cert);
             info.status = Status::Unknown;
             // What is not supported yet is named by the reader, in its own words.
-            info.details.push(Detail::of("PdfCraft can't check this signature yet: {}.", Fill::Reason(e.to_string())));
+            info.details.push(Detail::of("PdfCraft can't check this signature yet: {}.", Fill::Reason(e)));
             return;
         }
         Err(e) => {
@@ -1220,6 +1180,18 @@ fn classify_changes(doc: &Document, old: Option<Document>, p: Option<u8>) -> Mod
             _ => false,
         }
     };
+    // A later cross-reference section may carry an entry this reader sets aside (an in-use entry
+    // at offset 0, a second entry for one object, a reserved entry type). The renderer may follow
+    // it and draw another object than the one compared below, so the page could show new content
+    // while every comparison here finds the signed object untouched. No writer has a reason to
+    // add such an entry after signing: it is never a permitted change.
+    for (_, num) in doc.xref_oddities().iter().filter(|o| !old.xref_oddities().contains(o)) {
+        let r = ObjRef { num: *num, generation: doc.generation(*num) };
+        let what = if old_content.contains(&r) || signed_pages.contains(&r) { kind::PAGE_CONTENT } else { kind::OTHER };
+        if !disallowed.contains(&what) {
+            disallowed.push(what);
+        }
+    }
     for num in doc.object_numbers() {
         if same_place(num) {
             continue;
@@ -1228,6 +1200,12 @@ fn classify_changes(doc: &Document, old: Option<Document>, p: Option<u8>) -> Mod
         let new = doc.get(r);
         let before = old.try_get(num).ok().filter(|o| !matches!(**o, Object::Null));
         if before.as_deref() == Some(&*new) {
+            // The same content at a new place. That is true for the renderer as well only when
+            // the entry locates the object itself: where this reader had to search for the
+            // object, another reader may arrive at a different one.
+            if !doc.is_edited(num) && !doc.xref_entry_is_exact(num) && !disallowed.contains(&kind::OTHER) {
+                disallowed.push(kind::OTHER);
+            }
             continue;
         }
         let what = match &*new {
@@ -1441,7 +1419,7 @@ fn acroform_kind(doc: &Document, old: &Document, now: &Dict, before: Option<&Dic
     let before = before.unwrap_or(&fallback);
     let strip = |d: &Dict| -> Vec<(Vec<u8>, Object)> {
         let mut v: Vec<(Vec<u8>, Object)> =
-            d.iter().filter(|(k, _)| !matches!(k.as_slice(), b"Fields" | b"SigFlags")).map(|(k, o)| (k.to_vec(), o.clone())).collect();
+            d.iter().filter(|(k, _)| !matches!(k.as_slice(), b"Fields" | b"SigFlags")).map(|(k, o)| (k.clone(), o.clone())).collect();
         v.sort_by(|a, b| a.0.cmp(&b.0));
         v
     };
@@ -1455,7 +1433,7 @@ fn acroform_kind(doc: &Document, old: &Document, now: &Dict, before: Option<&Dic
 
 /// Dictionary entries in a stable order, without `keys`.
 fn without(x: &Dict, keys: &[&[u8]]) -> Vec<(Vec<u8>, Object)> {
-    let mut v: Vec<(Vec<u8>, Object)> = x.iter().filter(|(k, _)| !keys.contains(&k.as_slice())).map(|(k, o)| (k.to_vec(), o.clone())).collect();
+    let mut v: Vec<(Vec<u8>, Object)> = x.iter().filter(|(k, _)| !keys.contains(&k.as_slice())).map(|(k, o)| (k.clone(), o.clone())).collect();
     v.sort_by(|a, b| a.0.cmp(&b.0));
     v
 }
@@ -1734,7 +1712,8 @@ fn sign_inner(
             let fr = f.r.ok_or_else(|| SignError::Pdf("the field is not an indirect object".into()))?;
             doc.update_dict(fr, |d| d.set(b"V".to_vec(), Object::Ref(sig)))?;
             let (wr, wd) = f.widgets.first().cloned().ok_or_else(|| SignError::Pdf("the field has no widget".into()))?;
-            let rect = nums(&doc, &wd, b"Rect").filter(|r| r.len() == 4).map(|r| [r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])]);
+            let rect =
+                doc.numbers(wd.get(b"Rect")).filter(|r| r.len() == 4).map(|r| [r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])]);
             (wr.unwrap_or(fr), rect.unwrap_or([0.0; 4]))
         }
         None => {

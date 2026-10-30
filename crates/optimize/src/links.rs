@@ -69,7 +69,7 @@ fn destination(doc: &Document, d: &Dict) -> Option<Object> {
 fn dest_name(o: &Object) -> Option<Vec<u8>> {
     match o {
         Object::String(s) => Some(s.bytes.clone()),
-        Object::Name(n) => Some(n.to_vec()),
+        Object::Name(n) => Some(n.clone()),
         _ => None,
     }
 }

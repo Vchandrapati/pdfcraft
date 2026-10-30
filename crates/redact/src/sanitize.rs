@@ -1,4 +1,4 @@
-//! Remove Hidden Information and Sanitize Document (architecture §11.1, execution plan M8.4).
+//! Remove Hidden Information and Sanitize Document (execution plan M8.4).
 //!
 //! [`scan`] counts what each category would remove; [`remove_hidden`] removes the chosen
 //! categories; [`sanitize`] removes all of them. Every removal makes the next save a full
@@ -144,6 +144,8 @@ fn content_pass(doc: &mut Document, text: bool, layers: bool, write: bool) -> Re
         return Ok(0);
     }
     let mut total = 0;
+    // The original image and form XObjects the rewrite drops or replaces, on any page.
+    let mut doomed = Vec::new();
     let n = pdfcraft_model::pages(doc).len();
     for pi in 0..n {
         let page = pdfcraft_model::pages(doc).swap_remove(pi);
@@ -168,6 +170,7 @@ fn content_pass(doc: &mut Document, text: bool, layers: bool, write: bool) -> Re
         if !write {
             continue;
         }
+        doomed.extend_from_slice(&out.doomed);
         let mut new_list = list.clone();
         let mut changed = false;
         for (i, new) in out.streams.into_iter().enumerate() {
@@ -205,6 +208,9 @@ fn content_pass(doc: &mut Document, text: bool, layers: bool, write: bool) -> Re
             })?;
         }
     }
+    // What a page no longer draws must not stay reachable through an inherited or shared
+    // /Resources either.
+    crate::interp::unlink_doomed(doc, &doomed)?;
     Ok(total)
 }
 

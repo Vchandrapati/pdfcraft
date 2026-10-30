@@ -315,6 +315,21 @@ pub(crate) fn made_by(a: &Annotation, tool: CommentTool) -> bool {
     }
 }
 
+/// The tool whose defaults "Make Current Properties Default" should update.
+///
+/// Arrows are stored as Line annotations. An arrow ending belongs to the Arrow tool, so its
+/// defaults stay separate from a plain line.
+pub(crate) fn tool_for_default(a: &Annotation, endings: Option<&[LineEnding]>) -> Option<CommentTool> {
+    match tool_for(a) {
+        Some(CommentTool::Line) if endings.is_some_and(|ends| ends.iter().copied().any(arrow_ending)) => Some(CommentTool::Arrow),
+        other => other,
+    }
+}
+
+fn arrow_ending(ending: LineEnding) -> bool {
+    matches!(ending, LineEnding::OpenArrow | LineEnding::ClosedArrow | LineEnding::ROpenArrow | LineEnding::RClosedArrow)
+}
+
 /// The tool that makes comments like `a` (for Make Current Properties Default).
 pub fn tool_for(a: &Annotation) -> Option<CommentTool> {
     Some(match (a.subtype.as_str(), a.intent.as_deref()) {
@@ -463,9 +478,7 @@ pub(crate) struct PageCx<'a> {
 
 impl PageCx<'_> {
     fn to_user(&self, p: Pos2) -> [f64; 2] {
-        let (vx, vy) = self.xf.screen_to_view(p);
-        let u = self.info.pages[self.page].view_to_user(vx, vy);
-        [u[0] as f64, u[1] as f64]
+        self.xf.to_user(self.info, self.page, p)
     }
 
     fn to_screen(&self, p: [f64; 2]) -> Pos2 {
@@ -658,6 +671,18 @@ pub(crate) fn page_input(ui: &egui::Ui, resp: &egui::Response, cx: &PageCx<'_>, 
                 } else if let Some(shape) = drawn_shape(tool, &points) {
                     view.pending_edit = Some(new_comment(cx, tool, shape, String::new()));
                 }
+            }
+            // A quick press/release does not start an egui drag, but Acrobat's Draw tool treats
+            // it as a one-point ink stroke (a dot). The appearance uses round line caps, so a
+            // single PDF point is visible and remains editable like any other drawing.
+            if tool == CommentTool::Ink
+                && resp.clicked()
+                && over_page
+                && let Some(p) = pointer
+                && let Some(shape) = drawn_shape(tool, &[cx.to_user(p)])
+            {
+                cv.selected = None;
+                view.pending_edit = Some(new_comment(cx, tool, shape, String::new()));
             }
             true
         }
@@ -1094,7 +1119,7 @@ fn drawn_shape(tool: CommentTool, points: &[[f64; 2]]) -> Option<Shape> {
     let rect = [first[0].min(last[0]), first[1].min(last[1]), first[0].max(last[0]), first[1].max(last[1])];
     let big = rect[2] - rect[0] >= 2.0 && rect[3] - rect[1] >= 2.0;
     match tool {
-        CommentTool::Ink if points.len() >= 2 => Some(Shape::Ink { strokes: vec![points.to_vec()] }),
+        CommentTool::Ink if !points.is_empty() => Some(Shape::Ink { strokes: vec![points.to_vec()] }),
         CommentTool::Line | CommentTool::Arrow if far => Some(Shape::Line {
             from: first,
             to: last,
@@ -1444,28 +1469,140 @@ pub enum CanvasAction {
     Properties(usize, usize),
 }
 
-/// A grid of colour swatches; returns the one clicked.
+/// How many custom colours the "Recent colours" row keeps.
+const RECENT_CUSTOM: usize = 5;
+
+fn recent_custom_id() -> egui::Id {
+    egui::Id::new("pdfcraft-recent-custom-colours")
+}
+
+/// Custom colours picked with "Other colour…" this session, newest first (#1193).
+pub fn recent_custom_colours(ctx: &egui::Context) -> Vec<Rgb> {
+    ctx.data(|d| d.get_temp::<Vec<Rgb>>(recent_custom_id())).unwrap_or_default()
+}
+
+/// Put `c` first in the recent custom colours (once, at most [`RECENT_CUSTOM`]). Colours that are
+/// already swatches are not repeated there.
+pub fn remember_custom_colour(ctx: &egui::Context, c: Rgb) {
+    if !c.iter().all(|v| v.is_finite()) || SWATCHES.iter().any(|(_, s)| same_colour(s, &c)) {
+        return;
+    }
+    let c = c.map(|v| v.clamp(0.0, 1.0));
+    ctx.data_mut(|d| {
+        let recent = d.get_temp_mut_or_default::<Vec<Rgb>>(recent_custom_id());
+        recent.retain(|r| !same_colour(r, &c));
+        recent.insert(0, c);
+        recent.truncate(RECENT_CUSTOM);
+    });
+}
+
+fn same_colour(a: &Rgb, b: &Rgb) -> bool {
+    a.iter().zip(b).all(|(x, y)| (x - y).abs() < 0.02)
+}
+
+fn rgb_of(c: Color32) -> Rgb {
+    [c.r(), c.g(), c.b()].map(|v| f64::from(v) / 255.0)
+}
+
+/// One round swatch; `on` rings it as the current colour.
+fn swatch(ui: &mut egui::Ui, c: Rgb, on: bool, tooltip: &str) -> egui::Response {
+    let (r, resp) = ui.allocate_exact_size(vec2(22.0, 22.0), Sense::click());
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tooltip));
+    ui.painter().circle_filled(r.center(), 9.0, color32(c));
+    ui.painter().circle_stroke(r.center(), 9.0, Stroke::new(1.0, Color32::from_black_alpha(40)));
+    if on || resp.hovered() {
+        ui.painter().circle_stroke(r.center(), 11.0, Stroke::new(1.5, SELECT_BLUE));
+    }
+    resp.on_hover_text(tooltip)
+}
+
+/// The "+" swatch that opens "Other colour…": a ring with a plus, the size of a swatch.
+fn other_colour_swatch(ui: &mut egui::Ui, open: bool) -> egui::Response {
+    let (r, resp) = ui.allocate_exact_size(vec2(22.0, 22.0), Sense::click());
+    let ink = ui.visuals().widgets.inactive.fg_stroke.color;
+    ui.painter().circle_stroke(r.center(), 9.0, Stroke::new(1.0, ink.gamma_multiply(0.6)));
+    let c = r.center();
+    for d in [vec2(4.5, 0.0), vec2(0.0, 4.5)] {
+        ui.painter().line_segment([c - d, c + d], Stroke::new(1.5, ink));
+    }
+    if open || resp.hovered() {
+        ui.painter().circle_stroke(c, 11.0, Stroke::new(1.5, SELECT_BLUE));
+    }
+    let label = tl!("Other colour…");
+    resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, open, label));
+    resp.on_hover_text(label)
+}
+
+/// A grid of colour swatches with a "+" swatch for "Other colour…" (a full picker, as Acrobat's
+/// quick colours offer) and, once used, the recent custom colours; returns the colour chosen.
+/// The "+" sits in the first row, so the grid is no taller than before until the picker opens.
 pub fn swatch_grid(ui: &mut egui::Ui, current: Option<Rgb>) -> Option<Rgb> {
     let mut picked = None;
-    egui::Grid::new(ui.id().with("swatches")).spacing(vec2(6.0, 6.0)).show(ui, |ui| {
+    let on = |c: &Rgb| current.is_some_and(|cur| same_colour(&cur, c));
+    // Keyed on this grid's own place in the parent, so two grids in one dialog open their
+    // pickers separately.
+    let base = ui.next_auto_id();
+    ui.skip_ahead_auto_ids(1);
+    let open_id = base.with("other-colour");
+    let value_id = open_id.with("value");
+    let mut open = ui.data(|d| d.get_temp::<bool>(open_id)).unwrap_or(false);
+    egui::Grid::new(base.with("swatches")).spacing(vec2(6.0, 6.0)).show(ui, |ui| {
         for (i, (name, c)) in SWATCHES.iter().enumerate() {
-            let (r, resp) = ui.allocate_exact_size(vec2(22.0, 22.0), Sense::click());
-            resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tl!(name)));
-            let on = current.is_some_and(|cur| cur.iter().zip(c).all(|(a, b)| (a - b).abs() < 0.02));
-            ui.painter().circle_filled(r.center(), 9.0, color32(*c));
-            ui.painter().circle_stroke(r.center(), 9.0, Stroke::new(1.0, Color32::from_black_alpha(40)));
-            if on || resp.hovered() {
-                ui.painter().circle_stroke(r.center(), 11.0, Stroke::new(1.5, SELECT_BLUE));
-            }
-            if resp.on_hover_text(tl!(name)).clicked() {
+            if swatch(ui, *c, on(c), tl!(name)).clicked() {
                 picked = Some(*c);
+            }
+            if i == 4 && other_colour_swatch(ui, open).clicked() {
+                open = !open;
+                // Start from the current colour each time the picker opens.
+                ui.data_mut(|d| d.insert_temp(value_id, current.map_or(Color32::BLACK, color32)));
             }
             if i % 5 == 4 {
                 ui.end_row();
             }
         }
     });
+    let recent = recent_custom_colours(ui.ctx());
+    if !recent.is_empty() {
+        ui.label(egui::RichText::new(tl!("Recent colours")).small());
+        ui.horizontal(|ui| {
+            ui.spacing_mut().item_spacing.x = 6.0;
+            for c in &recent {
+                let [r, g, b, _] = color32(*c).to_array();
+                if swatch(ui, *c, on(c), &format!("#{r:02X}{g:02X}{b:02X}")).clicked() {
+                    picked = Some(*c);
+                }
+            }
+        });
+    }
+    if open && picked.is_none() {
+        let mut value = ui.data(|d| d.get_temp::<Color32>(value_id)).unwrap_or_else(|| current.map_or(Color32::BLACK, color32));
+        egui::widgets::color_picker::color_picker_color32(ui, &mut value, egui::widgets::color_picker::Alpha::Opaque);
+        ui.data_mut(|d| d.insert_temp(value_id, value));
+        // Dragging in the picker previews nothing; Apply commits once (one undo step).
+        if ui.button(tl!("Apply")).clicked() {
+            let c = rgb_of(value);
+            remember_custom_colour(ui.ctx(), c);
+            picked = Some(c);
+        }
+    }
+    if picked.is_some() {
+        open = false;
+    }
+    ui.data_mut(|d| d.insert_temp(open_id, open));
     picked
+}
+
+/// A "No colour" check box for an optional colour. Unticking it brings back the colour that was
+/// set before it was ticked, instead of resetting to black.
+pub(crate) fn no_colour_checkbox(ui: &mut egui::Ui, label: &str, slot: &mut Option<Rgb>) {
+    let last = ui.next_auto_id().with("last-colour");
+    if let Some(c) = *slot {
+        ui.data_mut(|d| d.insert_temp(last, c));
+    }
+    let mut none = slot.is_none();
+    if ui.add(crate::widgets::checkbox(&mut none, label)).changed() {
+        *slot = if none { None } else { Some(ui.data(|d| d.get_temp::<Rgb>(last)).unwrap_or([0.0; 3])) };
+    }
 }
 
 /// "No fill" and the colour swatches; returns the choice clicked (`Some(None)`: no fill).
@@ -1657,6 +1794,75 @@ mod tests {
     }
 
     #[test]
+    fn recent_custom_colours_dedupe_cap_and_skip_swatches() {
+        // #1193: "Other colour…" remembers what it applied, newest first.
+        let ctx = egui::Context::default();
+        assert!(recent_custom_colours(&ctx).is_empty());
+        for i in 0..7 {
+            remember_custom_colour(&ctx, [0.1 * f64::from(i), 0.3, 0.7]);
+        }
+        let recent = recent_custom_colours(&ctx);
+        assert_eq!(recent.len(), RECENT_CUSTOM, "capped");
+        assert!(same_colour(&recent[0], &[0.6, 0.3, 0.7]), "newest first: {recent:?}");
+        remember_custom_colour(&ctx, [0.2, 0.3, 0.7]);
+        let again = recent_custom_colours(&ctx);
+        assert_eq!(again.len(), RECENT_CUSTOM);
+        assert!(
+            same_colour(&again[0], &[0.2, 0.3, 0.7]) && again.iter().filter(|c| same_colour(c, &[0.2, 0.3, 0.7])).count() == 1,
+            "moved, not repeated"
+        );
+        // Swatches and unusable values are not remembered; out-of-range ones are clamped.
+        remember_custom_colour(&ctx, SWATCHES[0].1);
+        remember_custom_colour(&ctx, [f64::NAN, 0.0, 0.0]);
+        assert!(same_colour(&recent_custom_colours(&ctx)[0], &[0.2, 0.3, 0.7]));
+        remember_custom_colour(&ctx, [1.7, -0.5, 0.25]);
+        assert!(same_colour(&recent_custom_colours(&ctx)[0], &[1.0, 0.0, 0.25]));
+    }
+
+    #[test]
+    fn other_colour_applies_the_picked_colour_once() {
+        // #1193: the swatch grid has a full picker; Apply returns its colour and remembers it.
+        use egui_kittest::kittest::Queryable;
+        let current = [0.2, 0.4, 0.6];
+        let mut h = egui_kittest::Harness::new_ui_state(
+            |ui, picked: &mut Vec<Rgb>| {
+                if let Some(c) = swatch_grid(ui, Some(current)) {
+                    picked.push(c);
+                }
+            },
+            Vec::new(),
+        );
+        h.run();
+        assert!(h.query_by_label("Apply").is_none(), "the picker starts closed");
+        assert!(h.query_by_label("Recent colours").is_none());
+        h.get_by_label("Other colour…").click();
+        h.run();
+        h.get_by_label("Apply").click();
+        h.run();
+        let picked = h.state().clone();
+        assert_eq!(picked.len(), 1, "one choice: {picked:?}");
+        assert!(same_colour(&picked[0], &current), "the picker opens on the current colour: {picked:?}");
+        assert!(h.query_by_label("Apply").is_none(), "applying closes the picker");
+        assert!(h.query_by_label("Recent colours").is_some(), "the colour is offered again");
+    }
+
+    #[test]
+    fn two_grids_in_one_parent_open_their_pickers_separately() {
+        // Redaction properties and Prepare a form draw two grids in one parent ui.
+        use egui_kittest::kittest::Queryable;
+        let mut h = egui_kittest::Harness::new_ui(|ui| {
+            let _ = swatch_grid(ui, Some([0.2, 0.4, 0.6]));
+            let _ = swatch_grid(ui, Some([0.6, 0.4, 0.2]));
+        });
+        h.run();
+        let plus = h.query_all_by_label("Other colour…").collect::<Vec<_>>();
+        assert_eq!(plus.len(), 2);
+        plus[0].click();
+        h.run();
+        assert_eq!(h.query_all_by_label("Apply").count(), 1, "only the first grid's picker opens");
+    }
+
+    #[test]
     fn proportional_corners_keep_the_opposite_anchor_and_edges_stretch_one_axis() {
         let r = Rect::from_min_max(pos2(100.0, 100.0), pos2(196.0, 132.0));
         for (hx, hy) in [(-1, -1), (1, -1), (-1, 1), (1, 1)] {
@@ -1691,7 +1897,7 @@ mod tests {
     fn drawn_shapes_ignore_slips() {
         assert_eq!(drawn_shape(CommentTool::Rectangle, &[[0.0, 0.0], [1.0, 1.0]]), None);
         assert_eq!(drawn_shape(CommentTool::Rectangle, &[[10.0, 0.0], [0.0, 10.0]]), Some(Shape::Rectangle { rect: [0.0, 0.0, 10.0, 10.0] }));
-        assert_eq!(drawn_shape(CommentTool::Ink, &[[0.0, 0.0]]), None);
+        assert_eq!(drawn_shape(CommentTool::Ink, &[[0.0, 0.0]]), Some(Shape::Ink { strokes: vec![vec![[0.0, 0.0]]] }));
         assert!(matches!(
             drawn_shape(CommentTool::Arrow, &[[0.0, 0.0], [5.0, 0.0]]),
             Some(Shape::Line { start: LineEnding::None, end: LineEnding::OpenArrow, .. })

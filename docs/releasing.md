@@ -1,48 +1,21 @@
 # Releasing PdfCraft
 
-Every push to the `release` branch runs `.github/workflows/release.yml`. It builds installers for
-macOS, Windows, Linux, FreeBSD and the web, signs the ones it has certificates for, and creates or
-updates a **draft** GitHub Release named `PdfCraft v<version>`. Nobody sees a draft until a
-maintainer publishes it.
+This fork has no hosted release pipeline: installers are built locally with the scripts in
+`packaging/`, one per platform. User-facing names say **PdfCraft**; files, binaries and ids stay
+lowercase (`pdfcraft-<version>-<platform>-<arch>.<ext>`, `ai.storyteller.pdfcraft`).
 
-The pipeline was ported from PhotoCraft's. User-facing names say **PdfCraft**; files, binaries and
-ids stay lowercase (`pdfcraft-<version>-<platform>-<arch>.<ext>`, `ai.storyteller.pdfcraft`).
+## Version
 
-## Cutting a release
+The version lives only in `[workspace.package] version` in the root `Cargo.toml`:
 
-1. **Bump the version** on `main`. It lives only in `[workspace.package] version` in the root
-   `Cargo.toml`:
-
-   ```sh
-   cargo xtask version                 # prints the current version
-   cargo xtask version set 0.3.0       # or 0.3.0-rc.1; updates Cargo.toml and Cargo.lock
-   ```
-
-   Commit the change through the normal review flow (see the `Release: PdfCraft v0.2.1` PR).
-2. **Merge `main` into `release`** (or fast-forward it) and push. The workflow starts by itself.
-3. **Wait for the draft.** When every job has finished (notarization is the slow part), the
-   Releases page has a draft `PdfCraft v0.3.0` targeting the pushed commit, with every artifact
-   and `SHA256SUMS.txt`. The notes are generated from the merged PRs.
-4. **Check it.** Download an installer or two and read the job summaries. A `::warning::` there
-   means a signing secret was missing and that artifact is unsigned.
-5. **Publish** the draft in the GitHub UI. Publishing creates the `v0.3.0` tag. Versions with a
-   pre-release suffix (`-rc.1`) are marked as pre-releases.
-
-Pushing to `release` again before you publish rebuilds the same draft and replaces its assets.
-Once the draft is published, the workflow refuses to touch that version again, so bump it first.
-
-**Test runs:** *Actions ▸ Release ▸ Run workflow* runs the whole pipeline by hand. The optional
-`version` input (such as `0.3.0-rc.1`) overrides `Cargo.toml` for that run only; each job applies it
-with `cargo xtask version set` before building, so the binaries report it too. The signing jobs
-(macOS, Windows) and the draft-release job use the `release` environment, so pick the `release`
-branch in the dialog for a full run. On any other branch the same dispatch is a **dry run**: the
-Linux, Flatpak, FreeBSD and web jobs build and check everything, the signing jobs are refused by the
-environment's branch rule, and the draft-release job (which needs them) is skipped, so nothing is
-published (`gh workflow run release.yml --ref <branch>`).
+```sh
+cargo xtask version                 # prints the current version
+cargo xtask version set 0.3.0       # or 0.3.0-rc.1; updates Cargo.toml and Cargo.lock
+```
 
 ## What gets built
 
-| Platform | Artifacts | Built on |
+| Platform | Artifacts | Upstream built it on |
 |---|---|---|
 | macOS 11+ (universal: Apple silicon + Intel) | `pdfcraft-<v>-macos-universal.dmg`, `pdfcraft-cli-<v>-macos-universal.zip` | `macos-15` |
 | Windows 10+ x64 | `pdfcraft-<v>-windows-x64.msi`, `pdfcraft-<v>-windows-x64-portable.zip` | `windows-latest` |
@@ -56,18 +29,18 @@ published (`gh workflow run release.yml --ref <branch>`).
 | FreeBSD 14 x86_64 | `pdfcraft-<v>-freebsd-x86_64.tar.gz` | FreeBSD VM on `ubuntu-latest` |
 | Web | `pdfcraft-web-<v>.zip` (a static site; see [`packaging/web/README.md`](../packaging/web/README.md)) | `ubuntu-latest` |
 
-The ARM64 Windows build is cross-compiled on the x64 runner, so signing and WiX work as for the
-other Windows builds; `.github/workflows/windows-arm64.yml` installs and runs it on ARM64 hardware.
+The ARM64 Windows build is cross-compiled on x64, so signing and WiX work as for the other Windows
+builds; `.github/workflows/windows-arm64.yml` installs and runs it on ARM64 hardware.
 
 Every binary reports its version (`pdfcraft --version`, `pdfcraft-cli --version`, *Help ▸ About*).
-The workflow sets `PDFCRAFT_BUILD_SHA` and `PDFCRAFT_BUILD_DATE` (`packaging/env.sh` fills them in
-for local builds): the commit is recorded in the macOS `Info.plist` (`PdfCraftBuildCommit`) and the
-date in the AppStream metadata. The binaries don't embed the commit yet.
+`PDFCRAFT_BUILD_SHA` and `PDFCRAFT_BUILD_DATE` (filled in by `packaging/env.sh` when unset) are
+recorded: the commit in the macOS `Info.plist` (`PdfCraftBuildCommit`) and the date in the AppStream
+metadata. The binaries don't embed the commit yet.
 
-**Fonts:** every job checks out [craft-fonts](https://github.com/storytold/craft-fonts) at the commit
-pinned in `release.yml` and builds with `CRAFT_FONTS_DIR` and `CRAFT_FONTS_REQUIRED=1`, so releases
-embed its Japanese fonts and fail rather than ship without them (`AGENTS.md` §1.4). Bump the pin
-deliberately.
+**Fonts:** check out [craft-fonts](https://github.com/storytold/craft-fonts) (CI pins the commit in
+`.github/workflows/ci.yml`) and build with `CRAFT_FONTS_DIR` and `CRAFT_FONTS_REQUIRED=1`, so the
+package embeds its Japanese fonts and the build fails rather than ship without them (`AGENTS.md`
+§1.4).
 
 **OCR model and runtime:** desktop packages stage the single English Tesseract BEST model (#103).
 The packaging scripts call `stage_models` (`packaging/env.sh`; `package.ps1` on Windows), which runs
@@ -89,8 +62,7 @@ from Preview). Files opened from Finder arrive as Apple events, which
 `apps/pdfcraft/src/apple_events.rs` receives.
 
 - **Signing** uses the hardened runtime and a secure timestamp, executable first, then the bundle.
-  `packaging/macos/import-cert.sh` puts the certificate in a temporary keychain, deleted at the end
-  of the job.
+  `packaging/macos/import-cert.sh` puts the certificate in a temporary keychain.
 - **Notarization:** the app is zipped and sent with `xcrun notarytool submit --wait`, the ticket is
   stapled, and the result is checked with `codesign --verify`, `stapler validate` and `spctl`. The
   app ships on a drag-to-Applications DMG, which is signed and notarized too.
@@ -165,15 +137,14 @@ Each AppImage embeds update information
 `.zsync` is published beside it, so AppImageUpdate and AppImageLauncher can update it in place,
 downloading only the changed blocks. `latest` is the newest published, non-pre-release version.
 `package.sh` writes the `.zsync` when `zsyncmake` (the `zsync` package) is installed and warns
-otherwise; the release job checks both.
+otherwise.
 
-**Flatpak:** the `flatpak` job turns each arch's tarball into a single-file bundle with
-`packaging/linux/flatpak-bundle.sh` and `flatpak/ai.storyteller.pdfcraft.bundle.yml` (no Rust build;
-the same binaries), then installs it and runs `pdfcraft-cli --version` in the sandbox.
+**Flatpak:** `packaging/linux/flatpak-bundle.sh` turns each arch's tarball into a single-file bundle with
+`flatpak/ai.storyteller.pdfcraft.bundle.yml` (no Rust build; the same binaries).
 `flatpak/ai.storyteller.pdfcraft.yml` is the from-source manifest for a later Flathub submission;
 packaging-lint keeps the runtime and sandbox permissions (`finish-args`) of the two identical.
 Printing is not available in the Flatpak yet: it runs `lp`, which the freedesktop runtime lacks
-(the job logs a note); it needs the print portal. Users install the bundle with `flatpak install --user pdfcraft-<v>-linux-<arch>.flatpak`; the
+; it needs the print portal. Users install the bundle with `flatpak install --user pdfcraft-<v>-linux-<arch>.flatpak`; the
 freedesktop runtime comes from Flathub.
 
 Locally (on Linux, with nfpm): `packaging/linux/package.sh` or `--formats "deb tar"`; then
@@ -181,10 +152,10 @@ Locally (on Linux, with nfpm): `packaging/linux/package.sh` or `--formats "deb t
 
 ### FreeBSD
 
-GitHub has no FreeBSD runners, so the `freebsd` job runs `packaging/freebsd/package.sh` in a FreeBSD
-VM with the packages from `.github/workflows/freebsd.yml`. The tarball is a `/usr/local`-style tree
+`packaging/freebsd/package.sh` runs on FreeBSD (CI builds in a VM: `.github/workflows/freebsd.yml`
+lists the packages it needs). The tarball is a `/usr/local`-style tree
 with the same desktop entry, metainfo and icons as Linux. FreeBSD has no code signing for loose
-binaries; check the tarball against `SHA256SUMS.txt`.
+binaries; publish the tarball's SHA-256 beside it.
 
 ### Web
 
@@ -192,39 +163,33 @@ binaries; check the tarball against `SHA256SUMS.txt`.
 with sample `_headers` and `.htaccess` files. Hosting (MIME types, compression, caching, iframes) is
 covered in [`packaging/web/README.md`](../packaging/web/README.md).
 
-## Secrets
+## Signing
 
-The signing secrets live in the repository's **`release` environment** (*Settings ▸ Environments ▸
-release*), restricted to the `release` branch; every job in `release.yml` declares
-`environment: release`. Each secret is optional: if one is missing, that platform's artifacts are
-unsigned and the run shows a warning.
+Signing is optional: without these environment variables the scripts warn and produce unsigned
+(Windows) or ad-hoc signed, un-notarized (macOS) packages.
 
-| Secret | Used for |
+| Variable | Used for |
 |---|---|
-| `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD` | base64 Developer ID Application `.p12` and its password |
-| `KEYCHAIN_PASSWORD` | the temporary CI keychain (random if unset) |
+| `APPLE_CERTIFICATE`, `APPLE_CERTIFICATE_PASSWORD` | base64 Developer ID Application `.p12` and its password (`packaging/macos/import-cert.sh`) |
+| `KEYCHAIN_PASSWORD` | the temporary keychain (random if unset) |
 | `APPLE_ID`, `APPLE_PASSWORD`, `APPLE_TEAM_ID` | `notarytool` (an app-specific password) |
-| `WINDOWS_CERTIFICATE`, `WINDOWS_CERTIFICATE_PASSWORD` | base64 `.pfx` code-signing certificate and its password |
+| `WINDOWS_CERTIFICATE`, `WINDOWS_CERTIFICATE_PASSWORD` | base64 `.pfx` code-signing certificate and its password (`packaging/windows/sign.ps1`) |
 | `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` | service principal for Azure Trusted Signing (instead of a `.pfx`) |
 | `AZURE_SIGNING_ENDPOINT`, `AZURE_SIGNING_ACCOUNT`, `AZURE_CERT_PROFILE` | Trusted Signing endpoint, account and certificate profile |
-
-`GITHUB_TOKEN` creates the release; only the final job gets `contents: write`.
 
 ## Checks
 
 `.github/workflows/packaging-lint.yml` runs on changes to `packaging/` and the workflows: actionlint, shellcheck,
 a PowerShell parse, xmllint (WiX, plist, MIME), `desktop-file-validate`, `appstreamcli validate`, and
-the MSI icon-id check. The FreeBSD and Windows ARM64 workflows also exercise their packaging before a
-release does.
+the MSI icon-id check. The FreeBSD and Windows ARM64 workflows also exercise their packaging.
 
 ## Scanner detections
 
 Antivirus and reputation scanners sometimes flag a released file. Check the facts before you change
-code or answer publicly. The first report was [issue #747](https://github.com/storytold/pdfcraft/issues/747),
-a match of the `CobaltStrikeBeacon` family rule.
+code or answer publicly. The example below is a match of the `CobaltStrikeBeacon` family rule.
 
-1. **Confirm the file is the release.** Compare its SHA-256 with `SHA256SUMS.txt` on the GitHub
-   Release. Only a file whose hash matches the release says anything about that release.
+1. **Confirm the file is the release.** Compare its SHA-256 with the hash published for that
+   release. Only a file whose hash matches the release says anything about that release.
 2. **Record the signature.** `packaging/windows/security-audit.ps1` prints the Authenticode status:
    - `Valid`: the signature verifies.
    - `NotSigned`: no signature, as in developer and test builds. Not evidence of compromise by itself.
@@ -255,5 +220,4 @@ a match of the `CobaltStrikeBeacon` family rule.
    current one does not. Don't alter PdfCraft's binaries to change a scanner's result. That changes
    nothing about the software.
 7. **Report.** To the scanner, send the file's SHA-256, the release URL, the rule name and revision,
-   and the matched identifiers and offsets. Report PdfCraft problems at
-   <https://github.com/storytold/pdfcraft/issues> with the same facts.
+   and the matched identifiers and offsets.

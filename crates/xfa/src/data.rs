@@ -8,6 +8,7 @@
 //! under the area's parent ([`data_path`]). Explicit `bind ref` expressions are not followed.
 
 use std::collections::HashMap;
+use std::fmt::Write as _;
 
 use pdfcraft_cos::{Dict, Document, ObjRef, Object, PdfString, Stream};
 
@@ -379,12 +380,12 @@ impl Build {
     /// The tree as XML. Depth is bounded by [`Build::at`].
     fn write(&self, out: &mut String) {
         if self.children.is_empty() {
-            out.push_str(&format!("<{}>{}</{}>", self.name, escape(&self.text).0, self.name));
+            let _ = write!(out, "<{}>{}</{}>", self.name, escape(&self.text).0, self.name);
             return;
         }
-        out.push_str(&format!("<{}>", self.name));
+        let _ = write!(out, "<{}>", self.name);
         self.write_children(out);
-        out.push_str(&format!("</{}>", self.name));
+        let _ = write!(out, "</{}>", self.name);
     }
 
     fn write_children(&self, out: &mut String) {
@@ -465,7 +466,7 @@ fn skipped(warnings: &mut Vec<String>, reason: &str, som: &str) {
     const MAX_WARNINGS: usize = 20;
     if let Some(w) = warnings.iter_mut().find(|w| w.starts_with(reason)) {
         if w.matches(", ").count() < 4 {
-            w.push_str(&format!(", {som}"));
+            let _ = write!(w, ", {som}");
         } else if !w.ends_with('…') {
             w.push_str(", …");
         }
@@ -547,7 +548,7 @@ fn append_edit(src: &str, node: roxmltree::Node, inner: &str) -> Option<Edit> {
         let name = qname(src, &range)?;
         return Some(Edit { start: tag_end.checked_sub(1)?, end: range.end, text: format!(">{inner}</{name}>") });
     }
-    let close = range.start + src.get(range.clone())?.rfind("</")?;
+    let close = range.start + src.get(range)?.rfind("</")?;
     Some(Edit { start: close, end: close, text: inner.to_string() })
 }
 
@@ -559,7 +560,7 @@ fn replace_edit(src: &str, node: roxmltree::Node, text: &str) -> Option<Edit> {
         let name = qname(src, &range)?;
         return Some(Edit { start: tag_end.checked_sub(1)?, end: range.end, text: format!(">{text}</{name}>") });
     }
-    let close = range.start + src.get(range.clone())?.rfind("</")?;
+    let close = range.start + src.get(range)?.rfind("</")?;
     (close > tag_end).then(|| Edit { start: tag_end + 1, end: close, text: text.to_string() })
 }
 
@@ -687,7 +688,7 @@ fn serialize_node(n: &ImportNode, xfa: &str, out: &mut String, depth: usize) {
     out.push('<');
     out.push_str(&tag);
     for (p, uri) in &decls {
-        out.push_str(&format!(" xmlns:{p}=\"{}\"", escape(uri).0));
+        let _ = write!(out, " xmlns:{p}=\"{}\"", escape(uri).0);
     }
     for a in &attrs {
         out.push_str(a);
@@ -701,7 +702,7 @@ fn serialize_node(n: &ImportNode, xfa: &str, out: &mut String, depth: usize) {
     for c in &n.children {
         serialize_node(c, xfa, out, depth + 1);
     }
-    out.push_str(&format!("</{tag}>"));
+    let _ = write!(out, "</{tag}>");
 }
 
 fn merge(text: &str, within: Within, op: Op, warnings: &mut Vec<String>) -> Merged {
@@ -1261,7 +1262,7 @@ pub fn export_data(doc: &Document, xdp: bool, pdf_name: &str) -> Result<String, 
         let (name, _) = escape(pdf_name);
         out.push_str("<xdp:xdp xmlns:xdp=\"http://ns.adobe.com/xdp/\">\n");
         out.push_str(&datasets);
-        out.push_str(&format!("\n<pdf href=\"{name}\" xmlns=\"http://ns.adobe.com/xdp/pdf/\"/>\n</xdp:xdp>\n"));
+        let _ = write!(out, "\n<pdf href=\"{name}\" xmlns=\"http://ns.adobe.com/xdp/pdf/\"/>\n</xdp:xdp>\n");
     } else {
         out.push_str(if data.is_empty() { &datasets } else { &data });
         out.push('\n');
@@ -1311,7 +1312,7 @@ fn element_markup(src: &str, n: roxmltree::Node) -> Option<String> {
             None => "xmlns=".to_string(),
         };
         if !start_tag.contains(&attr) {
-            decls.push_str(&format!(" {attr}\"{}\"", escape(ns.uri()).0));
+            let _ = write!(decls, " {attr}\"{}\"", escape(ns.uri()).0);
         }
     }
     if decls.is_empty() {

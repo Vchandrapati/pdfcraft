@@ -23,17 +23,18 @@
 use pdfcraft_cos::{Dict, Document, Object, Stream};
 use pdfcraft_fonts::pdf::Metrics;
 use pdfcraft_fonts::{UnicodeCMap, cjk_width, helvetica_width, literal, win_ansi, wrap_with};
+use std::fmt::Write as _;
 
 use crate::{Field, FieldKind, Widget, acroform, flags};
 
 /// Format a number for content streams.
-fn n(v: f64) -> String {
-    pdfcraft_content::number(v, 3)
+fn n(v: f64) -> pdfcraft_content::Num {
+    pdfcraft_content::Num(v, 3)
 }
 
 /// Format a number for content streams (up to three decimals).
 pub fn fmt(v: f64) -> String {
-    n(v)
+    n(v).to_string()
 }
 
 /// `/MK /R` as a quadrant, or 0 when it is missing or not a multiple of 90.
@@ -219,7 +220,7 @@ fn frame(doc: &Document, wd: &Dict, w: f64, h: f64) -> (String, f64) {
     let mk = wd.get(b"MK").map(|m| doc.resolve(m)).and_then(|m| m.as_dict().cloned());
     let mut c = String::new();
     if let Some(bg) = color_array(doc, mk.as_ref(), b"BG") {
-        c.push_str(&format!("{bg}\n0 0 {} {} re f\n", n(w), n(h)));
+        let _ = write!(c, "{bg}\n0 0 {} {} re f\n", n(w), n(h));
     }
     let bs = wd.get(b"BS").map(|b| doc.resolve(b)).and_then(|b| b.as_dict().cloned());
     let bw = bs.as_ref().and_then(|b| b.get(b"W")).and_then(|x| doc.resolve(x).as_f64()).unwrap_or(1.0).max(0.0);
@@ -229,7 +230,7 @@ fn frame(doc: &Document, wd: &Dict, w: f64, h: f64) -> (String, f64) {
         let style = bs.as_ref().and_then(|b| b.name(b"S").map(<[u8]>::to_vec)).unwrap_or_default();
         if style == b"U" {
             // Underline: only the bottom edge.
-            c.push_str(&format!("{}\n{} w\n0 {} m {} {} l S\n", stroke_op(&bc), n(bw), n(bw / 2.0), n(w), n(bw / 2.0)));
+            let _ = write!(c, "{}\n{} w\n0 {} m {} {} l S\n", stroke_op(&bc), n(bw), n(bw / 2.0), n(w), n(bw / 2.0));
             return (c, bw);
         }
         let dashed = style == b"D";
@@ -283,21 +284,11 @@ fn frame(doc: &Document, wd: &Dict, w: f64, h: f64) -> (String, f64) {
     (c, 0.0)
 }
 
-/// The appearance of a text or choice field's widget showing `values`. Characters its font can't
-/// hold come out as `?`; [`field_appearance_drawn`] says which.
-pub fn field_appearance(doc: &Document, f: &Field, w: &Widget, values: &[String]) -> Stream {
-    field_appearance_as(doc, f, w, values, true)
-}
-
-/// [`field_appearance`], where `format` false means `values` are already what to show (a
-/// custom Format script ran).
-pub fn field_appearance_as(doc: &Document, f: &Field, w: &Widget, values: &[String], format: bool) -> Stream {
-    field_appearance_drawn(doc, f, w, values, format).0
-}
-
-/// [`field_appearance_as`] with the first character it drew as `?` because the field's font can't
-/// hold it: the form's font is a simple (WinAnsi) font, Helvetica stands in for one PdfCraft can't
-/// write with (an embedded subset, `Identity-H`), or a UCS-2 CMap meets a character beyond U+FFFF.
+/// The appearance of a text or choice field's widget showing `values`, where `format` false means
+/// `values` are already what to show (a custom Format script ran). Characters its font can't hold
+/// come out as `?`, and the first of them is returned: the form's font is a simple (WinAnsi) font,
+/// Helvetica stands in for one PdfCraft can't write with (an embedded subset, `Identity-H`), or a
+/// UCS-2 CMap meets a character beyond U+FFFF.
 pub fn field_appearance_drawn(doc: &Document, f: &Field, w: &Widget, values: &[String], format: bool) -> (Stream, Option<char>) {
     // The Format event: what is shown, not what is stored.
     let formatted: Vec<String>;
@@ -377,7 +368,7 @@ pub fn field_appearance_drawn(doc: &Document, f: &Field, w: &Widget, values: &[S
                     break;
                 }
                 if values.contains(export) {
-                    c.push_str(&format!("0.6 0.75 0.86 rg\n{} {} {} {} re f\n", n(bw), n(y - line), n(width - 2.0 * bw), n(line)));
+                    let _ = write!(c, "0.6 0.75 0.86 rg\n{} {} {} {} re f\n", n(bw), n(y - line), n(width - 2.0 * bw), n(line));
                 }
                 show(&mut body, pad, y - line + size * 0.25, display);
                 y -= line;
@@ -488,7 +479,7 @@ fn check_mark(style: crate::author::CheckStyle, cx: f64, cy: f64, s: f64) -> Str
     let polygon = |pts: &[(f64, f64)]| {
         let mut c = String::from("0 g\n");
         for (i, (x, y)) in pts.iter().enumerate() {
-            c.push_str(&format!("{} {} {} ", n(*x), n(*y), if i == 0 { "m" } else { "l" }));
+            let _ = write!(c, "{} {} {} ", n(*x), n(*y), if i == 0 { "m" } else { "l" });
         }
         c.push_str("h f\n");
         c

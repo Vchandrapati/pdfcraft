@@ -103,8 +103,6 @@
 	Select all pages (Organize)	Zaznacz wszystkie strony (Organizuj)
 	Home	Strona główna
 	Open	Otwórz
-	Open a PDF (⌘O)	Otwórz PDF (⌘O)
-	Dark gray theme	Ciemnoszary motyw
 	Light theme	Jasny motyw
 	Appearance mode	Tryb wyglądu
 	Light	Jasny
@@ -116,9 +114,7 @@
 	Read	Czytaj
 	Convert	Konwertuj
 	E-Sign	Podpis elektroniczny
-	Print (⌘P)	Drukuj (⌘P)
 	Save ({key})	Zapisz ({key})
-	Document properties (⌘D)	Właściwości dokumentu (⌘D)
 	Find tools and commands	Znajdź narzędzia i polecenia
 	Fit to height	Dopasuj do wysokości
 	Zoom in	Powiększ
@@ -147,18 +143,14 @@
 	Compare	Porównaj
 	Page thumbnails	Miniatury stron
 	Form fields	Pola formularza
-	Zoom out (⌘−)	Pomniejsz (⌘−)
-	Zoom in (⌘+)	Powiększ (⌘+)
 	Rotate view clockwise (⇧⌘+)	Obróć widok w prawo (⇧⌘+)
 	Toggle fit page / fit width	Przełącz dopasowanie do strony / szerokości
 	Next page	Następna strona
 	Previous page	Poprzednia strona
 	Current page — type a page number or label (such as iv) and press Enter	Bieżąca strona — wpisz numer lub etykietę strony (np. iv) i naciśnij Enter
-	Use now	Użyj teraz
 	Open file	Otwórz plik
 	Recent	Ostatnie
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Pliki otwierane w PdfCraft pojawiają się tutaj. Upuść PDF w dowolnym miejscu, aby go otworzyć.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Skrypty działają w piaskownicy bez dostępu do plików i sieci. Przy wyłączonym JavaScript standardowe funkcje formatowania, walidacji i obliczeń Acrobata nadal działają.
 	Back to all tools	Wróć do wszystkich narzędzi
 	Close panel	Zamknij panel
 	View less	Wyświetl mniej
@@ -295,7 +287,6 @@
 	Export a PDF	Eksportuj PDF
 	Export to	Eksportuj do
 	Microsoft Word (.docx)	Microsoft Word (.docx)
-	Spreadsheet (.xlsx)	Arkusz kalkulacyjny (.xlsx)
 	Presentation (.pptx)	Prezentacja (.pptx)
 	Image (PNG)	Obraz (PNG)
 	Export all images	Eksportuj wszystkie obrazy
@@ -418,7 +409,6 @@
 	Fix hairlines	Popraw cienkie linie
 	Measure objects	Zmierz obiekty
 	Measure	Pomiar
-	Measuring tool	Narzędzie pomiarowe
 	Geospatial location	Położenie geoprzestrzenne
 	Compare files	Porównaj pliki
 	Select files to compare	Wybierz pliki do porównania
@@ -756,7 +746,6 @@
 	{verb} Header and Footer	{verb} nagłówek i stopkę
 	{verb} Watermark	{verb} znak wodny
 	{verb} Background	{verb} tło
-	Margins (in)	Marginesy (cale)
 	Left Header Text	Lewy tekst nagłówka
 	Center Header Text	Środkowy tekst nagłówka
 	Right Header Text	Prawy tekst nagłówka
@@ -1201,9 +1190,6 @@
 	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	Rozpoznawanie tekstu nie jest zainstalowane: brakuje plików modeli. Zainstaluj PdfCraft ponownie lub ustaw PDFCRAFT_MODELS na folder zawierający te pliki.
 	Settings	Ustawienia
 	Optional	Opcjonalne
-	Planned · {m}	Planowane · {m}
-	Planned for milestone {m} — open to see what it will include	Planowane na etap {m} — otwórz, aby zobaczyć planowane funkcje
-	Coming in milestone {m}. Items marked Ready work today.	Dostępne w etapie {m}. Elementy oznaczone jako Gotowe działają już teraz.
 	1 mark	1 oznaczenie
 	{n} marks	Liczba oznaczeń: {n}
 	Dynamic	Dynamiczne
@@ -1266,7 +1252,6 @@
 	Expand all bookmarks	Rozwiń wszystkie zakładki
 	Expand top-level bookmarks	Rozwiń zakładki najwyższego poziomu
 	Collapse all bookmarks	Zwiń wszystkie zakładki
-	New bookmark (⌘B)	Nowa zakładka (⌘B)
 	This document has no bookmarks.	Ten dokument nie zawiera zakładek.
 	This document has no layers.	Ten dokument nie zawiera warstw.
 	This document has no attachments.	Ten dokument nie zawiera załączników.
@@ -1281,8 +1266,6 @@
 	No matches	Brak dopasowań
 	Searching… {s}/{p}	Wyszukiwanie… {s}/{p}
 	{c} of {n}{more}	{c} z {n}{more}
-	Previous (⇧⌘G)	Poprzednie (⇧⌘G)
-	Next (⌘G)	Następne (⌘G)
 	Find options	Opcje wyszukiwania
 	Whole words only	Tylko całe słowa
 	Case-sensitive	Rozróżniaj wielkość liter
@@ -1736,7 +1719,6 @@
 	At least one signature has problems.	Co najmniej jeden podpis ma problemy.
 	This document is secured. Some changes are restricted by its security settings.	Ten dokument jest zabezpieczony. Niektóre zmiany są ograniczone ustawieniami zabezpieczeń.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	To dynamiczny formularz XFA, którego PdfCraft nie potrafi jeszcze wyświetlić. Widzisz stronę zastępczą pliku.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Ten formularz zawiera również dane XFA, których PdfCraft jeszcze nie odczytuje. Możesz wypełniać jego pola, ale Acrobat może zamiast nich wyświetlać wartości XFA.
 	This document contains {n} interactive form fields.	Ten dokument zawiera interaktywne pola formularza w liczbie {n}.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Ten plik był uszkodzony i został naprawiony. Zapis zachowa naprawioną wersję.
 	Dismiss	Zamknij komunikat
@@ -1768,8 +1750,6 @@
 	Page	Strona
 	None	Brak
 	Delete selected fields	Usuń zaznaczone pola
-	Diagnostic details	Szczegóły diagnostyczne
-	The operation failed.	Operacja nie powiodła się.
 	no such document	brak takiego dokumentu
 	nothing to undo	brak operacji do cofnięcia
 	nothing to redo	brak operacji do ponowienia
@@ -1920,10 +1900,7 @@
 	Set status Cancelled	Ustaw status Anulowane
 	Set status Completed	Ustaw status Ukończone
 	Set status None	Ustaw status Brak
-	Set status Unmarked	Ustaw status Nieoznaczone
-	Save as PDF/A-1b	Zapisz jako PDF/A-1b
 	Save as PDF/A-2b	Zapisz jako PDF/A-2b
-	Save as PDF/A-3b	Zapisz jako PDF/A-3b
 	Fill & Sign: change signature	Wypełnij i podpisz: zmień podpis
 	Fill & Sign: change initials	Wypełnij i podpisz: zmień inicjały
 	Fill & Sign: remove saved signature	Wypełnij i podpisz: usuń zapisany podpis
@@ -1986,14 +1963,12 @@
 	Save these pages as one PDF	Zapisz te strony jako jeden PDF
 	No changes to save	Brak zmian do zapisania
 	Created a PDF from {n} files; left out: {names}	Utworzono PDF z {n} plików; pominięto: {names}
-	Created a PDF from the first {n} files	Utworzono PDF z pierwszych {n} plików
 	None of those files can be made into a PDF; use PDFs, images or .txt files	Żadnego z tych plików nie można przekonwertować do PDF; użyj plików PDF, obrazów lub plików .txt
 	Choose a PNG or JPEG image (up to 4 MiB). Transparency is preserved.	Wybierz obraz PNG lub JPEG (do 4 MiB). Przezroczystość zostanie zachowana.
 	Couldn't import the signature image: {e}	Nie można zaimportować obrazu podpisu: {e}
 	Go to page…	Przejdź do strony…
 	Reopen the files that were open when PdfCraft last closed	Otwórz ponownie pliki otwarte przy ostatnim zamknięciu PdfCraft
 	The PDF text fonts can't draw “{c}” ({code}). Choose supported text.	Czcionki tekstu PDF nie obsługują znaku „{c}” ({code}). Wybierz obsługiwany tekst.
-	The standard fonts can't draw “{c}” ({code}). Only Western European characters can be added as text for now.	Standardowe czcionki nie obsługują znaku „{c}” ({code}). Na razie można dodawać tylko tekst ze znakami zachodnioeuropejskimi.
 	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	Czcionka tego pola nie obsługuje znaku „{c}” ({code}), więc PdfCraft wyświetla w jego miejscu ?. Wartość została zapisana, a inne przeglądarki PDF odrysują pole na jej podstawie.
 	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	Czcionki, którymi pisze PdfCraft, nie obsługują znaku „{c}” ({code}), więc w każdej przeglądarce PDF w jego miejscu widać ?. Tekst został zapisany.
 	Open arrow	Otwarta strzałka
@@ -2049,7 +2024,6 @@
 	Distribute fields	Rozmieść pola równomiernie
 	Documents and view	Dokumenty i widok
 	Dynamic XFA form laid out from its template: {pages}, {fields}.	Dynamiczny formularz XFA z układem według szablonu: {pages}, {fields}.
-	Files are combined in this order. Leave Pages empty to take every page.	Pliki są łączone w tej kolejności. Pozostaw pole Strony puste, aby uwzględnić wszystkie strony.
 	First	Pierwszy
 	First commit	Pierwszy commit
 	Grab bag	Różne
@@ -2094,7 +2068,6 @@
 	Squiggly	Faliste podkreślenie
 	Table	Tabela
 	Table rows belong directly in a table or its head, body or foot. Fix the table's tags.	Wiersze tabeli należą bezpośrednio do tabeli lub jej nagłówka, treści albo stopki. Popraw tagi tabeli.
-	Text recognition isn't installed: its models are missing (run `cargo xtask models`, or set PDFCRAFT_MODELS).	Rozpoznawanie tekstu nie jest zainstalowane: brakuje modeli (uruchom `cargo xtask models` lub ustaw PDFCRAFT_MODELS).
 	That didn't work: an internal error stopped it ({m}).	Operacja nie powiodła się z powodu błędu wewnętrznego ({m}).
 	The Windows store's digital IDs couldn't be listed: {e}	Nie można wyświetlić identyfikatorów cyfrowych z magazynu Windows: {e}
 	The document changed while you were choosing a file, so nothing was changed.	Dokument zmienił się podczas wybierania pliku, więc nic nie zmieniono.
@@ -2273,3 +2246,5 @@ scroll speed	Fast	Szybka
 	Quick tools	Szybkie narzędzia
 	Merge	Scal
 	Reorder	Zmień kolejność
+	Other colour…	Inny kolor…
+	Recent colours	Ostatnie kolory

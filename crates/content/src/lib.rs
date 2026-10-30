@@ -15,10 +15,59 @@ mod tests;
 /// `v` as a content-stream number with at most `decimals` (≥ 1) decimal places: trailing zeros
 /// and a bare point dropped, no `-0`, and a NaN or infinity written as 0 (neither is valid PDF).
 pub fn number(v: f64, decimals: usize) -> String {
-    let v = if v.is_finite() { v } else { 0.0 };
-    let s = format!("{v:.*}", decimals.max(1));
+    Num(v, decimals).to_string()
+}
+
+/// [`number`] as a `Display` value, for writing straight into a stream with `write!` or
+/// `format!` without a string per number.
+#[derive(Clone, Copy, Debug)]
+pub struct Num(pub f64, pub usize);
+
+impl std::fmt::Display for Num {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use std::fmt::Write as _;
+        let v = if self.0.is_finite() { self.0 } else { 0.0 };
+        let decimals = self.1.max(1);
+        let mut buf = StackBuf::default();
+        if write!(buf, "{v:.*}", decimals).is_err() {
+            // Longer than the buffer (a huge value or many decimals): format on the heap.
+            return f.pad(trim_number(&format!("{v:.*}", decimals)));
+        }
+        f.pad(trim_number(buf.as_str()))
+    }
+}
+
+fn trim_number(s: &str) -> &str {
     let s = s.trim_end_matches('0').trim_end_matches('.');
-    if s == "-0" { "0".into() } else { s.into() }
+    if s == "-0" { "0" } else { s }
+}
+
+/// A fixed buffer for formatting one number; writing past its end fails.
+struct StackBuf {
+    bytes: [u8; 64],
+    len: usize,
+}
+
+impl Default for StackBuf {
+    fn default() -> Self {
+        Self { bytes: [0; 64], len: 0 }
+    }
+}
+
+impl StackBuf {
+    fn as_str(&self) -> &str {
+        // Only whole `&str`s are ever copied in, so the filled part is valid UTF-8.
+        self.bytes.get(..self.len).and_then(|b| std::str::from_utf8(b).ok()).unwrap_or_default()
+    }
+}
+
+impl std::fmt::Write for StackBuf {
+    fn write_str(&mut self, s: &str) -> std::fmt::Result {
+        let end = self.len.checked_add(s.len()).ok_or(std::fmt::Error)?;
+        self.bytes.get_mut(self.len..end).ok_or(std::fmt::Error)?.copy_from_slice(s.as_bytes());
+        self.len = end;
+        Ok(())
+    }
 }
 
 /// One operator with its operands.

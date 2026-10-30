@@ -5,6 +5,9 @@ use egui::{Color32, EventFilter, Id, Key, Modifiers, Rect, Response, Sense, Ui, 
 use super::SplitAxis;
 use super::geometry::valid_rect;
 
+/// Keyboard and accessibility increment/decrement size, in logical points.
+const STEP: f32 = 8.0;
+
 /// Colors for a resize handle. The ordinary, unfocused handle does not paint a fill.
 #[derive(Clone, Copy, Debug)]
 pub struct ResizeHandleStyle {
@@ -34,24 +37,17 @@ pub struct ResizeHandle<'a> {
     label: &'a str,
     style: ResizeHandleStyle,
     hit_margin: f32,
-    step: f32,
     value: Option<(f32, RangeInclusive<f32>)>,
 }
 
 impl<'a> ResizeHandle<'a> {
     pub fn new(id: Id, axis: SplitAxis, rect: Rect, label: &'a str, style: ResizeHandleStyle) -> Self {
-        Self { id, axis, rect, label, style, hit_margin: 3.0, step: 8.0, value: None }
+        Self { id, axis, rect, label, style, hit_margin: 3.0, value: None }
     }
 
     /// Expand the hit rectangle along the movement axis, in logical points. Default: 3.
     pub fn hit_margin(mut self, margin: f32) -> Self {
         self.hit_margin = margin;
-        self
-    }
-
-    /// Keyboard and accessibility increment/decrement size in logical points. Default: 8.
-    pub fn keyboard_step(mut self, step: f32) -> Self {
-        self.step = step;
         self
     }
 
@@ -73,8 +69,6 @@ impl<'a> ResizeHandle<'a> {
             && valid_rect(hit)
             && self.hit_margin.is_finite()
             && (0.0..=4096.0).contains(&self.hit_margin)
-            && self.step.is_finite()
-            && self.step > 0.0
             && self.value.as_ref().is_none_or(|(value, range)| {
                 value.is_finite() && range.start().is_finite() && range.end().is_finite() && range.start() <= range.end()
             });
@@ -110,21 +104,21 @@ impl<'a> ResizeHandle<'a> {
                 };
                 ui.input_mut(|input| {
                     if input.consume_key(Modifiers::NONE, back) {
-                        delta -= self.step;
+                        delta -= STEP;
                     }
                     if input.consume_key(Modifiers::NONE, forward) {
-                        delta += self.step;
+                        delta += STEP;
                     }
                 });
             }
             ui.input_mut(|input| {
                 input.consume_accesskit_action_requests(response.id, |request| match request.action {
                     accesskit::Action::Increment => {
-                        delta += self.step;
+                        delta += STEP;
                         true
                     }
                     accesskit::Action::Decrement => {
-                        delta -= self.step;
+                        delta -= STEP;
                         true
                     }
                     accesskit::Action::SetValue => {
@@ -168,7 +162,7 @@ impl<'a> ResizeHandle<'a> {
                     node.set_numeric_value(f64::from(*value));
                     node.set_min_numeric_value(f64::from(*range.start()));
                     node.set_max_numeric_value(f64::from(*range.end()));
-                    node.set_numeric_value_step(f64::from(self.step));
+                    node.set_numeric_value_step(f64::from(STEP));
                     node.add_action(accesskit::Action::SetValue);
                 }
             }

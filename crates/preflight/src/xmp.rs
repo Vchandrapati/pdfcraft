@@ -2,6 +2,7 @@
 //! consistent (ISO 19005-2 §6.6).
 
 use pdfcraft_cos::Document;
+use std::fmt::Write as _;
 
 /// The value of a simple XMP property, written either as an attribute (`pdfaid:part="2"`) or
 /// as an element (`<pdfaid:part>2</pdfaid:part>`, or inside an `rdf:Alt`/`rdf:Seq`).
@@ -68,28 +69,28 @@ fn info(doc: &Document, key: &str) -> Option<String> {
 pub fn packet(doc: &Document, level: crate::Level) -> String {
     let mut props = String::new();
     if let Some(t) = info(doc, "Title") {
-        props.push_str(&format!("   <dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">{}</rdf:li></rdf:Alt></dc:title>\n", esc(&t)));
+        let _ = writeln!(props, "   <dc:title><rdf:Alt><rdf:li xml:lang=\"x-default\">{}</rdf:li></rdf:Alt></dc:title>", esc(&t));
     }
     if let Some(a) = info(doc, "Author") {
-        props.push_str(&format!("   <dc:creator><rdf:Seq><rdf:li>{}</rdf:li></rdf:Seq></dc:creator>\n", esc(&a)));
+        let _ = writeln!(props, "   <dc:creator><rdf:Seq><rdf:li>{}</rdf:li></rdf:Seq></dc:creator>", esc(&a));
     }
     if let Some(s) = info(doc, "Subject") {
-        props.push_str(&format!("   <dc:description><rdf:Alt><rdf:li xml:lang=\"x-default\">{}</rdf:li></rdf:Alt></dc:description>\n", esc(&s)));
+        let _ = writeln!(props, "   <dc:description><rdf:Alt><rdf:li xml:lang=\"x-default\">{}</rdf:li></rdf:Alt></dc:description>", esc(&s));
     }
     if let Some(k) = info(doc, "Keywords") {
-        props.push_str(&format!("   <pdf:Keywords>{}</pdf:Keywords>\n", esc(&k)));
+        let _ = writeln!(props, "   <pdf:Keywords>{}</pdf:Keywords>", esc(&k));
     }
     if let Some(p) = info(doc, "Producer") {
-        props.push_str(&format!("   <pdf:Producer>{}</pdf:Producer>\n", esc(&p)));
+        let _ = writeln!(props, "   <pdf:Producer>{}</pdf:Producer>", esc(&p));
     }
     if let Some(c) = info(doc, "Creator") {
-        props.push_str(&format!("   <xmp:CreatorTool>{}</xmp:CreatorTool>\n", esc(&c)));
+        let _ = writeln!(props, "   <xmp:CreatorTool>{}</xmp:CreatorTool>", esc(&c));
     }
     if let Some(d) = info(doc, "CreationDate").and_then(|d| iso_date(&d)) {
-        props.push_str(&format!("   <xmp:CreateDate>{d}</xmp:CreateDate>\n"));
+        let _ = writeln!(props, "   <xmp:CreateDate>{d}</xmp:CreateDate>");
     }
     if let Some(d) = info(doc, "ModDate").and_then(|d| iso_date(&d)) {
-        props.push_str(&format!("   <xmp:ModifyDate>{d}</xmp:ModifyDate>\n"));
+        let _ = writeln!(props, "   <xmp:ModifyDate>{d}</xmp:ModifyDate>");
     }
     format!(
         "<?xpacket begin=\"\u{feff}\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>\n\

@@ -1170,7 +1170,7 @@ fn install(ctx: &mut Context, event: &XfaEvent, doc: &XfaDoc, current: usize) ->
         .property(js_string!("layout"), layout, rw)
         .property(js_string!("event"), ev.clone(), rw)
         .property(js_string!("datasets"), datasets, rw)
-        .property(js_string!("record"), form.clone(), rw)
+        .property(js_string!("record"), form, rw)
         .property(js_string!("template"), template, rw)
         .property(js_string!("resolveNode"), resolve_one, rw)
         .property(js_string!("resolveNodes"), resolve_many, rw)
@@ -1356,19 +1356,6 @@ pub fn run_xfa(script: &str, event: &XfaEvent, doc: &XfaDoc, root: &XfaNode, lim
     run_here(script, event, doc, root.clone(), limits, &|| {})
 }
 
-/// [`run_xfa`] with a time limit: a script still running `timeout` after the engine is ready
-/// (loops inside nested function calls can run for hours within the engine's per-frame loop
-/// limit) is left on its thread, which ends when the engine's own limits stop it, and an
-/// outcome with `abandoned` set comes back at once. In the browser build there are no
-/// threads: the script runs to its limits.
-pub fn run_xfa_within(script: &str, event: &XfaEvent, doc: &XfaDoc, root: XfaNode, limits: Limits, timeout: std::time::Duration) -> XfaOutcome {
-    if let Some(why) = refuse(script) {
-        return XfaOutcome { error: Some(why), ..Default::default() };
-    }
-    let (script, event, doc) = (script.to_string(), event.clone(), doc.clone());
-    run_within("pdfcraft-xfa-js", timeout, move |started| run_here(&script, &event, &doc, root, limits, started))
-}
-
 /// Longest the script engine may take to be ready for a script (its thread and context, and
 /// for the first script in a process the engine's own set-up) before the script is abandoned.
 /// It doesn't count against the script's time: on a busy machine the start alone can take
@@ -1458,7 +1445,6 @@ pub(crate) fn warm_up() {
 pub(crate) fn run_here(script: &str, event: &XfaEvent, doc: &XfaDoc, root: XfaNode, limits: Limits, started: &dyn Fn()) -> XfaOutcome {
     warm_up();
     let mut ctx = Context::default();
-    started();
     ctx.runtime_limits_mut().set_loop_iteration_limit(limits.loop_iterations);
     ctx.runtime_limits_mut().set_recursion_limit(limits.recursion);
     let host_state = XHost::new(root, &event.target, doc);
@@ -1467,6 +1453,8 @@ pub(crate) fn run_here(script: &str, event: &XfaEvent, doc: &XfaDoc, root: XfaNo
     let mut out = XfaOutcome::default();
     let result = (|| -> JsResult<()> {
         install(&mut ctx, event, doc, current)?;
+        // Ready for the script: its time starts now, the set-up above not charged to it.
+        started();
         ctx.register_global_property(js_string!("__xfa_src"), s(script), Attribute::CONFIGURABLE)?;
         // Direct eval inside a function called on the node: `this` is the node and the
         // completion value is the script's last expression (what a calculate script yields).

@@ -1,5 +1,5 @@
 //! PdfCraft in the browser. Build: `cd apps/pdfcraft-web && trunk build --release`
-//! (trunk generates the JS loader; no handwritten JS — plan/execution-plan.md §1).
+//! (trunk generates the JS loader; there is no handwritten JS).
 
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 

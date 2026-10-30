@@ -1,8 +1,9 @@
 //! The document area: page layout, zoom, render scheduling, overlays (links, annotation hovers,
 //! form-field highlights), and the organize-pages grid.
 //!
-//! Page images come from the engine's render pool as whole-page rasters at the current zoom;
-//! stale rasters are shown stretched until the sharp one arrives (tiling comes in M3.3).
+//! Page images come from the engine's render pool as whole-page rasters at the current zoom, or,
+//! for pages too large for one raster ([`TILE_THRESHOLD`]), as tiles of the visible area over a
+//! low-resolution backdrop. Stale rasters are shown stretched until the sharp one arrives.
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::ops::Range;
@@ -42,8 +43,25 @@ const PRINT_TAG: u64 = 1 << 60;
 const THUMB_W: f32 = 240.0;
 const THUMB_H: f32 = 320.0;
 const THUMB_BYTES: usize = 24 * 1024 * 1024;
+/// Most and least memory kept for off-screen page rasters and tiles. Within those bounds the
+/// allowance follows the canvas: [`PAGE_SCREENS`] and [`TILE_SCREENS`] screenfuls of it at its
+/// device resolution, so a laptop window keeps far less than a 4K display needs.
 const PAGE_BYTES: usize = 128 * 1024 * 1024;
 const TILE_BYTES: usize = 128 * 1024 * 1024;
+const MIN_PREFETCH_BYTES: usize = 32 * 1024 * 1024;
+/// The screenful before and after the one shown.
+const PAGE_SCREENS: f32 = 2.0;
+const TILE_SCREENS: f32 = 1.5;
+
+/// `screens` screenfuls of a `w` x `h`-point canvas at `ppp` device pixels per point, within
+/// [`MIN_PREFETCH_BYTES`]..=`max`. Before the canvas has been drawn (no size yet) it is `max`.
+fn screen_budget(w: f32, h: f32, ppp: f32, screens: f32, max: usize) -> usize {
+    let bytes = w * ppp * h * ppp * 4.0 * screens;
+    if !(bytes.is_finite() && bytes > 0.0) {
+        return max;
+    }
+    (bytes as usize).clamp(MIN_PREFETCH_BYTES, max)
+}
 const UPLOAD_BYTES_PER_FRAME: usize = 16 * 1024 * 1024;
 const RESULTS_PER_FRAME: usize = 8;
 /// A defensive ceiling for unusually large viewports / n-up previews.
@@ -224,6 +242,10 @@ pub struct Find {
     pub whole_words: bool,
     /// Shown in the Search panel (Advanced Search) instead of the find bar.
     pub in_panel: bool,
+    /// Pages already searched for `case_query`. Their text need not stay cached: only pages
+    /// with matches keep it (to draw highlights), so a long search holds the matches, not
+    /// every page's glyphs.
+    pub searched: HashSet<usize>,
 }
 
 /// A text selection on one page.
@@ -365,6 +387,9 @@ pub struct DocView {
     pub(crate) text_failed: HashSet<usize>,
     pub find: Option<Find>,
     selection: Option<Selection>,
+    /// The drag in progress started a text selection: the wheel scrolls the page during it
+    /// (#721), which egui's scroll area refuses while anything is dragged.
+    selection_drag: bool,
     /// Clicks in the current run on the text layer: two select a word, three the line, four the page.
     clicks: u32,
     last_press_time: f64,
@@ -380,6 +405,8 @@ pub struct DocView {
     screen_xforms: Vec<(usize, PageXform)>,
     /// The scroll viewport on screen last frame.
     viewport_screen: Rect,
+    /// Device pixels per point at the last render queue (sizes the prefetch allowances).
+    budget_ppp: f32,
     /// Pending zoom anchor: page, fractional position (also in gutters), and viewport offset.
     zoom_anchor: Option<(usize, f32, f32, Vec2)>,
     /// The page view has been shown, so its scroll offset in egui's memory is this document's.
@@ -662,6 +689,7 @@ impl DocView {
             text_failed: HashSet::new(),
             find: None,
             selection: None,
+            selection_drag: false,
             clicks: 0,
             last_press_time: 0.0,
             last_press_pos: None,
@@ -672,6 +700,7 @@ impl DocView {
             page_heights: info.pages.iter().map(|p| p.height).collect(),
             screen_rects: Vec::new(),
             screen_xforms: Vec::new(),
+            budget_ppp: 1.0,
             viewport_screen: Rect::NOTHING,
             zoom_anchor: None,
             shown: false,
@@ -854,6 +883,7 @@ impl DocView {
         if let Some(f) = self.find.as_mut() {
             f.matches.clear();
             f.current = None;
+            f.searched.clear();
         }
     }
 
@@ -884,6 +914,9 @@ impl DocView {
         self.slow_pages.remove(&page);
         self.texts.remove(&page);
         self.text_failed.remove(&page);
+        if let Some(f) = self.find.as_mut() {
+            f.searched.remove(&page);
+        }
         self.errors.remove(&page);
         self.last_queue.clear();
         if self.selection.is_some_and(|s| s.page == page) {
@@ -946,6 +979,7 @@ impl DocView {
         f.case_query = f.query.clone();
         f.matches.clear();
         f.current = None;
+        f.searched.clear();
         if f.case_query.trim().is_empty() {
             return;
         }
@@ -954,6 +988,7 @@ impl DocView {
         for &p in &pages {
             if let Some(text) = self.texts.get(&p) {
                 f.matches.extend(text.find_opts(&f.case_query, f.case_sensitive, f.whole_words).into_iter().map(|r| (p, r)));
+                f.searched.insert(p);
             }
         }
         f.matches.sort_by_key(|(p, r)| (*p, r.start));
@@ -975,6 +1010,7 @@ impl DocView {
         let current_key = f.current.and_then(|c| f.matches.get(c).cloned());
         f.matches.retain(|(p, _)| *p != page);
         f.matches.extend(text.find_opts(&f.case_query, f.case_sensitive, f.whole_words).into_iter().map(|r| (page, r)));
+        f.searched.insert(page);
         f.matches.sort_by_key(|(p, r)| (*p, r.start));
         f.current = current_key.as_ref().and_then(|k| f.matches.iter().position(|m| m == k));
         if f.current.is_none() && !f.matches.is_empty() {
@@ -1428,7 +1464,28 @@ impl DocView {
 
     /// Admit current demand within explicit byte limits. Cached and pending surfaces share
     /// the allowance, so an evicted page can be requested again without a permanent done set.
+    /// Off-screen page rasters kept beside the ones on screen (see [`screen_budget`]). Until the
+    /// view has been drawn its canvas size is a placeholder, so the full allowance applies.
+    fn page_budget(&self) -> usize {
+        if !self.shown {
+            return PAGE_BYTES;
+        }
+        screen_budget(self.viewport_w, self.viewport_h, self.budget_ppp, PAGE_SCREENS, PAGE_BYTES)
+    }
+
+    /// Off-screen tiles kept beside the ones on screen (see [`screen_budget`]).
+    fn tile_budget(&self) -> usize {
+        if !self.shown {
+            return TILE_BYTES;
+        }
+        screen_budget(self.viewport_w, self.viewport_h, self.budget_ppp, TILE_SCREENS, TILE_BYTES)
+    }
+
     fn prepare_render_queue(&mut self, info: &DocInfo, ppp: f32) -> Vec<RenderRequest> {
+        if ppp.is_finite() && ppp > 0.0 {
+            self.budget_ppp = ppp;
+        }
+        let (page_budget, tile_budget) = (self.page_budget(), self.tile_budget());
         let requests = std::mem::take(&mut self.frame_queue);
         let mut queue = Vec::new();
         let mut pages = HashSet::new();
@@ -1458,7 +1515,7 @@ impl DocView {
                 // (`tile_side`), so grid indices would need the scale to decode.
                 let key = (req.page, req.tag, tile.x, tile.y);
                 let bytes = rgba_bytes(tile.w as usize, tile.h as usize);
-                if (!visible && tile_bytes.saturating_add(bytes) > TILE_BYTES) || !tiles.insert(key) {
+                if (!visible && tile_bytes.saturating_add(bytes) > tile_budget) || !tiles.insert(key) {
                     continue;
                 }
                 tile_bytes = tile_bytes.saturating_add(bytes);
@@ -1468,7 +1525,7 @@ impl DocView {
                 }
             } else {
                 let bytes = rgba_bytes(device_pixels(p.width, req.scale) as usize, device_pixels(p.height, req.scale) as usize);
-                if (!visible && (page_bytes.saturating_add(bytes) > PAGE_BYTES || pages.len() >= MAX_CACHED_PAGES)) || !pages.insert(req.page) {
+                if (!visible && (page_bytes.saturating_add(bytes) > page_budget || pages.len() >= MAX_CACHED_PAGES)) || !pages.insert(req.page) {
                     continue;
                 }
                 page_bytes = page_bytes.saturating_add(bytes);
@@ -1484,7 +1541,7 @@ impl DocView {
         let mut kept = pages.len();
         for page in undemanded {
             let bytes = self.pages.get(&page).map_or(0, |p| texture_bytes(&p.tex));
-            if kept < MAX_CACHED_PAGES && page_bytes.saturating_add(bytes) <= PAGE_BYTES {
+            if kept < MAX_CACHED_PAGES && page_bytes.saturating_add(bytes) <= page_budget {
                 page_bytes = page_bytes.saturating_add(bytes);
                 kept += 1;
                 pages.insert(page);
@@ -1537,15 +1594,12 @@ impl DocView {
     /// Drop text layers nothing can still need. Every visited page's text used to stay
     /// cached for the session. Keep visible, selected and matched pages plus the nearest
     /// prefetch window; evicted pages re-extract on revisit. (Count window only: unlike
-    /// rasters there is no byte budget here.) While a search is active keep everything:
-    /// demand still wants every page, so evicting would re-request evicted pages each
-    /// frame and churn the workers. Failures are never evicted either: they cost nothing
-    /// to remember, and evicting one would re-request and re-fail it every frame.
+    /// rasters there is no byte budget here.) A search marks each page it has read
+    /// ([`Find::searched`]), so it doesn't ask for an evicted page again. Failures are never
+    /// evicted: they cost nothing to remember, and evicting one would re-request and re-fail
+    /// it every frame.
     fn retain_text_layers(&mut self) {
         if self.texts.len() <= MAX_CACHED_TEXT_PAGES {
-            return;
-        }
-        if self.find.as_ref().is_some_and(|f| !f.case_query.trim().is_empty()) {
             return;
         }
         let mut keep: HashSet<usize> = self.frame_visible.clone();
@@ -1684,10 +1738,11 @@ impl DocView {
             let key = (req.page, req.tag, t.x, t.y);
             self.tiles.remove(&key);
             let retained = self.tiles.values().fold(0usize, |n, tex| n.saturating_add(texture_bytes(tex)));
-            visible || bytes <= TILE_BYTES.saturating_sub(retained)
+            visible || bytes <= self.tile_budget().saturating_sub(retained)
         } else {
             let thumb = req.tag & THUMB_TAG != 0;
-            let (cache, limit) = if thumb { (&mut self.thumbs, THUMB_BYTES) } else { (&mut self.pages, PAGE_BYTES) };
+            let limit = if thumb { THUMB_BYTES } else { self.page_budget() };
+            let cache = if thumb { &mut self.thumbs } else { &mut self.pages };
             cache.remove(&req.page);
             let mut retained = cache.values().fold(0usize, |n, p| n.saturating_add(texture_bytes(&p.tex)));
             // A zoom/DPI change can temporarily retain larger stale images than the new
@@ -1798,6 +1853,17 @@ impl DocView {
     }
 }
 
+/// The hover popup for an annotation. Replies and Fill & Sign marks (typed text, checks, signatures)
+/// show none: they are page content being edited, not comments.
+fn annotation_hover_text(a: &pdfcraft_render::Annotation) -> Option<String> {
+    if a.in_reply_to.is_some() || a.fill_sign {
+        return None;
+    }
+    let who = a.author.clone().unwrap_or_else(|| a.subtype.clone());
+    let body = a.contents.clone().unwrap_or_default();
+    Some(if body.is_empty() { who } else { format!("{who}\n{body}") })
+}
+
 /// The request tag for a raster at `scale`: equal tags mean the same scale (to 1/65536).
 fn scale_tag(scale: f32) -> u64 {
     (f64::from(scale) * 65536.0).round() as u64
@@ -1904,6 +1970,13 @@ impl PageXform {
     pub fn screen_to_view(&self, p: Pos2) -> (f32, f32) {
         let (u, v) = self.screen_to_norm(p);
         (u * self.pw, v * self.ph)
+    }
+
+    /// Screen point → user space of `page` (PDF points).
+    pub fn to_user(&self, info: &DocInfo, page: usize, p: Pos2) -> [f64; 2] {
+        let (vx, vy) = self.screen_to_view(p);
+        let u = info.pages.get(page).map_or([vx, vy], |pg| pg.view_to_user(vx, vy));
+        [f64::from(u[0]), f64::from(u[1])]
     }
 
     /// A view-space rect [x0, y0, x1, y1] → screen rect.
@@ -2434,6 +2507,10 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
             ui.scroll_with_delta_animation(delta, egui::style::ScrollAnimation::none());
         }
         let (resp_rect, resp) = ui.allocate_exact_size(vec2(content_w, content_h), Sense::click_and_drag());
+        // A drag lasts only while egui reports it, so the mark can't outlive one.
+        if !resp.dragged_by(egui::PointerButton::Primary) {
+            view.selection_drag = false;
+        }
         // The Hand tool pans: the content widget takes every drag, so scroll by its delta.
         if hand {
             if resp.dragged() {
@@ -2837,6 +2914,7 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
                         }
                     }
                     if resp.drag_started() && press_here && !over_link {
+                        view.selection_drag = true;
                         let origin = ui.input(|inp| inp.pointer.press_origin()).unwrap_or(p);
                         let (ox, oy) = xf.screen_to_view(origin);
                         if view.clicks < 2 {
@@ -2985,12 +3063,13 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
                 // freehand, where it would cover the next stroke (#429).
                 let freehand = matches!(tool, QuickTool::Comment(comments::CommentTool::Ink | comments::CommentTool::Eraser));
                 let gesturing = view.comments.gesture.is_some() || freehand;
-                for a in info.annotations.iter().filter(|a| a.page == i && a.in_reply_to.is_none() && !gesturing) {
+                for a in info.annotations.iter().filter(|a| a.page == i && !gesturing) {
                     let sr = xf.user_rect(info, i, a.rect);
-                    if sr.contains(p) && hover_text.is_none() {
-                        let who = a.author.clone().unwrap_or_else(|| a.subtype.clone());
-                        let body = a.contents.clone().unwrap_or_default();
-                        hover_text = Some((p, if body.is_empty() { who } else { format!("{who}\n{body}") }));
+                    if sr.contains(p)
+                        && hover_text.is_none()
+                        && let Some(text) = annotation_hover_text(a)
+                    {
+                        hover_text = Some((p, text));
                     }
                 }
             }
@@ -3020,6 +3099,23 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
                 } else {
                     view.flash = None;
                 }
+            }
+        }
+        // ScrollArea ignores the wheel while any widget is dragged, so a text-selection drag
+        // scrolls the page itself (#721). After the page loop, so it keeps scrolling once the
+        // pointer leaves the selection's page for the gap or the next page; over the whole
+        // document area, like #759. A Line/Page event clears precise_scroll_until; a Point
+        // gesture's eased tail after its suppression deadline is not picked up.
+        if view.selection_drag
+            && navigation_enabled
+            && unobstructed
+            && !single_paging
+            && view.precise_scroll_until == 0.0
+            && ui.rect_contains_pointer(avail)
+        {
+            let delta = ui.input_mut(|input| std::mem::take(&mut input.smooth_scroll_delta));
+            if delta != Vec2::ZERO {
+                ui.scroll_with_delta_animation(delta, egui::style::ScrollAnimation::none());
             }
         }
         // The page navigated to stays current while no page shows more of itself, so the next
@@ -3074,7 +3170,7 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
                     ui.close();
                 }
                 if ui.add_enabled(can_modify, egui::Button::new(tl!("Duplicate…"))).clicked() {
-                    field_menu = Some(FieldMenu::Duplicate(name.clone()));
+                    field_menu = Some(FieldMenu::Duplicate(name));
                     ui.close();
                 }
                 ui.separator();
@@ -3180,9 +3276,10 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
     // Text layers: visible pages for selection, every page while a search is active.
     let need_text = |p: &usize| !view.texts.contains_key(p) && !view.text_failed.contains(p);
     let mut text_pages: Vec<usize> = if hand { Vec::new() } else { visible_now.iter().copied().filter(need_text).collect() };
-    if view.find.as_ref().is_some_and(|f| !f.case_query.trim().is_empty()) {
+    if let Some(f) = view.find.as_ref().filter(|f| !f.case_query.trim().is_empty()) {
         let n = info.pages.len();
-        let rest: Vec<usize> = (0..n).map(|k| (cur + k) % n).filter(need_text).filter(|p| !text_pages.contains(p)).collect();
+        let rest: Vec<usize> =
+            (0..n).map(|k| (cur + k) % n).filter(need_text).filter(|p| !f.searched.contains(p) && !text_pages.contains(p)).collect();
         text_pages.extend(rest);
     }
     queue.extend(text_pages.into_iter().map(|page| RenderRequest {
@@ -4462,6 +4559,32 @@ pub(crate) fn texture_image(size: [usize; 2], pixels: pdfcraft_render::Pixels) -
 mod tests {
     use super::*;
 
+    fn annotation(fill_sign: bool) -> pdfcraft_render::Annotation {
+        pdfcraft_render::Annotation {
+            page: 0,
+            subtype: "FreeText".into(),
+            author: None,
+            contents: Some("Hello".into()),
+            modified: None,
+            name: None,
+            in_reply_to: None,
+            rect: [0.0; 4],
+            color: None,
+            index: 0,
+            state: None,
+            quads: Vec::new(),
+            locked: false,
+            intent: None,
+            fill_sign,
+        }
+    }
+
+    #[test]
+    fn hover_popup_skips_fill_and_sign_marks() {
+        assert_eq!(annotation_hover_text(&annotation(false)).as_deref(), Some("FreeText\nHello"));
+        assert_eq!(annotation_hover_text(&annotation(true)), None);
+    }
+
     #[test]
     fn rendered_rasters_become_texture_images_without_a_copy() {
         let pdf = b"%PDF-1.4
@@ -4578,7 +4701,7 @@ trailer << /Root 1 0 R >>
     }
 
     #[test]
-    fn text_layers_stay_while_a_search_is_active() {
+    fn a_search_keeps_only_matched_and_nearby_text_and_a_new_query_reads_again() {
         let info = thumbnail_info(100);
         let mut v = DocView::new(DocId(1), &info, ViewDefaults::default());
         v.current = 50;
@@ -4586,9 +4709,18 @@ trailer << /Root 1 0 R >>
         for p in 0..100 {
             v.texts.insert(p, Arc::new(PageText::default()));
         }
-        v.find = Some(Find { query: "dup".into(), case_query: "dup".into(), matches: vec![(0, 0..1)], ..Default::default() });
+        let searched: HashSet<usize> = (0..100).collect();
+        v.find = Some(Find { query: "dup".into(), case_query: "dup".into(), matches: vec![(0, 0..1)], searched, ..Default::default() });
         let _ = v.prepare_render_queue(&info, 1.0);
-        assert_eq!(v.texts.len(), 100, "evicting mid-search would churn the workers");
+        assert!(v.texts.len() <= 2 + MAX_CACHED_TEXT_PAGES, "only matched, visible and nearby pages stay: {}", v.texts.len());
+        assert!(v.texts.contains_key(&0) && v.texts.contains_key(&50), "the matched and the visible page stay");
+        assert_eq!(v.find.as_ref().unwrap().searched.len(), 100, "evicted pages still count as searched for this query");
+        // A new query has read only the pages still cached; the evicted ones are unread again.
+        v.find.as_mut().unwrap().query = "other".into();
+        v.rerun_find();
+        let f = v.find.as_ref().unwrap();
+        assert_eq!(f.searched, v.texts.keys().copied().collect::<HashSet<_>>());
+        assert!(f.searched.len() < 100);
     }
 
     fn thumbnail_info(count: usize) -> DocInfo {
@@ -4748,6 +4880,32 @@ trailer << /Root 1 0 R >>
             .collect();
         assert_eq!(v.prepare_render_queue(&info, 1.0).len(), 32);
         assert!(!v.admit_texture(RenderRequest::default(), PAGE_BYTES + 1));
+    }
+
+    #[test]
+    fn the_prefetch_allowance_follows_the_canvas() {
+        // No canvas yet (headless, before the first frame): the former fixed allowance.
+        assert_eq!(screen_budget(0.0, 0.0, 1.0, PAGE_SCREENS, PAGE_BYTES), PAGE_BYTES);
+        assert_eq!(screen_budget(f32::NAN, 600.0, 1.0, PAGE_SCREENS, PAGE_BYTES), PAGE_BYTES);
+        // A small window keeps the floor; a 1500 x 950-point canvas at 250% two screenfuls;
+        // a huge one no more than the former allowance.
+        assert_eq!(screen_budget(800.0, 600.0, 1.0, PAGE_SCREENS, PAGE_BYTES), MIN_PREFETCH_BYTES);
+        let laptop = screen_budget(1500.0, 950.0, 2.5, PAGE_SCREENS, PAGE_BYTES);
+        assert_eq!(laptop, (1500.0f32 * 2.5 * 950.0 * 2.5 * 4.0 * 2.0) as usize);
+        assert!(laptop < PAGE_BYTES);
+        assert_eq!(screen_budget(8000.0, 4000.0, 3.0, PAGE_SCREENS, PAGE_BYTES), PAGE_BYTES);
+        // The view uses its canvas: a small one admits fewer prefetched pages than headless does.
+        let info = thumbnail_info(40);
+        let mut v = DocView::new(DocId(1), &info, ViewDefaults::default());
+        v.shown = true;
+        v.viewport_w = 800.0;
+        v.viewport_h = 600.0;
+        v.frame_queue = (0..40).map(|page| RenderRequest { page, scale: 1.0, tag: 1000, ..Default::default() }).collect();
+        let small = v.prepare_render_queue(&info, 1.0).len();
+        let mut headless = DocView::new(DocId(1), &info, ViewDefaults::default());
+        headless.frame_queue = (0..40).map(|page| RenderRequest { page, scale: 1.0, tag: 1000, ..Default::default() }).collect();
+        assert!(small < headless.prepare_render_queue(&info, 1.0).len());
+        assert!(!v.admit_texture(RenderRequest::default(), MIN_PREFETCH_BYTES + 1), "beyond a small canvas's allowance");
     }
 
     #[test]

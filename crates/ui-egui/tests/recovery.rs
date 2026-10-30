@@ -60,6 +60,40 @@ fn crashed_session(s: &RecoveryStore, bytes: Vec<u8>, password: Option<&str>, pa
     // Dropped without a clean quit: the recovery entry stays.
 }
 
+/// The periodic autosave writes in the background; a crash (dropping the app) still leaves a
+/// complete entry, because dropping waits for the write.
+#[test]
+fn a_background_autosave_completes_before_the_app_goes() {
+    let s = store("background");
+    {
+        let mut app = PdfCraftApp::new();
+        app.enable_recovery(s.clone());
+        app.open_bytes("work.pdf", None, fixture(3)).unwrap();
+        assert!(app.apply_edit(Edit::DeletePages { pages: vec![0] }));
+        app.autosave_in_background();
+    }
+    assert_eq!(files_in(&s), 2, "the snapshot and its metadata were written");
+    assert_eq!(s.list().len(), 1);
+    let _ = std::fs::remove_dir_all(s.dir());
+}
+
+/// Closing a document right after a background autosave started removes its entry for good:
+/// the removal waits for the write instead of racing it.
+#[test]
+fn closing_right_after_a_background_autosave_leaves_no_entry() {
+    let s = store("background-close");
+    let mut app = PdfCraftApp::new();
+    app.enable_recovery(s.clone());
+    app.open_bytes("work.pdf", None, fixture(3)).unwrap();
+    assert!(app.apply_edit(Edit::DeletePages { pages: vec![0] }));
+    app.autosave_in_background();
+    app.close_tab(0);
+    assert_eq!(files_in(&s), 0, "the closed document's snapshot is gone");
+    drop(app);
+    assert_eq!(files_in(&s), 0);
+    let _ = std::fs::remove_dir_all(s.dir());
+}
+
 fn harness(s: RecoveryStore) -> Harness<'static, PdfCraftApp> {
     let mut h = Harness::builder().with_size(egui::vec2(1200.0, 800.0)).build_eframe(move |_cc| {
         let mut app = PdfCraftApp::new();

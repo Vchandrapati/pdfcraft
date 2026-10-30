@@ -116,7 +116,7 @@ impl PdfCraftApp {
         match clip {
             Some(c) => {
                 if let Err(e) = self.create_from_clip(c) {
-                    self.notify_fmt("Couldn't create a PDF: {e}", &[("e", &e.to_string())]);
+                    self.notify_fmt("Couldn't create a PDF: {e}", &[("e", &e)]);
                 }
             }
             None => self.notify_tr("The clipboard has no image or text"),
@@ -139,7 +139,7 @@ impl PdfCraftApp {
     pub(crate) fn create_blank(&mut self) {
         let created = self.session.create_blank(612.0, 792.0, 1).map_err(|e| e.to_string());
         if let Err(e) = self.open_created_bytes("Untitled.pdf", created) {
-            self.notify_fmt("Couldn't create a PDF: {e}", &[("e", &e.to_string())]);
+            self.notify_fmt("Couldn't create a PDF: {e}", &[("e", &e)]);
         }
     }
 
@@ -217,7 +217,7 @@ impl PdfCraftApp {
             if let Some((name, _)) = images.first().filter(|_| images.len() == 1) { format!("{}.pdf", stem(name)) } else { "Images.pdf".to_string() };
         let created = self.session.create_from_images_with_resolution(&images, resolution).map_err(|e| e.to_string());
         if let Err(e) = self.open_created_bytes(&name, created) {
-            self.notify_fmt("Couldn't create a PDF: {e}", &[("e", &e.to_string())]);
+            self.notify_fmt("Couldn't create a PDF: {e}", &[("e", &e)]);
         }
     }
 

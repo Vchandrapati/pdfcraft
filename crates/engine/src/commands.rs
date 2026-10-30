@@ -1,5 +1,5 @@
-//! The command registry: every user-facing action, by id (architecture §4, "everything is a
-//! command").
+//! The command registry: every user-facing action, by id ("everything is a command"; see Agent
+//! control in `docs/architecture.md`).
 //!
 //! Menus, keyboard shortcuts, the ⌘K palette and automation (CLI `run`, the control channel and
 //! MCP later) all go through this table. A frontend implements *what* each id does. The registry

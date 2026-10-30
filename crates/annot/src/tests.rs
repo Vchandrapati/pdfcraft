@@ -187,6 +187,7 @@ fn invalid_geometry_is_rejected() {
         assert!(matches!(add_annotation(&mut doc, &new(0, s.clone()), &meta("x")), Err(AnnotError::Invalid(_))), "{s:?}");
     }
     assert_eq!(add_annotation(&mut doc, &new(5, Shape::Rectangle { rect: [0.0, 0.0, 10.0, 10.0] }), &meta("x")), Err(AnnotError::NoSuchPage(5)));
+    assert_eq!(AnnotError::NoSuchPage(5).to_string(), "page 6 does not exist", "the message counts pages from 1 (#1550)");
     assert!(!doc.is_modified(), "failed adds change nothing");
 }
 
@@ -482,9 +483,9 @@ fn wrapping_and_widths() {
     // A word longer than the line is broken.
     let long = appearance::wrap("Supercalifragilisticexpialidocious", 12.0, 40.0);
     assert!(long.len() > 3 && long.concat() == "Supercalifragilisticexpialidocious");
-    assert_eq!(n(1.0), "1");
-    assert_eq!(n(-0.0001), "0");
-    assert_eq!(n(2.50), "2.5");
+    assert_eq!(n(1.0).to_string(), "1");
+    assert_eq!(n(-0.0001).to_string(), "0");
+    assert_eq!(n(2.50).to_string(), "2.5");
 }
 
 #[test]
@@ -1219,9 +1220,13 @@ fn comment_text_the_standard_fonts_cannot_draw_is_kept_and_marked() {
     on_page.push(Object::Ref(r));
     set_annots(&mut doc, page, on_page).unwrap();
     let k = list(&doc, 0).len() - 1;
-    let err = set_style(&mut doc, 0, k, Some([1.0, 0.0, 0.0]), None, None, None, &meta("")).unwrap_err();
+    let before = list(&doc, 0)[k].clone();
+    let err = set_style(&mut doc, 0, k, Some([1.0, 0.0, 0.0]), Some(0.4), Some(6.0), None, &meta("")).unwrap_err();
     assert!(matches!(&err, AnnotError::Undrawable(m) if m.contains("can't redraw") && m.contains("\"欢\" (U+6B22)")), "{err:?}");
-    assert_eq!(list(&doc, 0)[k].get(b"AP").and_then(|a| a.as_dict()).and_then(|a| a.reference(b"N")), Some(drawn), "its appearance is kept");
+    assert_eq!(list(&doc, 0)[k], before, "a refused restyle keeps the colour, opacity, width and appearance");
+    let err = set_rect(&mut doc, 0, k, [40.0, 40.0, 180.0, 90.0], &meta("")).unwrap_err();
+    assert!(matches!(&err, AnnotError::Undrawable(_)), "{err:?}");
+    assert_eq!(list(&doc, 0)[k], before, "a refused resize keeps the rectangle");
     // New text from the user is taken (and marked), as for any comment.
     set_contents(&mut doc, 0, k, "欢迎光临", &meta("")).unwrap();
     assert_eq!(mark(&doc, k), Some('欢'));

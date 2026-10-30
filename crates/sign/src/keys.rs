@@ -1,8 +1,9 @@
 //! Digests, public keys (verification everywhere) and private keys (signing).
 //!
 //! Verification uses RustCrypto. RSA private-key operations use `aws-lc-rs` on native targets
-//! (constant-time; ADR-0009: the `rsa` crate is never used for private keys there). ECDSA
-//! signing uses RustCrypto with deterministic nonces (RFC 6979).
+//! (constant-time). The `rsa` crate's Marvin advisory, RUSTSEC-2023-0071, has no fix, so `rsa`
+//! is only used to verify, never for private keys. ECDSA signing uses RustCrypto with
+//! deterministic nonces (RFC 6979).
 
 use crate::SignError;
 use crate::der::{self, Tlv, tag};
@@ -653,7 +654,7 @@ impl PrivateKey {
         PrivateKey::from_pkcs8(der.as_ref())
     }
 
-    /// RSA keys are generated only on native targets (ADR-0009).
+    /// RSA keys are generated only on native targets, through `aws-lc-rs` (see the module docs).
     #[cfg(target_arch = "wasm32")]
     pub fn generate_rsa(_bits: usize) -> Result<PrivateKey, SignError> {
         Err(SignError::Unsupported("creating RSA keys in the browser (use a P-256 key)".into()))

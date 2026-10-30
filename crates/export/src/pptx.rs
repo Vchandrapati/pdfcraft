@@ -2,6 +2,7 @@
 //! largest text as slide title, remaining paragraphs as body text, images and tables between them.
 
 use crate::{Block, Image, Page, Table, Zip, esc, hex};
+use std::fmt::Write as _;
 
 /// Items on a slide in reading order.
 enum SlideBodyItem<'a> {
@@ -40,7 +41,7 @@ fn height_emu(pt: f64) -> i64 {
 fn run_drawingml(text: &str, size: f64, bold: bool, italic: bool, color: [f64; 3]) -> String {
     let mut rpr = String::new();
     let sz = if size.is_finite() { (size * 100.0).round().clamp(100.0, 400000.0) as i64 } else { 1200 };
-    rpr.push_str(&format!(" sz=\"{sz}\""));
+    let _ = write!(rpr, " sz=\"{sz}\"");
     if bold {
         rpr.push_str(" b=\"1\"");
     }
@@ -65,7 +66,7 @@ fn pptx_table(shape_id: usize, t: &Table, x: i64, y: i64, content_w: i64) -> (St
 
     let mut grid_cols = String::new();
     for w in &widths {
-        grid_cols.push_str(&format!("<a:gridCol w=\"{w}\"/>"));
+        let _ = write!(grid_cols, "<a:gridCol w=\"{w}\"/>");
     }
 
     const TC_PR: &str = "<a:tcPr>\
@@ -77,22 +78,22 @@ fn pptx_table(shape_id: usize, t: &Table, x: i64, y: i64, content_w: i64) -> (St
 
     let mut rows_xml = String::new();
     for row in &t.rows {
-        rows_xml.push_str(&format!("<a:tr h=\"{row_h}\">"));
+        let _ = write!(rows_xml, "<a:tr h=\"{row_h}\">");
         for c in row {
             let span = c.span.max(1);
             let run = run_drawingml(&c.text, c.size, c.bold, c.italic, c.color);
             if span > 1 {
-                rows_xml.push_str(&format!("<a:tc gridSpan=\"{span}\"><a:txBody><a:bodyPr/><a:lstStyle/><a:p>{run}</a:p></a:txBody>{TC_PR}</a:tc>"));
+                let _ = write!(rows_xml, "<a:tc gridSpan=\"{span}\"><a:txBody><a:bodyPr/><a:lstStyle/><a:p>{run}</a:p></a:txBody>{TC_PR}</a:tc>");
                 for _ in 1..span {
-                    rows_xml.push_str(&format!("<a:tc hMerge=\"1\"><a:txBody><a:bodyPr/><a:lstStyle/><a:p/></a:txBody>{TC_PR}</a:tc>"));
+                    let _ = write!(rows_xml, "<a:tc hMerge=\"1\"><a:txBody><a:bodyPr/><a:lstStyle/><a:p/></a:txBody>{TC_PR}</a:tc>");
                 }
             } else {
-                rows_xml.push_str(&format!("<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p>{run}</a:p></a:txBody>{TC_PR}</a:tc>"));
+                let _ = write!(rows_xml, "<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p>{run}</a:p></a:txBody>{TC_PR}</a:tc>");
             }
         }
         let used: usize = row.iter().map(|c| c.span).sum();
         for _ in used..t.cols.len() {
-            rows_xml.push_str(&format!("<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p/></a:txBody>{TC_PR}</a:tc>"));
+            let _ = write!(rows_xml, "<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p/></a:txBody>{TC_PR}</a:tc>");
         }
         rows_xml.push_str("</a:tr>");
     }
@@ -175,7 +176,7 @@ pub fn pptx(pages: &[Page], title: &str) -> Vec<u8> {
                     let mut est_h_pt = 0.0;
                     while let Some((_, _, SlideBodyItem::Para(b))) = items.get(i) {
                         let run = run_drawingml(&b.text, b.size, b.bold, b.italic, b.color);
-                        paras_xml.push_str(&format!("<a:p>{run}</a:p>"));
+                        let _ = write!(paras_xml, "<a:p>{run}</a:p>");
                         let lines = (b.text.len() as f64 / 60.0).ceil().max(1.0);
                         est_h_pt += (b.size.max(10.0) * 1.3) * lines + 6.0;
                         i += 1;
@@ -282,7 +283,7 @@ xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><dc:title>{}</dc:title></cp:corePr
     );
     for i in 1..=slides.len() {
         let sld_id = 255 + i;
-        sld_id_lst.push_str(&format!("<p:sldId id=\"{sld_id}\" r:id=\"rIdSld{i}\"/>"));
+        let _ = write!(sld_id_lst, "<p:sldId id=\"{sld_id}\" r:id=\"rIdSld{i}\"/>");
         pres_rels.push_str(&format!(
             "<Relationship Id=\"rIdSld{i}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide\" Target=\"slides/slide{i}.xml\"/>"
         ));

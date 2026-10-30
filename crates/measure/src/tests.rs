@@ -50,6 +50,8 @@ fn calibrated_lengths_concave_areas_and_axis_scales() {
     assert_eq!(distance.label, "10.000 m");
     let path = [[0.0, 0.0], [3.0, 0.0], [3.0, 4.0], [0.0, 0.0]];
     close(reading(Kind::Perimeter, &path, &scale).unwrap().value, 24.0);
+    // An area's length is its closed boundary: the same triangle without repeating its start.
+    close(reading(Kind::Area, &path[..3], &scale).unwrap().length, 24.0);
     let concave = [[1e8, 1e8], [1e8 + 3.0, 1e8], [1e8 + 3.0, 1e8 + 1.0], [1e8 + 1.0, 1e8 + 1.0], [1e8 + 1.0, 1e8 + 3.0], [1e8, 1e8 + 3.0]];
     close(reading(Kind::Area, &concave, &scale).unwrap().value, 20.0);
     let reversed: Vec<_> = concave.into_iter().rev().collect();

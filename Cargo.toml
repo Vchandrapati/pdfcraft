@@ -102,6 +102,11 @@ debug = "line-tables-only"
 [profile.dev.package.pdfcraft-js]
 opt-level = 1
 
+# XFA forms recalculate within a time budget the user waits for (hundreds of calculations as a
+# form opens); unoptimised, the budget tests ran over.
+[profile.dev.package.pdfcraft-xfa]
+opt-level = 1
+
 [profile.low-disk]
 inherits = "dev"
 debug = "line-tables-only"

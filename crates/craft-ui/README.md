@@ -4,11 +4,10 @@
 
 `craft-ui` provides small egui components with application-supplied styles. `icons` prepares
 embedded SVG catalogs; `buttons` paints accessible icon buttons; `tabs` handles tab fitting and
-interaction; `layout` provides toolbar fitting, split geometry and resize handles; `theme` shares widget-state styling.
-`docking` supplies transactional panel moves and an optional docking surface.
-The current delivery covers nine creative apps (DesignCraft, VectorCraft, PhotoCraft, FilmCraft, EffectCraft, CADCraft, PDFCraft, LightCraft and SoundCraft); prior basic and office adapters are separate. The [suite audit](../../docs/ui-components-audit.md#adoption-and-acceptance)
-records their scope and acceptance limits. Assets, complete themes, localization and command handling
-remain in each application. No icons, fonts or application engines are bundled.
+interaction; `layout` provides split geometry and resize handles.
+`docking` supplies transactional panel moves and an optional docking surface. PdfCraft
+(`crates/ui-egui`) is its only consumer. Assets, complete themes, localization and command
+handling remain in the application. No icons, fonts or application engines are bundled.
 
 ## SVG catalogs
 
@@ -92,10 +91,6 @@ AccessKit and draws the supplied inset focus outline. Mouse, Enter and Space act
 egui. The caller reads `clicked()`, runs its command and updates selection; the component neither
 dispatches nor toggles state. Attach tooltips to the returned response.
 
-Controls previously painted with one `egui::Painter::rect` can opt into `.single_shape_frame()`.
-This keeps their fill/border edge tessellation, especially for translucent disabled borders.
-The default paints fill and border separately, preserving existing consumers' rendering.
-
 IDs come from the surrounding UI scope/position, independent of the translated label. Use
 `ui.push_id(stable_id, ...)` when items reorder. Dimensions must be finite, positive and no larger
 than 4096 points; other sizes produce an inert zero-size response. Invalid stroke widths are
@@ -169,55 +164,18 @@ the remembered destination still exists. Apps choose an explicit fallback when i
 Enable the optional `serde` feature to persist the shared layout, or convert to/from an existing
 workspace schema. Validate loaded input before rendering or recursively converting it.
 
-`DockArea` is an optional renderer. It takes a layout snapshot, styles, labels, panel permissions
-and body callbacks, then returns actions for the app's command handler. Its floating groups stay
+`DockArea::show_with_limits` is an optional renderer. It takes a layout snapshot, styles, labels,
+panel permissions, size limits and a body callback, then returns actions for the app's command
+handler. Its floating groups stay
 inside the current egui viewport. Protected document canvases have no tab header. Per-panel size
 limits constrain geometry without overwriting saved preferred widths when the window shrinks.
 Applications with established chrome can use the shared transaction model and `resolve_drop`
-without changing their renderer. See [the docking guide](../../docs/ui-docking.md) for details.
-
-## Toolbar overflow
-
-`layout::fit_toolbar(natural_widths, available, spacing, overflow_width)` keeps an ordered
-prefix of indivisible groups at their natural widths. When groups do not fit, it reserves the
-full overflow-control width and the preceding gap. `ToolbarFit` contains visible `(index, width)`
-pairs, overflow indices and the reserved width. It does not skip wide groups or compress controls.
-
-The application paints an enabled, focusable overflow control and makes every overflow index
-available in its menu through existing commands. Group identity, labels, selection and command
-dispatch remain local. An empty input produces an empty fit. Invalid dimensions, more than 4096
-groups, or an available width too small for the overflow control return `None`; the caller must
-then provide a scrollable row, wrapping or an existing application menu. Never turn that result
-into silently missing commands. See the API documentation for the accepted numeric bounds.
-
-## Theme mechanisms
-
-`theme::WidgetPalette` applies background colors to egui's five widget states, with a supplied
-corner radius and foreground stroke. VectorCraft, DesignCraft and LightCraft construct it from their existing
-local tokens. It updates each state's strong/weak background fill, radius and foreground; borders,
-expansion and all other visual settings are retained.
-
-```rust
-use craft_ui::theme::WidgetPalette;
-use egui::{Color32, CornerRadius, Stroke};
-
-fn style_widgets(visuals: &mut egui::Visuals, palette: WidgetPalette, text: Color32) {
-    palette.apply_to(&mut visuals.widgets, CornerRadius::same(4), Stroke::new(1.0, text));
-    // Optional app-specific exceptions belong after the shared operation.
-    visuals.widgets.inactive.weak_bg_fill = Color32::TRANSPARENT;
-}
-```
-
-This is a mechanism for coloring widgets, not a shared theme schema. Fonts, complete palettes,
-selection colors, shadows, spacing, context storage and preference serialization remain in each
-application. See the [eight-app comparison](../../docs/theme-infrastructure.md) for the exact
-common operation and the differences preserved by the adapters.
+without changing their renderer.
 
 ## Compatibility and checks
 
 The crate uses egui 0.36 and Rust 1.95 or later. Its production dependency disables egui's default
-features so fonts and rendering features remain the application's choice. See the
-[suite audit](../../docs/ui-components-audit.md) for candidates, policies and adoption order.
+features so fonts and rendering features remain the application's choice.
 
 Validation:
 
@@ -228,7 +186,7 @@ cargo test --workspace
 cargo check --target wasm32-unknown-unknown -p craft-ui
 ```
 
-The [visual regression suite](../../docs/ui-visual-regressions.md) compares the actual controls
+The visual regression suite (`tests/visual_regression.rs`) compares the actual controls
 against independent reference painters, including exact mesh and RGBA checks, and proves that
 color, spacing and stroke changes fail those comparisons. To retain reviewable PNG pairs:
 

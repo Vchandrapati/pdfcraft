@@ -8,6 +8,7 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic, clippy::unimplemented, clippy::todo, clippy::unreachable)]
 
 pub mod data;
+#[cfg(any(test, feature = "fixtures"))]
 pub mod fixtures;
 pub mod image;
 pub mod layout;

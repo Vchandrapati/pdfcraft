@@ -1,6 +1,5 @@
-# Windows on ARM (#61): package the ARM64 release the way release.yml does (cross-compiled on an
-# x64 runner, unsigned here), then install that MSI on a Windows 11 ARM64 runner and run it, and
-# run the test suite natively on ARM64.
+# Windows on ARM (#61): package the ARM64 build (cross-compiled on an x64 runner, unsigned), then
+# install that MSI on a Windows 11 ARM64 runner and run it, and run the test suite natively on ARM64.
 name: Windows ARM64
 
 on:

@@ -93,14 +93,12 @@
 	Home	Αρχική
 	Open	Άνοιγμα
 	Open a PDF ({key})	Άνοιγμα PDF ({key})
-	Dark gray theme	Σκούρο γκρι θέμα
 	Light theme	Φωτεινό θέμα
 	All tools	Όλα τα εργαλεία
 	Read	Ανάγνωση
 	Convert	Μετατροπή
 	E-Sign	Ηλεκτρονική υπογραφή
 	Print ({key})	Εκτύπωση ({key})
-	Save (M4)	Αποθήκευση (M4)
 	Document properties ({key})	Ιδιότητες εγγράφου ({key})
 	Find tools and commands	Αναζήτηση εργαλείων και εντολών
 	Fit to height	Προσαρμογή στο ύψος
@@ -136,7 +134,6 @@
 	Toggle fit page / fit width	Εναλλαγή προσαρμογής στη σελίδα / στο πλάτος
 	Next page	Επόμενη σελίδα
 	Previous page	Προηγούμενη σελίδα
-	Use now	Χρήση τώρα
 	Open file	Άνοιγμα αρχείου
 	Recent	Πρόσφατα
 	Date	Ημερομηνία
@@ -270,7 +267,6 @@
 	Text, marks and signatures become part of the page. Other comments stay editable.	Το κείμενο, τα σημάδια και οι υπογραφές γίνονται μέρος της σελίδας. Τα υπόλοιπα σχόλια παραμένουν επεξεργάσιμα.
 	Current page — type a page number or label (such as iv) and press Enter	Τρέχουσα σελίδα — πληκτρολογήστε αριθμό ή ετικέτα σελίδας (π.χ. iv) και πατήστε Enter
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Τα αρχεία που ανοίγετε στο PdfCraft εμφανίζονται εδώ. Σύρετε ένα PDF οπουδήποτε για να το ανοίξετε.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Τα σενάρια εκτελούνται σε απομονωμένο περιβάλλον χωρίς πρόσβαση σε αρχεία ή δίκτυο. Με απενεργοποιημένη τη JavaScript, οι τυπικές λειτουργίες μορφοποίησης, επικύρωσης και υπολογισμού του Acrobat εξακολουθούν να λειτουργούν.
 	Move up	Μετακίνηση πάνω
 	Move down	Μετακίνηση κάτω
 	Clear	Εκκαθάριση
@@ -392,7 +388,6 @@
 	{verb} Header and Footer	{verb} κεφαλίδας και υποσέλιδου
 	{verb} Watermark	{verb} υδατογραφήματος
 	{verb} Background	{verb} φόντου
-	Margins (in)	Περιθώρια (ίντσες)
 	Left Header Text	Κείμενο αριστερής κεφαλίδας
 	Center Header Text	Κείμενο κεντρικής κεφαλίδας
 	Right Header Text	Κείμενο δεξιάς κεφαλίδας
@@ -794,9 +789,6 @@
 	Also recognize pages that already have text	Αναγνώριση και σελίδων που έχουν ήδη κείμενο
 	Pictures on those pages are recognized too; words already in the page's text are not added again	Αναγνωρίζονται και οι εικόνες αυτών των σελίδων· οι λέξεις που υπάρχουν ήδη στο κείμενο της σελίδας δεν προστίθενται ξανά
 	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	Η αναγνώριση κειμένου δεν είναι εγκατεστημένη: λείπουν τα αρχεία μοντέλων. Εγκαταστήστε ξανά το PdfCraft ή ορίστε το PDFCRAFT_MODELS στον φάκελο που τα περιέχει.
-	Planned · {m}	Προγραμματισμένο · {m}
-	Planned for milestone {m} — open to see what it will include	Προγραμματισμένο για το ορόσημο {m} — ανοίξτε για να δείτε τι θα περιλαμβάνει
-	Coming in milestone {m}. Items marked Ready work today.	Αναμένεται στο ορόσημο {m}. Τα στοιχεία με ένδειξη «Έτοιμο» λειτουργούν ήδη.
 	1 mark	1 επισήμανση
 	{n} marks	{n} επισημάνσεις
 	Dynamic	Δυναμικό
@@ -852,7 +844,6 @@
 	This document has no layers.	Αυτό το έγγραφο δεν έχει επίπεδα.
 	This document has no attachments.	Αυτό το έγγραφο δεν έχει συνημμένα.
 	Set layer visibility	Ορισμός ορατότητας επιπέδου
-	 on page {label}	 στη σελίδα {label}
 	Save attachment…	Αποθήκευση συνημμένου…
 	Open in a new tab	Άνοιγμα σε νέα καρτέλα
 	This document has no pages.	Αυτό το έγγραφο δεν έχει σελίδες.
@@ -1123,16 +1114,11 @@
 	Opened, but its security settings don't allow combining. Enter the permissions password.	Το αρχείο άνοιξε, αλλά οι ρυθμίσεις ασφαλείας δεν επιτρέπουν τον συνδυασμό. Εισαγάγετε τον κωδικό δικαιωμάτων.
 	Unlocked: the combined file won't be password-protected	Ξεκλειδώθηκε: το συνδυασμένο αρχείο δεν θα προστατεύεται με κωδικό πρόσβασης
 	Unlocked {n} of {m} files	Ξεκλειδώθηκαν {n} από {m} αρχεία
-	Drop PDFs or folders here, or choose them.	Σύρετε εδώ PDF ή φακέλους ή επιλέξτε τα.
 	Add folder…	Προσθήκη φακέλου…
 	Add folder and subfolders…	Προσθήκη φακέλου και υποφακέλων…
 	More ways to add files	Περισσότεροι τρόποι προσθήκης αρχείων
-	Every PDF in the folder	Όλα τα PDF του φακέλου
-	Every PDF in the folder and the folders inside it	Όλα τα PDF του φακέλου και των υποφακέλων του
 	Add folder	Προσθήκη φακέλου
 	Add folder and subfolders	Προσθήκη φακέλου και υποφακέλων
-	No PDFs found in {folder}	Δεν βρέθηκαν PDF στον φάκελο {folder}
-	Added the first {n} PDFs in {folder}	Προστέθηκαν τα πρώτα {n} PDF του φακέλου {folder}
 	Click to sort, drag to move the column. Drag its edge to resize it.	Κάντε κλικ για ταξινόμηση ή σύρετε τη στήλη για μετακίνηση. Σύρετε το άκρο της για αλλαγή πλάτους.
 	Reset columns	Επαναφορά στηλών
 	Remove {n} files	Αφαίρεση {n} αρχείων
@@ -1150,7 +1136,6 @@
 	{n} files need attention	{n} αρχεία χρειάζονται έλεγχο
 	{name} can't be combined: {why}	Το {name} δεν μπορεί να συνδυαστεί: {why}
 	Check the pages of {name}: {why}	Ελέγξτε τις σελίδες του {name}: {why}
-	Add the PDFs to combine	Προσθέστε τα PDF που θέλετε να συνδυάσετε
 	Warnings	Προειδοποιήσεις
 	Drag to reorder	Σύρετε για αλλαγή σειράς
 	{k} of {n}	{k} από {n}
@@ -1217,8 +1202,6 @@
 	Has JavaScript actions (run in M6)	Περιέχει ενέργειες JavaScript (εκτελούνται στο M6)
 	None	Κανένα
 	Delete selected fields	Διαγραφή επιλεγμένων πεδίων
-	Diagnostic details	Διαγνωστικές λεπτομέρειες
-	The operation failed.	Η λειτουργία απέτυχε.
 	no such document	δεν υπάρχει τέτοιο έγγραφο
 	nothing to undo	δεν υπάρχει ενέργεια προς αναίρεση
 	nothing to redo	δεν υπάρχει ενέργεια προς επανάληψη
@@ -1355,10 +1338,7 @@
 	Set status Cancelled	Ορισμός κατάστασης: Ακυρώθηκε
 	Set status Completed	Ορισμός κατάστασης: Ολοκληρώθηκε
 	Set status None	Ορισμός κατάστασης: Καμία
-	Set status Unmarked	Ορισμός κατάστασης: Χωρίς σήμανση
-	Save as PDF/A-1b	Αποθήκευση ως PDF/A-1b
 	Save as PDF/A-2b	Αποθήκευση ως PDF/A-2b
-	Save as PDF/A-3b	Αποθήκευση ως PDF/A-3b
 	Fill & Sign: change signature	Συμπλήρωση και υπογραφή: αλλαγή υπογραφής
 	Fill & Sign: change initials	Συμπλήρωση και υπογραφή: αλλαγή μονογραφής
 	Fill & Sign: remove saved signature	Συμπλήρωση και υπογραφή: αφαίρεση αποθηκευμένης υπογραφής
@@ -1420,7 +1400,6 @@
 	Save these pages as one PDF	Αποθήκευση αυτών των σελίδων σε ένα PDF
 	No changes to save	Δεν υπάρχουν αλλαγές προς αποθήκευση
 	Created a PDF from {n} files; left out: {names}	Δημιουργήθηκε PDF από {n} αρχεία· παραλείφθηκαν: {names}
-	Created a PDF from the first {n} files	Δημιουργήθηκε PDF από τα πρώτα {n} αρχεία
 	None of those files can be made into a PDF; use PDFs, images or .txt files	Κανένα από αυτά τα αρχεία δεν μπορεί να μετατραπεί σε PDF· χρησιμοποιήστε PDF, εικόνες ή αρχεία .txt
 	Choose a PNG or JPEG image (up to 4 MiB). Transparency is preserved.	Επιλέξτε εικόνα PNG ή JPEG (έως 4 MiB). Η διαφάνεια διατηρείται.
 	Couldn't import the signature image: {e}	Δεν ήταν δυνατή η εισαγωγή της εικόνας υπογραφής: {e}
@@ -1476,7 +1455,6 @@
 	Distribute fields	Ισοκατανομή πεδίων
 	Documents and view	Έγγραφα και προβολή
 	Dynamic XFA form laid out from its template: {pages}, {fields}.	Δυναμική φόρμα XFA με διάταξη από το πρότυπό της: {pages}, {fields}.
-	Files are combined in this order. Leave Pages empty to take every page.	Τα αρχεία συνδυάζονται με αυτή τη σειρά. Αφήστε κενό το πεδίο «Σελίδες» για να συμπεριληφθούν όλες.
 	First	Πρώτο
 	First commit	Πρώτη καταχώριση
 	Grab bag	Διάφορα
@@ -1518,7 +1496,6 @@
 	Sort	Ταξινόμηση
 	Table	Πίνακας
 	Table rows belong directly in a table or its head, body or foot. Fix the table's tags.	Οι γραμμές πίνακα πρέπει να ανήκουν απευθείας στον πίνακα ή στην κεφαλίδα, το σώμα ή το υποσέλιδό του. Διορθώστε τις ετικέτες δομής του πίνακα.
-	Text recognition isn't installed: its models are missing (run `cargo xtask models`, or set PDFCRAFT_MODELS).	Η αναγνώριση κειμένου δεν έχει εγκατασταθεί: λείπουν τα μοντέλα της (εκτελέστε `cargo xtask models` ή ορίστε το PDFCRAFT_MODELS).
 	That didn't work: an internal error stopped it ({m}).	Η ενέργεια απέτυχε λόγω εσωτερικού σφάλματος ({m}).
 	The Windows store's digital IDs couldn't be listed: {e}	Δεν ήταν δυνατή η ανάκτηση των ψηφιακών ταυτοτήτων από το αποθετήριο των Windows: {e}
 	The document changed while you were choosing a file, so nothing was changed.	Το έγγραφο τροποποιήθηκε ενώ επιλέγατε αρχείο, οπότε δεν εφαρμόστηκε καμία αλλαγή.
@@ -1647,7 +1624,6 @@
 	Export a PDF	Εξαγωγή PDF
 	Export to	Εξαγωγή σε
 	Microsoft Word (.docx)	Microsoft Word (.docx)
-	Spreadsheet (.xlsx)	Υπολογιστικό φύλλο (.xlsx)
 	Presentation (.pptx)	Παρουσίαση (.pptx)
 	Image (PNG)	Εικόνα (PNG)
 	Export all images	Εξαγωγή όλων των εικόνων
@@ -1725,7 +1701,6 @@
 	Fix hairlines	Διόρθωση πολύ λεπτών γραμμών
 	Measure objects	Μέτρηση αντικειμένων
 	Measure	Μέτρηση
-	Measuring tool	Εργαλείο μέτρησης
 	Geospatial location	Γεωχωρική θέση
 	Compare files	Σύγκριση αρχείων
 	Select files to compare	Επιλογή αρχείων για σύγκριση
@@ -2040,7 +2015,6 @@
 	watermark	υδατογράφημα
 	background	φόντο
 	This document isn't password-protected	Το έγγραφο δεν προστατεύεται με κωδικό
-	Only the document's owner can change its security (open it with the permissions password)	Μόνο ο κάτοχος μπορεί να αλλάξει την προστασία (ανοίξτε το με τον κωδικό δικαιωμάτων)
 	The document's security settings don't allow this change	Οι ρυθμίσεις ασφαλείας του εγγράφου δεν επιτρέπουν αυτή την αλλαγή
 	Open a document first	Ανοίξτε πρώτα ένα έγγραφο
 	Security will be removed when you save	Η προστασία θα αφαιρεθεί κατά την αποθήκευση
@@ -2069,7 +2043,6 @@
 	At least one signature has problems.	Τουλάχιστον μία υπογραφή παρουσιάζει προβλήματα.
 	This document is secured. Some changes are restricted by its security settings.	Το έγγραφο προστατεύεται. Ορισμένες αλλαγές περιορίζονται από τις ρυθμίσεις ασφαλείας του.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Πρόκειται για δυναμική φόρμα XFA, την οποία το PdfCraft δεν μπορεί ακόμη να εμφανίσει. Εμφανίζεται η προσωρινή σελίδα του αρχείου.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Αυτή η φόρμα περιέχει επίσης δεδομένα XFA, τα οποία το PdfCraft δεν διαβάζει ακόμη. Μπορείτε να συμπληρώσετε τα πεδία της, αλλά το Acrobat ενδέχεται να εμφανίσει τις τιμές XFA.
 	This document contains {n} interactive form fields.	Το έγγραφο περιέχει {n} διαδραστικά πεδία φόρμας.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Το αρχείο ήταν κατεστραμμένο και επιδιορθώθηκε. Η αποθήκευση διατηρεί την επιδιορθωμένη έκδοση.
 	Dismiss	Κλείσιμο ειδοποίησης
@@ -2158,21 +2131,13 @@ key	End	Τέλος
 key	Space	Διάστημα
 	Certificate authority	Αρχή πιστοποίησης
 	Creator	Δημιουργός
-	Document properties (⌘D)	Ιδιότητες εγγράφου (⌘D)
 	End entity	Τελική οντότητα
 	Inserted text	Εισαχθέν κείμενο
-	New bookmark (⌘B)	Νέος σελιδοδείκτης (⌘B)
-	Next (⌘G)	Επόμενο (⌘G)
-	Open a PDF (⌘O)	Άνοιγμα PDF (⌘O)
-	Previous (⇧⌘G)	Προηγούμενο (⇧⌘G)
-	Print (⌘P)	Εκτύπωση (⌘P)
 	Producer	Παραγωγός
 	Redo {action}	Επανάληψη ενέργειας: {action}
 	Rotate view clockwise (⇧⌘+)	Δεξιόστροφη περιστροφή προβολής (⇧⌘+)
 	Undo {action}	Αναίρεση ενέργειας: {action}
-	Zoom in (⌘+)	Μεγέθυνση (⌘+)
 	Zoom in / out (also pinch or ⌘-scroll)	Μεγέθυνση / σμίκρυνση (επίσης με σύγκλιση δακτύλων ή κύλιση με ⌘)
-	Zoom out (⌘−)	Σμίκρυνση (⌘−)
 action wizard	Start	Έναρξη
 calendar date	April	Απρίλιος
 calendar date	August	Αύγουστος
@@ -2309,3 +2274,5 @@ scroll speed	Fast	Γρήγορη
 	Quick tools	Γρήγορα εργαλεία
 	Merge	Συγχώνευση
 	Reorder	Αναδιάταξη
+	Other colour…	Άλλο χρώμα…
+	Recent colours	Πρόσφατα χρώματα

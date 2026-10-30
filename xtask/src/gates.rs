@@ -48,7 +48,7 @@ fn metadata() -> anyhow::Result<serde_json::Value> {
 
 pub fn layers(_: &[String]) -> anyhow::Result<()> {
     let crates = layers::from_metadata(&metadata()?).map_err(|e| anyhow!(e))?;
-    println!("Dependency layering (plan/architecture.md §3)\n");
+    println!("Dependency layering (docs/architecture.md, Layers)\n");
     println!("{:<24} {:<14} workspace deps", "crate", "layer");
     for c in &crates {
         let ws: Vec<String> = c
@@ -99,7 +99,7 @@ pub fn ci(_: &[String]) -> anyhow::Result<()> {
     let steps: Vec<Step> = vec![
         ("fmt", Box::new(|| run_args(&["fmt", "--all", "--", "--check"]))),
         ("clippy", Box::new(|| run_args(&["clippy", "--workspace", "--all-targets", "--", "-D", "warnings"]))),
-        ("test", Box::new(|| run_args(&["test", "--workspace"]))),
+        ("test", Box::new(test)),
         ("layers", Box::new(|| layers(&[]))),
         ("wasm", Box::new(|| wasm(&[]))),
         ("assets", Box::new(|| crate::assets::run(&[]))),
@@ -114,6 +114,19 @@ pub fn ci(_: &[String]) -> anyhow::Result<()> {
     }
     println!("\nCI: all {} steps passed", steps.len());
     Ok(())
+}
+
+/// The workspace tests: with cargo-nextest when it's installed (every test in its own process,
+/// scheduled across all test binaries; `.config/nextest.toml`), then the doc tests, which nextest
+/// doesn't run. Without it, `cargo test`.
+fn test() -> anyhow::Result<()> {
+    let nextest = cargo().args(["nextest", "--version"]).output().is_ok_and(|o| o.status.success());
+    if !nextest {
+        eprintln!("test: cargo-nextest is not installed; running cargo test (see https://nexte.st)");
+        return run_args(&["test", "--workspace"]);
+    }
+    run_args(&["nextest", "run", "--workspace"])?;
+    run_args(&["test", "--workspace", "--doc"])
 }
 
 /// Dependency licences, bans, sources and advisories (`deny.toml`). Skipped with a hint when
@@ -196,7 +209,7 @@ pub fn check(args: &[String]) -> anyhow::Result<()> {
 
 /// `cargo xtask text-oracle [--limit N]`: compare `pdfcraft-cli text` with poppler's `pdftotext`
 /// (external oracle process, never linked) over the corpus. Reports word-level F1 per file and the
-/// median. Plan target (M2): median ≥ 0.97.
+/// median. Target: median ≥ 0.97.
 pub fn text_oracle(args: &[String]) -> anyhow::Result<()> {
     let limit: usize = args.iter().position(|a| a == "--limit").and_then(|i| args.get(i + 1)).and_then(|v| v.parse().ok()).unwrap_or(usize::MAX);
     if Command::new("pdftotext").arg("-v").output().is_err() {

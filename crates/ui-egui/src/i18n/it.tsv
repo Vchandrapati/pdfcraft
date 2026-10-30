@@ -105,7 +105,6 @@
 	Home	Home
 	Open	Apri
 	Open a PDF ({key})	Apri un PDF ({key})
-	Dark gray theme	Tema grigio scuro
 	Light theme	Tema chiaro
 	Appearance mode	Modalità aspetto
 	Light	Chiaro
@@ -155,11 +154,9 @@
 	Next page	Pagina successiva
 	Previous page	Pagina precedente
 	Current page — type a page number or label (such as iv) and press Enter	Pagina corrente: digita un numero o un'etichetta di pagina (ad esempio iv) e premi Invio
-	Use now	Usa ora
 	Open file	Apri file
 	Recent	Recenti
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	I file aperti in PdfCraft compaiono qui. Trascina un PDF in un punto qualsiasi per aprirlo.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Gli script vengono eseguiti in una sandbox senza accesso a file o rete. Con JavaScript disattivato, le funzioni standard di formato, convalida e calcolo di Acrobat continuano a funzionare.
 	Back to all tools	Torna a tutti gli strumenti
 	Close panel	Chiudi pannello
 	View less	Mostra meno
@@ -297,7 +294,6 @@
 	Export a PDF	Esporta un PDF
 	Export to	Esporta in
 	Microsoft Word (.docx)	Microsoft Word (.docx)
-	Spreadsheet (.xlsx)	Foglio di calcolo (.xlsx)
 	Presentation (.pptx)	Presentazione (.pptx)
 	Image (PNG)	Immagine (PNG)
 	Export all images	Esporta tutte le immagini
@@ -420,7 +416,6 @@
 	Fix hairlines	Correggi linee sottilissime
 	Measure objects	Misura oggetti
 	Measure	Misura
-	Measuring tool	Strumento di misura
 	Geospatial location	Posizione geospaziale
 	Compare files	Confronta file
 	Select files to compare	Seleziona i file da confrontare
@@ -760,7 +755,6 @@
 	{verb} Header and Footer	{verb} intestazione e piè di pagina
 	{verb} Watermark	{verb} filigrana
 	{verb} Background	{verb} sfondo
-	Margins (in)	Margini (pollici)
 	Left Header Text	Testo intestazione a sinistra
 	Center Header Text	Testo intestazione al centro
 	Right Header Text	Testo intestazione a destra
@@ -1212,9 +1206,6 @@
 	Pictures on those pages are recognized too; words already in the page's text are not added again	Vengono riconosciute anche le immagini di queste pagine; le parole già presenti nel testo della pagina non vengono aggiunte di nuovo
 	Settings	Impostazioni
 	Optional	Facoltativo
-	Planned · {m}	Pianificato · {m}
-	Planned for milestone {m} — open to see what it will include	Pianificato per il traguardo {m}: apri per vedere cosa includerà
-	Coming in milestone {m}. Items marked Ready work today.	In arrivo nel traguardo {m}. Le voci contrassegnate come Pronto funzionano già oggi.
 	1 mark	1 segno
 	{n} marks	{n} segni
 	Dynamic	Dinamici
@@ -1592,7 +1583,6 @@
 	Unlocked: the combined file won't be password-protected	Sbloccato: il file combinato non sarà protetto da password
 	Drop PDFs, images, text files or folders here, or choose them.	Trascina qui PDF, immagini, file di testo o cartelle, oppure sceglili.
 	Unlocked {n} of {m} files	File sbloccati: {n} su {m}
-	Drop PDFs or folders here, or choose them.	Trascina qui PDF o cartelle, oppure sceglili.
 	Add folder…	Aggiungi cartella…
 	Add folder and subfolders…	Aggiungi cartella e sottocartelle…
 	More ways to add files	Altri modi per aggiungere file
@@ -1750,7 +1740,6 @@
 	At least one signature has problems.	Almeno una firma presenta problemi.
 	This document is secured. Some changes are restricted by its security settings.	Questo documento è protetto. Alcune modifiche sono limitate dalle sue impostazioni di sicurezza.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Questo è un modulo XFA dinamico, che PdfCraft non è ancora in grado di visualizzare. Quella che vedi è la pagina segnaposto del file.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Questo modulo contiene anche dati XFA, che PdfCraft non legge ancora. Puoi compilarne i campi, ma Acrobat potrebbe mostrare invece i valori XFA.
 	This document contains {n} interactive form fields.	Campi modulo interattivi in questo documento: {n}.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Questo file era danneggiato ed è stato riparato. Il salvataggio mantiene la versione riparata.
 	Dismiss	Ignora
@@ -1782,8 +1771,6 @@
 	Page	Pagina
 	None	Nessuno
 	Delete selected fields	Elimina campi selezionati
-	Diagnostic details	Dettagli diagnostici
-	The operation failed.	L'operazione non è riuscita.
 	no such document	documento inesistente
 	nothing to undo	niente da annullare
 	nothing to redo	niente da ripetere
@@ -1933,10 +1920,7 @@
 	Set status Cancelled	Imposta stato Annullato
 	Set status Completed	Imposta stato Completato
 	Set status None	Imposta stato Nessuno
-	Set status Unmarked	Imposta stato Non contrassegnato
-	Save as PDF/A-1b	Salva come PDF/A-1b
 	Save as PDF/A-2b	Salva come PDF/A-2b
-	Save as PDF/A-3b	Salva come PDF/A-3b
 	Fill & Sign: change signature	Compila e firma: cambia firma
 	Fill & Sign: change initials	Compila e firma: cambia iniziali
 	Fill & Sign: remove saved signature	Compila e firma: rimuovi firma salvata
@@ -2000,7 +1984,6 @@
 	Save these pages as one PDF	Salva queste pagine come un unico PDF
 	No changes to save	Nessuna modifica da salvare
 	Created a PDF from {n} files; left out: {names}	Creato un PDF da {n} file; esclusi: {names}
-	Created a PDF from the first {n} files	Creato un PDF dai primi {n} file
 	None of those files can be made into a PDF; use PDFs, images or .txt files	Nessuno di questi file può essere convertito in PDF; usa PDF, immagini o file .txt
 	Choose a PNG or JPEG image (up to 4 MiB). Transparency is preserved.	Scegli un'immagine PNG o JPEG (fino a 4 MiB). La trasparenza viene mantenuta.
 	Couldn't import the signature image: {e}	Impossibile importare l'immagine della firma: {e}
@@ -2089,7 +2072,6 @@
 	Couldn't show the file picker. Please try again.	Impossibile mostrare la finestra di selezione file. Riprova.
 	Date format	Formato data
 	Distribute fields	Distribuisci campi
-	Files are combined in this order. Leave Pages empty to take every page.	I file vengono combinati in quest'ordine. Lascia vuoto Pagine per prendere tutte le pagine.
 	Fill & Sign dates	Date di Compila e firma
 	Flatten Fill & Sign when saving	Appiattisci Compila e firma al salvataggio
 	H / Space (hold)	H / Spazio (tieni premuto)
@@ -2142,7 +2124,6 @@
 	The PDF text fonts can't draw “{c}” ({code}). Choose supported text.	I caratteri del testo PDF non possono visualizzare «{c}» ({code}). Scegliere un testo supportato.
 	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	Il font di questo campo non può disegnare «{c}» ({code}), quindi PdfCraft mostra ? al suo posto. Il valore è salvato e gli altri visualizzatori PDF ridisegnano il campo a partire da esso.
 	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	I font con cui PdfCraft scrive non possono disegnare «{c}» ({code}), quindi appare come ? in ogni visualizzatore PDF. Il testo è salvato.
-	The standard fonts can't draw “{c}” ({code}). Only Western European characters can be added as text for now.	I caratteri standard non possono disegnare “{c}” ({code}). Per ora si possono aggiungere come testo solo caratteri dell'Europa occidentale.
 	This printer offers no settings of its own.	Questa stampante non offre impostazioni proprie.
 	Today: {date}	Oggi: {date}
 	Undo {action}	Annulla {action}
@@ -2302,3 +2283,5 @@ scroll speed	Fast	Veloce
 	Quick tools	Strumenti rapidi
 	Merge	Unisci
 	Reorder	Riordina
+	Other colour…	Altro colore…
+	Recent colours	Colori recenti

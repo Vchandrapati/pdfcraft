@@ -380,6 +380,18 @@ fn one_column_csv_still_reads_its_quotes() {
 }
 
 #[test]
+fn quoted_empty_csv_value_clears_a_field() {
+    for data in ["Name\n\"\"\n", "Name\r\n\"\"\r\n", "Name\n\"\"", "Name\n\n\"\"\n", "Name\n\"\"\nGrace\n"] {
+        let mut dst = one_field();
+        set_value(&mut dst, "Name", &FieldValue::Text("Ada".into())).unwrap();
+        let report = import(&mut dst, data.as_bytes()).unwrap();
+        assert_eq!(report.fields, 1, "{data:?}");
+        assert!(report.rejected.is_empty(), "{report:?}");
+        assert!(values(&dst)[0].1.is_empty(), "{data:?}");
+    }
+}
+
+#[test]
 fn multi_select_lists_round_trip_through_xml_csv_and_text() {
     let src = filled();
     for format in [Format::Xml, Format::Csv, Format::Txt] {
@@ -746,8 +758,8 @@ fn vertices(doc: &Document) -> Vec<(String, Vec<f64>)> {
     out
 }
 
-/// storytold/pdfcraft#809: XFDF exchange dropped polygon and polyline vertices, so the
-/// imported comments had no shape (and no appearance).
+/// XFDF exchange used to drop polygon and polyline vertices, so the imported comments had no
+/// shape (and no appearance).
 #[test]
 fn xfdf_keeps_polygon_and_polyline_vertices() {
     let mut src = blank();

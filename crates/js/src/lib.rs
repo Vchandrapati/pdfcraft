@@ -25,6 +25,7 @@
 
 use std::cell::RefCell;
 use std::collections::BTreeSet;
+use std::fmt::Write as _;
 
 use boa_engine::object::builtins::{JsArray, JsFunction};
 use boa_engine::object::{FunctionObjectBuilder, ObjectInitializer};
@@ -245,7 +246,7 @@ fn strings(v: &JsValue, ctx: &mut Context) -> JsResult<Vec<String>> {
     if let Some(o) = v.as_object()
         && o.is_array()
     {
-        let a = JsArray::from_object(o.clone())?;
+        let a = JsArray::from_object(o)?;
         let n = a.length(ctx)?;
         if n > MAX_ARRAY_LENGTH {
             return Err(error(format!("array length exceeds {MAX_ARRAY_LENGTH}")));
@@ -444,7 +445,7 @@ fn field_object(ctx: &mut Context, name: &str) -> JsObject {
     let get_item_at = NativeFunction::from_copy_closure_with_captures(get_item_at, n.clone());
     let is_box_checked = NativeFunction::from_copy_closure_with_captures(is_box_checked, n.clone());
     let check_this_box = NativeFunction::from_copy_closure_with_captures(check_this_box, n.clone());
-    let set_focus = NativeFunction::from_copy_closure_with_captures(set_focus, n.clone());
+    let set_focus = NativeFunction::from_copy_closure_with_captures(set_focus, n);
     ObjectInitializer::new(ctx)
         .accessor(js_string!("value"), Some(value_get), Some(value_set), rw)
         .accessor(js_string!("valueAsString"), Some(as_string), None, rw)
@@ -751,7 +752,7 @@ fn printd(_: &JsValue, args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue>
         let run = b[i..].iter().take_while(|x| **x == c).count();
         let push_num = |out: &mut String, v: i64, n: usize| {
             if n >= 2 {
-                out.push_str(&format!("{v:02}"));
+                let _ = write!(out, "{v:02}");
             } else {
                 out.push_str(&v.to_string());
             }
@@ -759,9 +760,9 @@ fn printd(_: &JsValue, args: &[JsValue], ctx: &mut Context) -> JsResult<JsValue>
         match c {
             b'y' => {
                 if run >= 4 {
-                    out.push_str(&format!("{y:04}"));
+                    let _ = write!(out, "{y:04}");
                 } else {
-                    out.push_str(&format!("{:02}", y % 100));
+                    let _ = write!(out, "{:02}", y % 100);
                 }
             }
             b'm' => match run {

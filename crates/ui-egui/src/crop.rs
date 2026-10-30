@@ -10,12 +10,6 @@ use crate::canvas::{DocView, PageXform};
 /// A crop rectangle being dragged: (page, start on screen).
 pub type CropDrag = Option<(usize, Pos2)>;
 
-fn to_user(xf: &PageXform, info: &DocInfo, page: usize, p: Pos2) -> [f64; 2] {
-    let (vx, vy) = xf.screen_to_view(p);
-    let u = info.pages[page].view_to_user(vx, vy);
-    [u[0] as f64, u[1] as f64]
-}
-
 /// Crop gestures on one page. Returns `Some(true)` to open Set Page Boxes for this page.
 pub(crate) fn page_input(
     ui: &egui::Ui,
@@ -59,7 +53,7 @@ pub(crate) fn page_input(
         if resp.drag_stopped() {
             view.crop_drag = None;
             if r.width() >= 4.0 && r.height() >= 4.0 {
-                let (a, b) = (to_user(xf, info, page, r.left_top()), to_user(xf, info, page, r.right_bottom()));
+                let (a, b) = (xf.to_user(info, page, r.left_top()), xf.to_user(info, page, r.right_bottom()));
                 let rect = [a[0].min(b[0]), a[1].min(b[1]), a[0].max(b[0]), a[1].max(b[1])];
                 view.pending_edit = Some(Edit::SetPageBox { pages: vec![page], which: PageBox::Crop, spec: BoxSpec::Rect(rect) });
             }

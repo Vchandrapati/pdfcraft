@@ -837,7 +837,7 @@ impl Card {
         let page_label = self.page.map(|(_, p, _)| crate::i18n::fmt(tl!("Page {label}"), &[("label", &p.saturating_add(1).to_string())]));
         let label = match &page_label {
             Some(page) => format!("{page} · {name}"),
-            None => name.clone(),
+            None => name,
         };
         // As the organize grid's pages: a check box that is on when selected; and, for screen
         // readers, selected as items in a list are.

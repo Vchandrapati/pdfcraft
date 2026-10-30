@@ -14,8 +14,13 @@ impl Automation {
     pub(crate) fn redact_mark(&mut self, a: &Args) -> Result<Value> {
         let doc = self.doc(a)?;
         let (id, n) = (doc.id, doc.info.pages.len());
+        // find, words, pattern and whole_pages work on `pages`, or on `page` alone (without rect,
+        // `page` names the one page to work on rather than being ignored).
+        let one_page = a.get("page").is_some() && a.get("rect").is_none();
         let pages: Vec<usize> = match a.opt_ints("pages")? {
+            Some(_) if one_page => return Err(ToolError::InvalidArgs("pass pages, or page for a single page, not both".into())),
             Some(_) => self.pages(a, "pages")?,
+            None if one_page => vec![self.page(a)?],
             None => (0..n).collect(),
         };
         let overlay = match (a.opt_str("overlay")?, a.opt_str("code_set")?) {
@@ -40,7 +45,7 @@ impl Automation {
         let author = a.opt_str("author")?.unwrap_or(DEFAULT_AUTHOR).to_string();
         let mut style = Style::default_for(&Shape::Redact { quads: Vec::new(), overlay: String::new(), look: Default::default() });
         if let Some(c) = a.opt_str("fill")? {
-            style.fill = Some(parse_color(c)?);
+            style.fill = if c.eq_ignore_ascii_case("none") { None } else { Some(parse_color(c)?) };
         }
         // (page, quads) per mark.
         let mut marks: Vec<(usize, Vec<[f64; 8]>)> = Vec::new();

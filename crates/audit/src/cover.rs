@@ -1,10 +1,11 @@
 //! Walk page content streams and collect the opaque filled rectangles they draw.
 //!
 //! This is the geometric half of the faux-redaction audit: a rectangle filled with an opaque
-//! color (`re` + `f`) is the classic way a "redaction" is faked. Graphics state tracked here is
-//! deliberately small: the CTM stack (`q`/`Q`/`cm`), the non-stroking color (`g`/`rg`/`k`) and
-//! the non-stroking alpha from ExtGState (`gs` reading `/ca`). Form XObjects are followed
-//! read-only with a depth cap. Anything fancier (arbitrary filled paths, shadings, patterns) is
+//! color (`re` + `f`) is the classic way a "redaction" is faked. A single closed `m`/`l` subpath
+//! whose four corners form an axis-aligned rectangle in user space is the same shape and counts
+//! too (#1510). Graphics state tracked here is deliberately small: the CTM stack (`q`/`Q`/`cm`),
+//! the non-stroking color (`g`/`rg`/`k`) and the non-stroking alpha from ExtGState (`gs` reading
+//! `/ca`). Form XObjects are followed read-only with a depth cap. Anything fancier (other filled paths, shadings, patterns) is
 //! out of scope and documented as such.
 //!
 //! Paint order: a page's content streams are one stream in pieces (ISO 32000-2 §7.8.2), so they
@@ -42,12 +43,67 @@ pub struct FilledRect {
 struct Gs {
     ctm: Matrix,
     fill: [f64; 3],
+    /// Components of the non-stroking colour space when it is gray, RGB or CMYK-like (1, 3 or
+    /// 4); `None` for any other space, whose colours are left as the space's initial black.
+    fill_space: Option<usize>,
     alpha: f64,
+}
+
+/// The path under construction, as far as the audit cares about it.
+enum Path {
+    Empty,
+    /// A `re` rectangle, in user space.
+    Rect([f64; 4]),
+    /// One `m`/`l` subpath, corners already mapped to user space; `true` once closed by `h`.
+    Lines(Vec<[f64; 2]>, bool),
+    /// Anything else: curves, a second subpath, a CTM change mid-path.
+    Other,
+}
+
+impl Path {
+    /// The rectangle a fill of this path paints, if the path is one.
+    fn rect(self) -> Option<[f64; 4]> {
+        match self {
+            Path::Rect(r) => Some(r),
+            Path::Lines(pts, _) => lines_rect(pts),
+            Path::Empty | Path::Other => None,
+        }
+    }
+}
+
+/// The bounding box of a closed polygon that is an axis-aligned rectangle, or `None`. A repeated
+/// start point is dropped first; the remaining four corners must alternate horizontal and
+/// vertical edges.
+fn lines_rect(mut pts: Vec<[f64; 2]>) -> Option<[f64; 4]> {
+    // CTM products leave rounding noise, so corners compare with a tolerance (in points).
+    const EPS: f64 = 1e-6;
+    let same = |a: f64, b: f64| (a - b).abs() <= EPS;
+    if pts.len() == 5 && same(pts[0][0], pts[4][0]) && same(pts[0][1], pts[4][1]) {
+        pts.pop();
+    }
+    let [a, b, c, d] = <[[f64; 2]; 4]>::try_from(pts).ok()?;
+    let fits = |first_horizontal: bool| {
+        [(a, b), (b, c), (c, d), (d, a)]
+            .iter()
+            .enumerate()
+            .all(|(i, (p, q))| if (i % 2 == 0) == first_horizontal { same(p[1], q[1]) } else { same(p[0], q[0]) })
+    };
+    if !(fits(true) || fits(false)) {
+        return None;
+    }
+    let (xs, ys) = ([a[0], b[0], c[0], d[0]], [a[1], b[1], c[1], d[1]]);
+    let r = [
+        xs.into_iter().fold(f64::INFINITY, f64::min),
+        ys.into_iter().fold(f64::INFINITY, f64::min),
+        xs.into_iter().fold(f64::NEG_INFINITY, f64::max),
+        ys.into_iter().fold(f64::NEG_INFINITY, f64::max),
+    ];
+    (r[2] - r[0] > EPS && r[3] - r[1] > EPS).then_some(r)
 }
 
 impl Default for Gs {
     fn default() -> Self {
-        Gs { ctm: Matrix::IDENTITY, fill: [0.0, 0.0, 0.0], alpha: 1.0 }
+        Gs { ctm: Matrix::IDENTITY, fill: [0.0, 0.0, 0.0], fill_space: Some(1), alpha: 1.0 }
     }
 }
 
@@ -79,8 +135,7 @@ impl<'a> Walker<'a> {
         depth: usize,
         at_do: Option<(usize, usize)>,
     ) -> Result<(), AuditError> {
-        // A pending `re` rectangle, in the user space active when it was built.
-        let mut pending: Option<[f64; 4]> = None;
+        let mut path = Path::Empty;
         for (i, op) in ops.iter().enumerate() {
             self.bump()?;
             // Paint position of this operator: its own `(piece, joined index)` at page level,
@@ -95,7 +150,7 @@ impl<'a> Walker<'a> {
                     if let Some(g) = stack.pop() {
                         *gs = g;
                     }
-                    pending = None;
+                    path = Path::Empty;
                 }
                 b"cm" => {
                     let before = gs.ctm;
@@ -105,31 +160,32 @@ impl<'a> Walker<'a> {
                         gs.ctm = m.then(&gs.ctm);
                     }
                     // A `cm` that leaves the CTM unchanged (an identity matrix) cannot move the
-                    // pending rectangle, so keep it for the fill (#1333).
-                    if gs.ctm != before {
-                        pending = None;
+                    // pending path, so keep it for the fill (#1333).
+                    if gs.ctm != before && !matches!(path, Path::Empty) {
+                        path = Path::Other;
                     }
                 }
-                b"g" => {
-                    if let Some(v) = op.num(0).filter(|v| v.is_finite()) {
-                        let v = v.clamp(0.0, 1.0);
-                        gs.fill = [v, v, v];
+                b"g" | b"rg" | b"k" => {
+                    let n = op.operands.len();
+                    if let Some(rgb) = colour(&op.operands) {
+                        gs.fill = rgb;
                     }
+                    gs.fill_space = Some(n);
                 }
-                b"rg" => {
-                    if let Some([r, g, b]) = op.nums::<3>()
-                        && [r, g, b].iter().all(|v| v.is_finite())
+                // A colour space and a colour in it (a white figure background painted as
+                // `/Cs1 cs 1 sc` was taken for a black cover). Selecting a space sets its
+                // initial colour, black; a colour in a space that isn't gray, RGB or CMYK-like
+                // (a separation, an indexed palette, a pattern) stays black, so a possible
+                // cover is still reported rather than missed.
+                b"cs" => {
+                    gs.fill_space = op.name(0).and_then(|name| space_components(self.doc, resources, name));
+                    gs.fill = [0.0, 0.0, 0.0];
+                }
+                b"sc" | b"scn" => {
+                    if gs.fill_space == Some(op.operands.len())
+                        && let Some(rgb) = colour(&op.operands)
                     {
-                        gs.fill = [r.clamp(0.0, 1.0), g.clamp(0.0, 1.0), b.clamp(0.0, 1.0)];
-                    }
-                }
-                b"k" => {
-                    if let Some([c, m, y, k]) = op.nums::<4>()
-                        && [c, m, y, k].iter().all(|v| v.is_finite())
-                    {
-                        // Naive CMYK -> RGB; good enough to tell black from white.
-                        let (c, m, y, k) = (c.clamp(0.0, 1.0), m.clamp(0.0, 1.0), y.clamp(0.0, 1.0), k.clamp(0.0, 1.0));
-                        gs.fill = [(1.0 - c) * (1.0 - k), (1.0 - m) * (1.0 - k), (1.0 - y) * (1.0 - k)];
+                        gs.fill = rgb;
                     }
                 }
                 b"gs" => {
@@ -138,7 +194,7 @@ impl<'a> Walker<'a> {
                     }
                 }
                 b"re" => {
-                    pending = op.nums::<4>().and_then(|[x, y, w, h]| {
+                    let rect = op.nums::<4>().and_then(|[x, y, w, h]| {
                         if [x, y, w, h].iter().all(|v| v.is_finite()) && w != 0.0 && h != 0.0 {
                             let r = gs.ctm.bbox([x.min(x + w), y.min(y + h), x.max(x + w), y.max(y + h)]);
                             (r[2] > r[0] && r[3] > r[1]).then_some(r)
@@ -146,18 +202,39 @@ impl<'a> Walker<'a> {
                             None
                         }
                     });
+                    path = rect.map_or(Path::Other, Path::Rect);
+                }
+                b"m" => {
+                    path = match (path, user_point(gs, op)) {
+                        (Path::Empty, Some(p)) => Path::Lines(vec![p], false),
+                        _ => Path::Other,
+                    };
+                }
+                b"l" => {
+                    path = match (path, user_point(gs, op)) {
+                        // Past a repeated start point it can no longer be a rectangle.
+                        (Path::Lines(mut pts, false), Some(p)) if pts.len() < 5 => {
+                            pts.push(p);
+                            Path::Lines(pts, false)
+                        }
+                        _ => Path::Other,
+                    };
+                }
+                b"h" => {
+                    path = match path {
+                        Path::Lines(pts, _) => Path::Lines(pts, true),
+                        _ => Path::Other,
+                    };
                 }
                 b"f" | b"F" | b"f*" | b"B" | b"B*" => {
-                    if let Some(r) = pending.take()
+                    if let Some(r) = std::mem::replace(&mut path, Path::Empty).rect()
                         && gs.alpha >= 1.0
                     {
                         self.out.push(FilledRect { rect: r, rgb: gs.fill, pos });
                     }
-                    // Any other path construction clears the pending rectangle.
                 }
-                b"m" | b"l" | b"c" | b"v" | b"y" | b"h" | b"S" | b"s" | b"n" | b"W" | b"W*" => {
-                    pending = None;
-                }
+                b"S" | b"s" | b"n" => path = Path::Empty,
+                b"c" | b"v" | b"y" | b"W" | b"W*" => path = Path::Other,
                 b"Do" => {
                     if let Some(name) = op.name(0) {
                         if depth >= MAX_DEPTH {
@@ -165,7 +242,7 @@ impl<'a> Walker<'a> {
                         }
                         self.walk_xobject(name, gs, resources, depth, pos)?;
                     }
-                    pending = None;
+                    path = Path::Empty;
                 }
                 _ => {}
             }
@@ -188,7 +265,7 @@ impl<'a> Walker<'a> {
         let matrix = dict
             .get(b"Matrix")
             .map(|o| self.doc.resolve(o))
-            .and_then(|o| o.as_array().map(|a| a.to_vec()))
+            .and_then(|o| o.as_array().cloned())
             .and_then(|a| {
                 let v: Vec<f64> = a.iter().filter_map(|o| self.doc.resolve(o).as_f64()).collect();
                 (v.len() == 6 && v.iter().all(|x| x.is_finite())).then(|| Matrix([v[0], v[1], v[2], v[3], v[4], v[5]]))
@@ -206,7 +283,56 @@ impl<'a> Walker<'a> {
     }
 }
 
+/// The `x y` operands of `m`/`l`, mapped to user space.
+fn user_point(gs: &Gs, op: &Op) -> Option<[f64; 2]> {
+    let [x, y] = op.nums::<2>().filter(|v| v.iter().all(|n| n.is_finite()))?;
+    let (x, y) = gs.ctm.apply(x, y);
+    Some([x, y])
+}
+
 /// The non-stroking alpha (`/ca`) of a named ExtGState, defaulting to opaque.
+/// A gray, RGB or CMYK colour given by its operands, as RGB (`None` unless they are 1, 3 or 4
+/// finite numbers).
+fn colour(operands: &[Object]) -> Option<[f64; 3]> {
+    let v: Vec<f64> = operands.iter().map(|o| o.as_f64().filter(|v| v.is_finite()).map(|v| v.clamp(0.0, 1.0))).collect::<Option<_>>()?;
+    match *v.as_slice() {
+        [g] => Some([g, g, g]),
+        [r, g, b] => Some([r, g, b]),
+        // Naive CMYK -> RGB; good enough to tell black from white.
+        [c, m, y, k] => Some([(1.0 - c) * (1.0 - k), (1.0 - m) * (1.0 - k), (1.0 - y) * (1.0 - k)]),
+        _ => None,
+    }
+}
+
+/// How many components the colour space `name` has when it is gray, RGB or CMYK-like: the
+/// device spaces, CalGray, CalRGB and ICC-based spaces with 1, 3 or 4 components. `None` for
+/// any other (separations, indexed, Lab, patterns) or one that can't be read.
+fn space_components(doc: &Document, resources: &Dict, name: &[u8]) -> Option<usize> {
+    match name {
+        b"DeviceGray" | b"G" | b"CalGray" => return Some(1),
+        b"DeviceRGB" | b"RGB" | b"CalRGB" => return Some(3),
+        b"DeviceCMYK" | b"CMYK" => return Some(4),
+        _ => {}
+    }
+    let space = resources.get(b"ColorSpace").map(|o| doc.resolve(o)).and_then(|o| o.as_dict().cloned())?.get(name).map(|o| doc.resolve(o))?;
+    match &*space {
+        Object::Name(n) if n.as_slice() != name => space_components(doc, &Dict::default(), n),
+        Object::Array(a) => {
+            let family = a.first()?.as_name()?;
+            match family {
+                b"CalGray" => Some(1),
+                b"CalRGB" => Some(3),
+                b"ICCBased" => {
+                    let n = doc.resolve(a.get(1)?).as_dict()?.get(b"N").and_then(|o| doc.resolve(o).as_f64())?;
+                    [1.0, 3.0, 4.0].contains(&n).then_some(n as usize)
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
 fn ext_alpha(doc: &Document, resources: &Dict, name: &[u8]) -> f64 {
     let alpha = resources
         .get(b"ExtGState")

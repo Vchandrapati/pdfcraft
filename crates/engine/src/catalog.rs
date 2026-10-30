@@ -2,10 +2,10 @@
 //!
 //! Every UI (the egui shell today, anything tomorrow) builds its tool panel, palette and menus
 //! from this table; nothing is hard-coded in the toolkit. Each item names the command it will
-//! dispatch and the milestone (plan/execution-plan.md) in which it ships, so the UI can be honest
-//! about what works today.
+//! dispatch and whether it works in this build ([`Availability`]), so the UI can be honest about
+//! what works today.
 //!
-//! Source of the inventory: plan/acrobat/02-ui-ux.md §2 (observed in Acrobat Pro 26.002).
+//! The inventory follows the All tools panel observed in Acrobat Pro 26.002.
 
 /// Where a tool or item stands.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -225,8 +225,8 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
                     item("Oval", "circle", "comment.circle", Ready),
                     item("Line", "minus", "comment.line", Ready),
                     item("Arrow", "move-right", "comment.arrow", Ready),
-                    item("Cloud", "cloud", "comment.cloud", Planned("M5")),
-                    item("Stamp", "stamp", "comment.stamp", Planned("M5")),
+                    item("Cloud", "cloud", "comment.cloud", Ready),
+                    item("Stamp", "stamp", "comment.stamp", Ready),
                 ],
             },
             ToolSection {

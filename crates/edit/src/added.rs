@@ -16,7 +16,7 @@ use pdfcraft_fonts::{
 };
 use unicode_bidi::{Level, ParagraphBidiInfo};
 
-use crate::{EditError, MarkKind, check, contents, n, page_list, place_tagged};
+use crate::{EditError, MarkKind, check, contents, n, place_tagged};
 
 const TAG: &str = "Added";
 
@@ -205,10 +205,6 @@ pub struct Added {
 pub struct MarkerScan {
     pub marks: Vec<MarkKind>,
     pub added: Vec<Added>,
-}
-
-fn nums(doc: &Document, o: Option<&Object>) -> Vec<f64> {
-    o.map(|o| doc.resolve(o)).and_then(|a| a.as_array().map(|a| a.iter().filter_map(Object::as_f64).collect())).unwrap_or_default()
 }
 
 fn norm(r: [f64; 4]) -> [f64; 4] {
@@ -800,12 +796,12 @@ fn params(c: &Content) -> Dict {
 }
 
 fn parse(doc: &Document, d: &Dict) -> Option<Content> {
-    let r = nums(doc, d.get(b"Rect"));
+    let r = doc.numbers(d.get(b"Rect")).unwrap_or_default();
     let rect: [f64; 4] = r.try_into().ok()?;
     match d.name(b"Kind")? {
         b"Text" => {
             let (family, bold, italic) = Family::from_base(d.name(b"Font").unwrap_or(b"Helvetica"));
-            let c = nums(doc, d.get(b"Color"));
+            let c = doc.numbers(d.get(b"Color")).unwrap_or_default();
             Some(Content::Text(AddedText {
                 rect,
                 text: d.get(b"Text").and_then(|t| doc.resolve(t).as_string().map(|s| s.to_text())).unwrap_or_default(),
@@ -823,7 +819,7 @@ fn parse(doc: &Document, d: &Dict) -> Option<Content> {
             }))
         }
         b"Image" => {
-            let crop = nums(doc, d.get(b"Crop"));
+            let crop = doc.numbers(d.get(b"Crop")).unwrap_or_default();
             Some(Content::Image(AddedImage {
                 rect,
                 image: d.get(b"Image")?.as_ref()?,
@@ -862,7 +858,7 @@ fn for_each_content_entry(doc: &Document, page: &pdfcraft_model::Page, mut visit
 /// Finds page marks and editable added content in one pass over the page content entries.
 pub fn scan_markers(doc: &Document) -> MarkerScan {
     let mut scan = MarkerScan::default();
-    for (pi, page) in page_list(doc).iter().enumerate() {
+    for (pi, page) in pdfcraft_model::pages(doc).iter().enumerate() {
         for_each_content_entry(doc, page, |entry| {
             with_resolved(doc, entry, |resolved| {
                 let Some(dict) = resolved.as_dict() else { return };
@@ -953,7 +949,7 @@ fn validate(c: &Content) -> Result<(), EditError> {
 /// Write an item's stream (new, or replacing `obj`) and make its resources available to the page.
 fn write(doc: &mut Document, page: usize, c: &Content, obj: Option<ObjRef>) -> Result<ObjRef, EditError> {
     validate(c)?;
-    let all = page_list(doc);
+    let all = pdfcraft_model::pages(doc);
     check(&[page], all.len())?;
     let p = &all[page];
     let view = p.view_matrix(doc);
@@ -989,9 +985,9 @@ fn write(doc: &mut Document, page: usize, c: &Content, obj: Option<ObjRef>) -> R
         }
         None => {
             // place_tagged appends a new stream; recover its reference.
-            let p = page_list(doc).swap_remove(page);
-            place_tagged(doc, &p, TAG, content.clone(), false)?;
-            let p = page_list(doc).swap_remove(page);
+            let p = p.refreshed(doc);
+            place_tagged(doc, &p, TAG, content, false)?;
+            let p = p.refreshed(doc);
             let r = contents(doc, &p)?.last().and_then(Object::as_ref).ok_or_else(|| EditError::Invalid("could not add the content".into()))?;
             doc.set(r, Object::Stream(stream));
             Ok(r)
@@ -1031,7 +1027,7 @@ pub fn update_content(doc: &mut Document, page: usize, index: usize, c: &Content
 /// Remove item `index` of `page`.
 pub fn delete_content(doc: &mut Document, page: usize, index: usize) -> Result<(), EditError> {
     let a = find(doc, page, index)?;
-    let p = page_list(doc).swap_remove(page);
+    let p = pdfcraft_model::pages(doc).swap_remove(page);
     let list: Vec<Object> = contents(doc, &p)?.into_iter().filter(|o| o.as_ref() != Some(a.obj)).collect();
     let fonts = own_fonts(doc, a.obj);
     // Only the page's own resources carry an item's fonts (`write` gives the page a copy).

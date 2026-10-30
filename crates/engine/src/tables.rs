@@ -3,6 +3,7 @@
 //! right-aligned and a cell may consist of several separately positioned words.
 
 use pdfcraft_render::{PageText, TextGlyph};
+use std::fmt::Write as _;
 
 /// Coordinates are displayed PDF points from the top left. Columns are internal separators,
 /// not column left edges. Supply them to correct automatic inference in a selected region.
@@ -276,7 +277,7 @@ impl Table {
             if row.len() > MAX_COLUMNS {
                 return Err("too many table columns".into());
             }
-            sheet.push_str(&format!("<row r=\"{}\">", i + 1));
+            let _ = write!(sheet, "<row r=\"{}\">", i + 1);
             for (j, value) in row.iter().enumerate() {
                 if value.encode_utf16().count() > 32_767
                     || value.chars().any(|c| !matches!(c, '\t' | '\n' | '\r') && (c < ' ' || matches!(c, '\u{fffe}' | '\u{ffff}')))
@@ -306,7 +307,7 @@ impl Table {
                         _ => xml.push(ch),
                     }
                 }
-                sheet.push_str(&format!("<c r=\"{col}{}\" t=\"inlineStr\"><is><t xml:space=\"preserve\">{xml}</t></is></c>", i + 1));
+                let _ = write!(sheet, "<c r=\"{col}{}\" t=\"inlineStr\"><is><t xml:space=\"preserve\">{xml}</t></is></c>", i + 1);
             }
             sheet.push_str("</row>");
             if sheet.len() > MAX_TEXT * 8 {

@@ -81,7 +81,6 @@
 	Home	Accueil
 	Open	Ouvrir
 	Open a PDF ({key})	Ouvrir un PDF ({key})
-	Dark gray theme	Thème gris foncé
 	Light theme	Thème clair
 	Appearance mode	Mode d'apparence
 	Light	Clair
@@ -131,11 +130,9 @@
 	Next page	Page suivante
 	Previous page	Page précédente
 	Current page — type a page number or label (such as iv) and press Enter	Page actuelle — saisissez un numéro ou une étiquette de page (comme iv) et appuyez sur Entrée
-	Use now	Utiliser
 	Open file	Ouvrir un fichier
 	Recent	Récents
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Les fichiers que vous ouvrez dans PdfCraft apparaissent ici. Déposez un PDF n'importe où pour l'ouvrir.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Les scripts s'exécutent dans un bac à sable, sans accès aux fichiers ni au réseau. Si JavaScript est désactivé, les fonctions standard de format, de validation et de calcul d'Acrobat continuent de fonctionner.
 	Back to all tools	Retour à tous les outils
 	Close panel	Fermer le panneau
 	View less	Voir moins
@@ -273,7 +270,6 @@
 	Export a PDF	Exporter un PDF
 	Export to	Exporter vers
 	Microsoft Word (.docx)	Microsoft Word (.docx)
-	Spreadsheet (.xlsx)	Feuille de calcul (.xlsx)
 	Presentation (.pptx)	Présentation (.pptx)
 	Image (PNG)	Image (PNG)
 	Export all images	Exporter toutes les images
@@ -396,7 +392,6 @@
 	Fix hairlines	Corriger les filets
 	Measure objects	Mesurer des objets
 	Measure	Mesurer
-	Measuring tool	Outil de mesure
 	Geospatial location	Position géospatiale
 	Compare files	Comparer des fichiers
 	Select files to compare	Sélectionner les fichiers à comparer
@@ -1197,9 +1192,6 @@
 	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	La reconnaissance de texte n'est pas installée : ses fichiers de modèles sont absents. Réinstallez PdfCraft, ou définissez PDFCRAFT_MODELS sur le dossier qui les contient.
 	Settings	Réglages
 	Optional	Facultatif
-	Planned · {m}	Prévu · {m}
-	Planned for milestone {m} — open to see what it will include	Prévu pour le jalon {m} — ouvrez pour voir ce qu'il comprendra
-	Coming in milestone {m}. Items marked Ready work today.	Arrivera dans le jalon {m}. Les éléments marqués Prêt fonctionnent déjà.
 	1 mark	1 marque
 	{n} marks	{n} marques
 	Dynamic	Dynamiques
@@ -1559,7 +1551,6 @@
 	Looking for printers…	Recherche des imprimantes…
 	Sending to {printer}…	Envoi à {printer}…
 	Choose a folder for the searchable files	Choisissez un dossier pour les fichiers recherchables
-	Files are combined in this order. Leave Pages empty to take every page.	Les fichiers sont combinés dans cet ordre. Laissez Pages vide pour prendre toutes les pages.
 	Pages of {name} to combine, e.g. 1-3, 6	Pages de {name} à combiner, p. ex. 1-3, 6
 	Remove {name}	Retirer {name}
 	Add files…	Ajouter des fichiers…
@@ -1674,7 +1665,6 @@
 	At least one signature has problems.	Au moins une signature pose problème.
 	This document is secured. Some changes are restricted by its security settings.	Ce document est protégé. Sa protection restreint certaines modifications.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Ceci est un formulaire XFA dynamique, que PdfCraft ne peut pas encore afficher. Ce que vous voyez est la page de substitution du fichier.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Ce formulaire contient aussi des données XFA, que PdfCraft ne lit pas encore. Vous pouvez remplir ses champs, mais Acrobat peut afficher les valeurs XFA à la place.
 	This document contains {n} interactive form fields.	Ce document contient {n} champs de formulaire interactifs.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Ce fichier était endommagé et a été réparé. L'enregistrement conserve la version réparée.
 	Dismiss	Fermer
@@ -1706,8 +1696,6 @@
 	Page	Page
 	None	Aucun
 	Delete selected fields	Supprimer les champs sélectionnés
-	Diagnostic details	Détails du diagnostic
-	The operation failed.	L'opération a échoué.
 	no such document	document introuvable
 	nothing to undo	rien à annuler
 	nothing to redo	rien à rétablir
@@ -1858,10 +1846,7 @@
 	Set status Cancelled	Définir l'état Annulé
 	Set status Completed	Définir l'état Terminé
 	Set status None	Définir l'état Aucun
-	Set status Unmarked	Définir l'état Non marqué
-	Save as PDF/A-1b	Enregistrer comme PDF/A-1b
 	Save as PDF/A-2b	Enregistrer comme PDF/A-2b
-	Save as PDF/A-3b	Enregistrer comme PDF/A-3b
 	Fill & Sign: change signature	Remplir et signer : modifier la signature
 	Fill & Sign: change initials	Remplir et signer : modifier les initiales
 	Fill & Sign: remove saved signature	Remplir et signer : retirer la signature enregistrée
@@ -1995,7 +1980,6 @@
 	Save these pages as one PDF	Enregistrer ces pages dans un seul PDF
 	No changes to save	Aucune modification à enregistrer
 	Created a PDF from {n} files; left out: {names}	PDF créé à partir de {n} fichiers ; ignorés : {names}
-	Created a PDF from the first {n} files	PDF créé à partir des {n} premiers fichiers
 	None of those files can be made into a PDF; use PDFs, images or .txt files	Aucun de ces fichiers ne peut être converti en PDF ; utilisez des PDF, des images ou des fichiers .txt
 
 # Combine files tab
@@ -2085,7 +2069,6 @@
 	Go to page…	Aller à la page…
 	For page sizes and margins.	Pour les tailles de page et les marges.
 	The PDF text fonts can't draw “{c}” ({code}). Choose supported text.	Les polices de texte PDF ne peuvent pas afficher « {c} » ({code}). Choisissez un texte pris en charge.
-	The standard fonts can't draw “{c}” ({code}). Only Western European characters can be added as text for now.	Les polices standard ne peuvent pas afficher « {c} » ({code}). Pour l'instant, seuls les caractères d'Europe occidentale peuvent être ajoutés comme texte.
 	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	La police de ce champ ne peut pas afficher « {c} » ({code}) : PdfCraft affiche ? à sa place. La valeur est enregistrée, et les autres lecteurs PDF redessinent le champ à partir de celle-ci.
 	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	Les polices qu'utilise PdfCraft pour écrire ne peuvent pas afficher « {c} » ({code}) : il apparaît comme ? dans tous les lecteurs PDF. Le texte est enregistré.
 	Larger pages	Pages plus grandes
@@ -2293,3 +2276,5 @@ scroll speed	Fast	Rapide
 	Quick tools	Outils rapides
 	Merge	Fusionner
 	Reorder	Réorganiser
+	Other colour…	Autre couleur…
+	Recent colours	Couleurs récentes

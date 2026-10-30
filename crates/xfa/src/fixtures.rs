@@ -2,6 +2,8 @@
 
 #![doc(hidden)]
 
+use std::fmt::Write as _;
+
 /// A small dynamic form: a letter page master with a page-number draw, a title, a text field
 /// with a caption on top, a check box, a radio group beside a question, a date field, a table
 /// with a repeated header row and `rows` data rows, and a last section that starts a new page.
@@ -319,7 +321,7 @@ pub fn fields_template(data: &str) -> String {
 pub fn many_calculations_template(sections: usize, rows: usize) -> String {
     let mut body = String::new();
     for sct in 0..sections {
-        body.push_str(&format!("<subform name=\"s{sct}\" layout=\"tb\"><subform name=\"table\" layout=\"table\" columnWidths=\"1in 1in 1in\">"));
+        let _ = write!(body, "<subform name=\"s{sct}\" layout=\"tb\"><subform name=\"table\" layout=\"table\" columnWidths=\"1in 1in 1in\">");
         for r in 0..rows {
             let calc = if (sct + r) % 2 == 0 {
                 "<script contentType=\"application/x-javascript\">qty.rawValue * price.rawValue</script>"

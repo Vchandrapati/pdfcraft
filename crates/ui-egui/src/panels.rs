@@ -4,6 +4,7 @@
 use egui::{Align, Align2, Color32, CornerRadius, Layout, Rect, Sense, Stroke, pos2, vec2};
 use pdfcraft_engine::catalog::{self, Availability, TOOL_GROUPS, ToolGroup};
 use pdfcraft_render::{DocInfo, FieldKind, OutlineItem};
+use std::fmt::Write as _;
 
 use crate::theme::{self, Tokens};
 use crate::{LeftPanel, PdfCraftApp, RightPanel, icons, widgets};
@@ -435,7 +436,7 @@ fn format_section(app: &mut PdfCraftApp, ui: &mut egui::Ui, t: &Tokens) {
     match selected {
         Some((page, index, text)) => {
             if let Some(style) = crate::content_ui::format_panel(ui, t, &text) {
-                app.text_style = pdfcraft_engine::AddedText { text: String::new(), rect: [0.0; 4], ..style.clone() };
+                app.text_style = pdfcraft_engine::AddedText { text: String::new(), rect: [0.0; 4], ..style };
                 app.apply_edit(pdfcraft_engine::Edit::UpdateContent { page, index, content: pdfcraft_engine::AddedContent::Text(style) });
             }
         }
@@ -1270,10 +1271,10 @@ fn fields(
             let kind = format!("{:?}", f.kind);
             let mut tip = crate::i18n::fmt(tl!("{kind} field"), &[("kind", tl!(&kind))]);
             if let Some(tt) = &f.tooltip {
-                tip.push_str(&format!(" — {tt}"));
+                let _ = write!(tip, " — {tt}");
             }
             if f.has_actions {
-                tip.push_str(&format!("\n{}", tl!("Has JavaScript actions (run in M6)")));
+                let _ = write!(tip, "\n{}", tl!("Has JavaScript actions (run in M6)"));
             }
             if preparing && f.page.is_some() {
                 let up = Rect::from_center_size(rect.right_center() - vec2(44.0, 0.0), vec2(22.0, 22.0));

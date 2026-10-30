@@ -370,13 +370,8 @@ impl PdfCraftApp {
         // its fields keep their names. Pasting into another document renames colliding ones.
         let field_conflicts =
             if self.views[i].id == clip.from { pdfcraft_engine::FieldConflicts::Merge } else { pdfcraft_engine::FieldConflicts::Rename };
-        if self.apply_edit(Edit::InsertPagesFrom {
-            name: clip.name.clone(),
-            bytes: clip.bytes.clone(),
-            pages: Some(clip.pages.clone()),
-            at,
-            field_conflicts,
-        }) {
+        if self.apply_edit(Edit::InsertPagesFrom { name: clip.name.clone(), bytes: clip.bytes.clone(), pages: Some(clip.pages), at, field_conflicts })
+        {
             self.views[i].select_pages(&(at..at + count).collect::<Vec<_>>());
         }
     }
@@ -1148,7 +1143,7 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// Windows refuses to replace a read-only file, so the rename fails: the staging file must not
+    /// A read-only file is refused (Windows would refuse the rename anyway): no staging file may
     /// be left behind.
     #[cfg(windows)]
     #[test]

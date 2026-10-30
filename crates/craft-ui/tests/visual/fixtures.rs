@@ -124,14 +124,13 @@ impl State {
 #[derive(Clone, Copy, Debug)]
 pub enum Component {
     Button,
-    SingleShapeButton,
     Tab,
     HorizontalSplit,
     VerticalSplit,
 }
 
 impl Component {
-    pub const ALL: [Self; 5] = [Self::Button, Self::SingleShapeButton, Self::Tab, Self::HorizontalSplit, Self::VerticalSplit];
+    pub const ALL: [Self; 4] = [Self::Button, Self::Tab, Self::HorizontalSplit, Self::VerticalSplit];
 
     pub fn is_split(self) -> bool {
         matches!(self, Self::HorizontalSplit | Self::VerticalSplit)
@@ -256,9 +255,9 @@ pub fn actual(ui: &mut Ui, case: Case, mutation: Mutation) -> Vec<Response> {
                             .focus_stroke(style.focus_stroke)
                             .show_at(ui, rect, |ui, r| tab_body(ui, r, selected, p, case.compact))
                     } else {
-                        let button = IconButton::new("Action", case.size(), &style).selected(selected);
-                        let button = if matches!(case.component, Component::SingleShapeButton) { button.single_shape_frame() } else { button };
-                        button.show(ui, |ui, rect, tint| icon(ui.painter(), rect, tint, case.compact))
+                        IconButton::new("Action", case.size(), &style)
+                            .selected(selected)
+                            .show(ui, |ui, rect, tint| icon(ui.painter(), rect, tint, case.compact))
                     };
                     responses.push(response);
                 }
@@ -313,12 +312,8 @@ pub fn reference(ui: &Ui, case: Case) {
         };
         let rect = Rect::from_min_size(pos2(12.0 + index as f32 * (case.size().x + GAP), 12.0), case.size());
         let radius = if matches!(case.component, Component::Tab) { 0 } else { 3 };
-        if matches!(case.component, Component::SingleShapeButton) {
-            painter.rect(rect, radius, fill, Stroke::new(1.0, p.border), StrokeKind::Inside);
-        } else {
-            painter.rect_filled(rect, radius, fill);
-            painter.rect_stroke(rect, radius, Stroke::new(1.0, p.border), StrokeKind::Inside);
-        }
+        painter.rect_filled(rect, radius, fill);
+        painter.rect_stroke(rect, radius, Stroke::new(1.0, p.border), StrokeKind::Inside);
         icon(&painter, rect, tint, case.compact);
         if state == State::Focus {
             painter.rect_stroke(rect.shrink(2.0), radius, Stroke::new(1.0, p.focus), StrokeKind::Inside);

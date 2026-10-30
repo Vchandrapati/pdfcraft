@@ -80,13 +80,11 @@
 	Select all pages (Organize)	Барлық беттерді таңдау (Ұйымдастыру)
 	Home	Басты бет
 	Open	Ашу
-	Dark gray theme	Қою сұр тема
 	Light theme	Ашық тема
 	All tools	Барлық құралдар
 	Read	Оқу
 	Convert	Түрлендіру
 	E-Sign	Электронды қол қою
-	Save (M4)	Сақтау (M4)
 	Find tools and commands	Құралдар мен командаларды іздеу
 	Fit to height	Биіктігіне сыйдыру
 	Zoom in	Үлкейту
@@ -119,11 +117,9 @@
 	Next page	Келесі бет
 	Previous page	Алдыңғы бет
 	Current page — type a page number or label (such as iv) and press Enter	Ағымдағы бет — бет нөмірін немесе белгісін (мысалы, iv) теріңіз де, Enter пернесін басыңыз
-	Use now	Дәл қазір пайдалану
 	Open file	Файлды ашу
 	Recent	Соңғы
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	PdfCraft-те ашқан файлдарыңыз осында көрсетіледі. PDF файлын ашу үшін оны кез келген жерге апарып тастаңыз.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Скрипттер файлға да, желіге де қатынасы жоқ құмсалғышта орындалады. JavaScript өшірулі тұрса да, Acrobat-тың стандартты пішімдеу, тексеру және есептеу функциялары әлі де жұмыс істейді.
 	Back to all tools	Барлық құралдарға оралу
 	Close panel	Панельді жабу
 	View less	Азырақ көру
@@ -260,7 +256,6 @@
 	Export a PDF	PDF экспорттау
 	Export to	Мынаған экспорттау
 	Microsoft Word (.docx)	Microsoft Word (.docx)
-	Spreadsheet (.xlsx)	Электрондық кесте (.xlsx)
 	Presentation (.pptx)	Презентация (.pptx)
 	Image (PNG)	Кескін (PNG)
 	Export all images	Барлық кескіндерді экспорттау
@@ -383,7 +378,6 @@
 	Fix hairlines	Жіңішке сызықтарды түзету
 	Measure objects	Нысандарды өлшеу
 	Measure	Өлшеу
-	Measuring tool	Өлшеу құралы
 	Geospatial location	Геокеңістіктік орналасу
 	Compare files	Файлдарды салыстыру
 	Select files to compare	Салыстыру үшін файлдарды таңдау
@@ -720,7 +714,6 @@
 	{verb} Header and Footer	Колонтитулдарды {verb}
 	{verb} Watermark	Су белгісін {verb}
 	{verb} Background	Фонды {verb}
-	Margins (in)	Шеттер (дюйм)
 	Left Header Text	Сол жақ үстіңгі колонтитул мәтіні
 	Center Header Text	Ортаңғы үстіңгі колонтитул мәтіні
 	Right Header Text	Оң жақ үстіңгі колонтитул мәтіні
@@ -1160,9 +1153,6 @@
 	Pictures on those pages are recognized too; words already in the page's text are not added again	Бұл беттердегі суреттер де танылады; беттің мәтінінде бұрыннан бар сөздер қайта қосылмайды
 	Settings	Параметрлер
 	Optional	Міндетті емес
-	Planned · {m}	Жоспарланған · {m}
-	Planned for milestone {m} — open to see what it will include	{m} кезеңіне жоспарланған — не қамтитынын көру үшін ашыңыз
-	Coming in milestone {m}. Items marked Ready work today.	{m} кезеңінде шығады. «Дайын» деп белгіленген элементтер қазір жұмыс істейді.
 	1 mark	1 белгі
 	{n} marks	{n} белгі
 	Dynamic	Динамикалық
@@ -1523,16 +1513,11 @@
 	Opened, but its security settings don't allow combining. Enter the permissions password.	Ашылды, бірақ оның қауіпсіздік параметрлері біріктіруге рұқсат бермейді. Рұқсаттар құпиясөзін енгізіңіз.
 	Unlocked: the combined file won't be password-protected	Блоктан шығарылды: біріктірілген файл құпиясөзбен қорғалмайды
 	Unlocked {n} of {m} files	{m} файлдың {n}-і блоктан шығарылды
-	Drop PDFs or folders here, or choose them.	PDF файлдарын немесе қалталарды осында тастаңыз не таңдаңыз.
 	Add folder…	Қалта қосу…
 	Add folder and subfolders…	Қалта мен ішкі қалталарды қосу…
 	More ways to add files	Файлдарды қосудың басқа жолдары
-	Every PDF in the folder	Қалтадағы барлық PDF
-	Every PDF in the folder and the folders inside it	Қалтадағы және оның ішіндегі қалталардағы барлық PDF
 	Add folder	Қалта қосу
 	Add folder and subfolders	Қалта мен ішкі қалталарды қосу
-	No PDFs found in {folder}	{folder} ішінен ешбір PDF табылмады
-	Added the first {n} PDFs in {folder}	{folder} ішіндегі алғашқы {n} PDF қосылды
 	Click to sort, drag to move the column. Drag its edge to resize it.	Сұрыптау үшін шертіңіз, бағанды жылжыту үшін сүйреңіз. Өлшемін өзгерту үшін бағанның шетін сүйреңіз.
 	Reset columns	Бағандарды ысыру
 	Remove {n} files	{n} файлды алып тастау
@@ -1550,7 +1535,6 @@
 	{n} files need attention	{n} файл назар аударуды қажет етеді
 	{name} can't be combined: {why}	{name} біріктіріле алмайды: {why}
 	Check the pages of {name}: {why}	{name} беттерін тексеріңіз: {why}
-	Add the PDFs to combine	Біріктіру үшін PDF файлдарын қосыңыз
 	File name	Файл атауы
 	Warnings	Ескертулер
 	Drag to reorder	Ретін өзгерту үшін сүйреңіз
@@ -1636,7 +1620,6 @@
 	watermark	су белгісі
 	background	фон
 	This document isn't password-protected	Бұл құжат құпиясөзбен қорғалмаған
-	Only the document's owner can change its security (open it with the permissions password)	Қауіпсіздікті тек құжат иесі өзгерте алады (оны рұқсаттар құпиясөзімен ашыңыз)
 	The document's security settings don't allow this change	Құжаттың қауіпсіздік параметрлері бұл өзгерісті рұқсат етпейді
 	Open a document first	Алдымен құжатты ашыңыз
 	Security will be removed when you save	Сақтаған кезде қауіпсіздік алынып тасталады
@@ -1670,7 +1653,6 @@
 	At least one signature has problems.	Кемінде бір қолтаңбада мәселелер бар.
 	This document is secured. Some changes are restricted by its security settings.	Бұл құжат қорғалған. Кейбір өзгерістер оның қауіпсіздік параметрлерімен шектеулі.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Бұл динамикалық XFA формасы, оны PdfCraft әлі көрсете алмайды. Көріп тұрғаныңыз — файлдың орынбасар беті.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Бұл формада PdfCraft әлі оқымайтын XFA деректері де бар. Өрістерін толтыра аласыз, бірақ Acrobat орнына XFA мәндерін көрсетуі мүмкін.
 	This document contains {n} interactive form fields.	Бұл құжат {n} интерактивті форма өрісін қамтиды.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Бұл файл зақымдалған еді және жөнделді. Сақтау кезінде жөнделген нұсқа сақталады.
 	Dismiss	Жабу
@@ -1702,8 +1684,6 @@
 	Page	Бет
 	None	Жоқ
 	Delete selected fields	Таңдалған өрістерді жою
-	Diagnostic details	Диагностика мәліметтері
-	The operation failed.	Операция сәтсіз аяқталды.
 	no such document	мұндай құжат жоқ
 	nothing to undo	болдырмауға ештеңе жоқ
 	nothing to redo	қайталауға ештеңе жоқ
@@ -1853,10 +1833,7 @@
 	Set status Cancelled	Күйді орнату: Бас тартылды
 	Set status Completed	Күйді орнату: Аяқталды
 	Set status None	Күйді орнату: Жоқ
-	Set status Unmarked	Күйді орнату: Белгіленбеген
-	Save as PDF/A-1b	PDF/A-1b ретінде сақтау
 	Save as PDF/A-2b	PDF/A-2b ретінде сақтау
-	Save as PDF/A-3b	PDF/A-3b ретінде сақтау
 	Fill & Sign: change signature	Толтыру және қол қою: қолтаңбаны өзгерту
 	Fill & Sign: change initials	Толтыру және қол қою: инициалдарды өзгерту
 	Fill & Sign: remove saved signature	Толтыру және қол қою: сақталған қолтаңбаны алып тастау
@@ -1959,12 +1936,10 @@
 	Save these pages as one PDF	Бұл беттерді бір PDF ретінде сақтау
 	No changes to save	Сақтайтын өзгеріс жоқ
 	Created a PDF from {n} files; left out: {names}	{n} файлдан PDF жасалды; қосылмағандары: {names}
-	Created a PDF from the first {n} files	Алғашқы {n} файлдан PDF жасалды
 	Go to page…	Бетке өту…
 	Optimization is already running	Оңтайландыру әлдеқашан орындалуда
 	Optimization cancelled	Оңтайландырудан бас тартылды
 	Couldn't optimize the file	Файлды оңтайландыру мүмкін болмады
-	Files are combined in this order. Leave Pages empty to take every page.	Файлдар осы ретпен біріктіріледі. Барлық бетті алу үшін «Беттер» өрісін бос қалдырыңыз.
 	Portable mode is off: {folder} can't be written ({error}). Settings are kept in your user folder instead.	Портативті режим өшірулі: {folder} ішіне жазу мүмкін емес ({error}). Параметрлер орнына пайдаланушы қалтаңызда сақталады.
 	Show	Көрсету
 	Sort	Сұрыптау
@@ -2291,3 +2266,5 @@ scroll speed	Fast	Жылдам
 	Quick tools	Жылдам құралдар
 	Merge	Біріктіру
 	Reorder	Ретін өзгерту
+	Other colour…	Басқа түс…
+	Recent colours	Соңғы түстер

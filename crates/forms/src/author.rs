@@ -7,6 +7,7 @@
 
 use pdfcraft_cos::{Dict, Document, ObjRef, Object, PdfString, Stream};
 use pdfcraft_fonts::{helvetica_width, literal, win_ansi};
+use std::fmt::Write as _;
 
 use crate::{Field, FieldKind, FormError, Widget, appearance, fields, flags, page_refs};
 
@@ -733,10 +734,10 @@ fn frame_only(doc: &Document, w: &Widget) -> (String, crate::appearance::Placeme
     };
     let mut c = String::new();
     if let Some(bg) = col(b"BG") {
-        c.push_str(&format!("{bg} rg 0 0 {width:.3} {height:.3} re f\n"));
+        let _ = writeln!(c, "{bg} rg 0 0 {width:.3} {height:.3} re f");
     }
     if let Some(bc) = col(b"BC") {
-        c.push_str(&format!("{bc} RG 1 w 0.5 0.5 {:.3} {:.3} re S\n", width - 1.0, height - 1.0));
+        let _ = writeln!(c, "{bc} RG 1 w 0.5 0.5 {:.3} {:.3} re S", width - 1.0, height - 1.0);
     }
     (c, place)
 }

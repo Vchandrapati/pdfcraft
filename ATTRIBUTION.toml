@@ -7,7 +7,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Greek UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "cc9e1e5d96aa0f214f1f48a102853b47215f6a94fb344f9f270a5d07fa95a8bc"
+sha256 = "73e5590e6180ce05f4dac454b14ce5db0cd14a6a114c698437126a51309de094"
 
 # ATTRIBUTION.toml: one entry per asset (AGENTS.md §1). The source of truth for provenance and licences.
 # ATTRIBUTION.md is generated from this file: `cargo xtask assets --write`. Checked by `cargo xtask assets` (part of `xtask ci`).
@@ -30,7 +30,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Simplified Chinese UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "279007ea4cac9fc5d6a0b7abf07435a4eceb7efaced0c3a31486286b81d6d234"
+sha256 = "7a324306e94ca20f4039f3736c9e1f1c3151bb90b4dd306403785d6cddfbdd48"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/zh-hant.tsv"
@@ -41,7 +41,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Traditional Chinese UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "30da85c3fb0b6cd25135f34f38d8fe5665c372f2d6e5766fe8b3a609cdcc70df"
+sha256 = "2f1db64dd415f0a87c123475365371a1fafd84f73d14162aaefcd121bc434db5"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/cs.tsv"
@@ -52,7 +52,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Czech UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "ca2e0ea4464428e14615960ca966e7cd421adf33113f3260ebacfbf1bd5f914b"
+sha256 = "cf8cb563ce2dfdffc031cb997bb2e1a978688c49fef9a0a3bb55c8a0a180b66d"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/pt-br.tsv"
@@ -63,7 +63,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Brazilian Portuguese UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "6ec769fd60197d81cd1eac8660536be23488b95f8b91bcca33c603a078de1175"
+sha256 = "1f50906fdc0301fe386e891fc3089693e652aa452f858c67cc55ac36f4780eb9"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/es.tsv"
@@ -74,7 +74,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Spanish UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "9e3ea10128668ebb5e537d12e892dfa60e938e6d84182b4f1ccdd3624fe29382"
+sha256 = "cb3416abde63ef0f3ef50f2d5fc2cbbe05b2f091b27ee579568d89ca6829a08c"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/fr.tsv"
@@ -85,7 +85,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "French UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "1dbc793d0f6045f45fe413f7d2202ecb776162df99fb4cafd453f9fde651a58d"
+sha256 = "8de979ef270639fb71b83f6ffc2fd57498f1d2e3b525b28a8c1965a90ed3a2ad"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/de.tsv"
@@ -96,7 +96,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "German UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "b69d26c2e45a960e5c2b2e05a60e57810216c026e77aa936aa9f9d37bd873358"
+sha256 = "7424a8b345c716a84af8a9c326262843f1b58d7bbb2005305947ac83271f8e13"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/te.tsv"
@@ -107,7 +107,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Telugu UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "c77292a563f621ad692d3b23e287a03a438e7ba776e3745b6a3591bdafcd61e3"
+sha256 = "953670eee973131e23585e359e989e6929642da464857566aa1e324275e9caca"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/it.tsv"
@@ -118,7 +118,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Italian UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "eca1eeb4bf3aed8ce0b43ddacbe07ac3d3ab44a57f7efb28eb0c4d7c1ca7d7a5"
+sha256 = "4631e55dddc44b17caadcb88acddbc2602db0ac087e116e6717c38c386dfc192"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/pl.tsv"
@@ -129,7 +129,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Polish UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "d0129e1fe32419f85cb8051184246434711799c3e4e48c08aeff8cfe8ce671ee"
+sha256 = "559f490760c239542458bd04be65c862f044543f3444afb40f251fa75716bafb"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/ru.tsv"
@@ -140,7 +140,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Russian UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "aab24a5439ff013ea7e32be565e537a65929243dee5d2516d4ef2db35d87d364"
+sha256 = "1298693d7ca03e883eb9e5ec71980e86120587dcc25c64ac9240507a3e196adf"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/hu.tsv"
@@ -151,7 +151,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Hungarian UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "723af2e5f990fda0b605e3f05cbcd9bcf478e1139da69d7e51e1eb1e925bb6e2"
+sha256 = "8c676857d299a17bf8bc32c345f8baa29d1b422a6cfb273ad8e3a0afdcd31c4e"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/bg.tsv"
@@ -162,7 +162,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Bulgarian UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "6b1fef4967b08af4258670e3d1cd60f2ba1a3c6699f1d2638cae99f72f4373dd"
+sha256 = "d5401c918839b8089f9cd9ab6d168de89fb90aec35d29e5e01834f2e345455bc"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/kk.tsv"
@@ -173,7 +173,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Kazakh UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "a5c18856de6b183377643cb330b1ad9eabb1a29dbf2ac4d07138d7c279da7006"
+sha256 = "8c71fe00bb5010acd765462aaab4702c5b84f5efbeece5e6215bcfdd05d25e54"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/ja.tsv"
@@ -184,7 +184,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Japanese UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "f594643583f1fd49294adfd25724fe7135734bede529721e60a2774e9ba07fa3"
+sha256 = "d74a4b44459e9e4628a078c40d258727e0315c49718509bf3c24801878b12e71"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/uk.tsv"
@@ -195,7 +195,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Ukrainian UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "4c6611383fc18f20401823ddb9dd6ad777eb93b64646c54c989db81cdc0e7bfb"
+sha256 = "b501143764da75eed68ccfeb262ac9d5cc0e58745afeb8a025e74be191af1979"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/ar.tsv"
@@ -206,7 +206,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Arabic UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "4d7fcdd499341cb9ccec59f5ca83359d24e32b40ac14ffad913d6c88aec2932e"
+sha256 = "5f9be5457546dfa723769a6e0f40351bb1beee25b64dab54c9e48fe951c892d5"
 
 [[asset]]
 path = "crates/ui-egui/src/i18n/tr.tsv"
@@ -217,7 +217,7 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Turkish UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "3bd28bd6ca0e2ca48025f60ffd70544373be5ce6df01449560d220f31c6afd78"
+sha256 = "a2533544318722adea969ccdb2dfc21a71f0fadc55d443c47f6aabae8eb95349"
 
 [[asset]]
 path = "assets/icons/accessibility.svg"
@@ -352,17 +352,6 @@ usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "1372eabd5f05d58ec554a6f67da83337367f8c818b2ada7d1591c0ba227ca0a6"
 
 [[asset]]
-path = "assets/icons/app-window.svg"
-title = "Lucide icon \"app-window\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/app-window.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "78635d0da597104f526ea01dede8ab4d04ccabc7a2229c4baf17f921b15985de"
-
-[[asset]]
 path = "assets/icons/arrow-left-right.svg"
 title = "Lucide icon \"arrow-left-right\""
 author = "Lucide Contributors (portions Cole Bemis, Feather)"
@@ -385,17 +374,6 @@ usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "8380bdad937e85cc9c63701ce92ebe27c9e8ea2c710de28fac46f463c1a25f09"
 
 [[asset]]
-path = "assets/icons/arrow-up-right.svg"
-title = "Lucide icon \"arrow-up-right\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/arrow-up-right.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "59fb769ed094d290ac57d4154e5e86c27e33b4c250a59fd04d2f9b0ea842bf65"
-
-[[asset]]
 path = "assets/icons/badge-check.svg"
 title = "Lucide icon \"badge-check\""
 author = "Lucide Contributors (portions Cole Bemis, Feather)"
@@ -416,17 +394,6 @@ licence_file = "assets/icons/LICENSE-lucide.txt"
 kind = "icon"
 usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "a0e56764e3701ea180950c79975ac3aa14d90924c9fc9b427f7c476ec01eb609"
-
-[[asset]]
-path = "assets/icons/bell.svg"
-title = "Lucide icon \"bell\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/bell.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "5227140d3559a4794233779b5008c75e2475db4f761aaa4fdbec14c914721f8a"
 
 [[asset]]
 path = "assets/icons/blend.svg"
@@ -493,28 +460,6 @@ licence_file = "assets/icons/LICENSE-lucide.txt"
 kind = "icon"
 usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "c793670f91c7aab05bc58779e5956935a5307c12c62ec91364439d063d4d74c6"
-
-[[asset]]
-path = "assets/icons/brush-cleaning.svg"
-title = "Lucide icon \"brush-cleaning\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/brush-cleaning.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "16501b23a40f7d446d4047deaaa92b99236ae4caebe5b2e9eb47169a12a6a4a1"
-
-[[asset]]
-path = "assets/icons/brush.svg"
-title = "Lucide icon \"brush\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/brush.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "70a2174ebd2601367ba0e8ce6ddb3d6a844d5d17e24235197f04481a1bed27e9"
 
 [[asset]]
 path = "assets/icons/camera.svg"
@@ -594,28 +539,6 @@ usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "e7c0f5229a9b40bfc598f38e4c76099780bdd0747927c98322e816772d929b63"
 
 [[asset]]
-path = "assets/icons/chevrons-left.svg"
-title = "Lucide icon \"chevrons-left\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/chevrons-left.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "ec966bce841337a305fc7fbc0dab04c650dc9fb7f313d78645ea33378bef06e7"
-
-[[asset]]
-path = "assets/icons/chevrons-right.svg"
-title = "Lucide icon \"chevrons-right\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/chevrons-right.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "3491f9fe180bf75a058d480f32a0d26ff6a97c6c9a70315c77df7c6b75329d91"
-
-[[asset]]
 path = "assets/icons/circle-check.svg"
 title = "Lucide icon \"circle-check\""
 author = "Lucide Contributors (portions Cole Bemis, Feather)"
@@ -693,17 +616,6 @@ usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "e9d3e3acf4d1c280fcf8092293439dc0a4756a908ceb859de144b12451cd1cb9"
 
 [[asset]]
-path = "assets/icons/cloud-upload.svg"
-title = "Lucide icon \"cloud-upload\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/cloud-upload.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "e45a217268e550c3f9e08a4cbd4b30c24e3994f6f58b481930a3ec43b52f8ef3"
-
-[[asset]]
 path = "assets/icons/cloud.svg"
 title = "Lucide icon \"cloud\""
 author = "Lucide Contributors (portions Cole Bemis, Feather)"
@@ -713,17 +625,6 @@ licence_file = "assets/icons/LICENSE-lucide.txt"
 kind = "icon"
 usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "8f19866847075907fdc862e13354d5c81da2f7ba23c9df354514789f6db4c855"
-
-[[asset]]
-path = "assets/icons/code-xml.svg"
-title = "Lucide icon \"code-xml\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/code-xml.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "9f3b21989a68d727da9a152e08483fa55f9048d476d3a4c94e94b8b88d25c2a8"
 
 [[asset]]
 path = "assets/icons/columns-2.svg"
@@ -790,28 +691,6 @@ licence_file = "assets/icons/LICENSE-lucide.txt"
 kind = "icon"
 usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "9229f7832445ee0caa15eecd6323397a3ebb5c9a124f923212605ad3529d64b8"
-
-[[asset]]
-path = "assets/icons/droplet.svg"
-title = "Lucide icon \"droplet\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/droplet.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "abca4df60f91c605d945c6fe5ee0e6c919b53116d81e268f4581f8841bf24751"
-
-[[asset]]
-path = "assets/icons/ellipsis-vertical.svg"
-title = "Lucide icon \"ellipsis-vertical\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/ellipsis-vertical.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "e2f2969f90b09eba9196fdcb46c7b5c6a37da2852c8dd7dbfa320a2fffac0e96"
 
 [[asset]]
 path = "assets/icons/ellipsis.svg"
@@ -913,17 +792,6 @@ usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "d375ea90750602c62651ca8a83f969b2fd892bab62c35204202cbdb8b69867f9"
 
 [[asset]]
-path = "assets/icons/file-minus.svg"
-title = "Lucide icon \"file-minus\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/file-minus.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "a732f26975a788eb729ed5b0dbc229e73cd628020265feb44d733ef56c14c23d"
-
-[[asset]]
 path = "assets/icons/file-output.svg"
 title = "Lucide icon \"file-output\""
 author = "Lucide Contributors (portions Cole Bemis, Feather)"
@@ -966,17 +834,6 @@ licence_file = "assets/icons/LICENSE-lucide.txt"
 kind = "icon"
 usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "bbcf862a2a4425baa8a5bda39c7f16ec1d283816a3db77baf84f2e8766dd223e"
-
-[[asset]]
-path = "assets/icons/file-scan.svg"
-title = "Lucide icon \"file-scan\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/file-scan.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "af56d89c39dce00d85d90ac67b85a42818b445e63a9b467edeaa6998e529d216"
 
 [[asset]]
 path = "assets/icons/file-search.svg"
@@ -1032,17 +889,6 @@ licence_file = "assets/icons/LICENSE-lucide.txt"
 kind = "icon"
 usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "8d8fa5955c5e9c86a1104936b1288958f77c6c9b68288d4404299e7817e47b66"
-
-[[asset]]
-path = "assets/icons/film.svg"
-title = "Lucide icon \"film\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/film.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "3271f1e5b684d2d60f0370f074fb87d611a138162d27959cb3ec5260eb912771"
 
 [[asset]]
 path = "assets/icons/filter.svg"
@@ -1109,28 +955,6 @@ licence_file = "assets/icons/LICENSE-lucide.txt"
 kind = "icon"
 usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "2cafe78609903c93e1d7c3f9ebfcbcf855b86e9c8b223ef15b4d56d8b52c3809"
-
-[[asset]]
-path = "assets/icons/globe.svg"
-title = "Lucide icon \"globe\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/globe.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "af069c0f6a5d3f9c9eb2ce61d2601ab02976400d85f9d941e8c6c08d8b2ec910"
-
-[[asset]]
-path = "assets/icons/grid-3x3.svg"
-title = "Lucide icon \"grid-3x3\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/grid-3x3.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "6c24155397cf0e751c05931bae68e67e4fe0fd58baeb7b29e9f80c90ed1d5194"
 
 [[asset]]
 path = "assets/icons/hand.svg"
@@ -1241,17 +1065,6 @@ licence_file = "assets/icons/LICENSE-lucide.txt"
 kind = "icon"
 usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "7e86095a7a5937a8388c9a8a8753399062c9f59fe5ddea162d7a6fbdc2e4ddfa"
-
-[[asset]]
-path = "assets/icons/lasso.svg"
-title = "Lucide icon \"lasso\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/lasso.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "6b063dbff366eb4768c9d5cbdf4f03f218b9a807c5c730e87c004690696952fa"
 
 [[asset]]
 path = "assets/icons/layers.svg"
@@ -1397,50 +1210,6 @@ usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "7df41ce0c2b74654d44eee6a639433af6172c9ea82d8ade3eb68f636ec2a9933"
 
 [[asset]]
-path = "assets/icons/message-square.svg"
-title = "Lucide icon \"message-square\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/message-square.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "5812a3be783fdcd73efd2b6026e03131e4b8c6649e7d52aa2dc7bf2e2023a59d"
-
-[[asset]]
-path = "assets/icons/messages-square.svg"
-title = "Lucide icon \"messages-square\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/messages-square.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "eaad0af0779c6ef7816f2468017b3a1aa58338486dc85aa1ba6b276a6b1454b0"
-
-[[asset]]
-path = "assets/icons/mic.svg"
-title = "Lucide icon \"mic\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/mic.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "b1be29238f563ba7e3623ad8e0e0bc51285f17c8bd5d4c37aa5c6b6263e2dbf8"
-
-[[asset]]
-path = "assets/icons/minimize.svg"
-title = "Lucide icon \"minimize\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/minimize.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "fe917d6144a9aed9a5297cb28addb9e582ac591a8f1c498a55aecea9b5c1783e"
-
-[[asset]]
 path = "assets/icons/minimize-2.svg"
 title = "Lucide icon \"minimize-2\""
 author = "Lucide Contributors (portions Cole Bemis, Feather)"
@@ -1507,17 +1276,6 @@ usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "3c1adf655f06c733013ddf00848c3efe905ed70d7b3eba7a6be5e60e65880503"
 
 [[asset]]
-path = "assets/icons/paint-bucket.svg"
-title = "Lucide icon \"paint-bucket\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/paint-bucket.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "456e35597fb306f3e0e97d6e1b091df371cfe546854f2444da8063c89cca7a9c"
-
-[[asset]]
 path = "assets/icons/palette.svg"
 title = "Lucide icon \"palette\""
 author = "Lucide Contributors (portions Cole Bemis, Feather)"
@@ -1538,28 +1296,6 @@ licence_file = "assets/icons/LICENSE-lucide.txt"
 kind = "icon"
 usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "bafd841b89deadd12a571ba9e7d15473751dc51f46e857f7c2ab09a32bd01a79"
-
-[[asset]]
-path = "assets/icons/panel-right.svg"
-title = "Lucide icon \"panel-right\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/panel-right.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "327d197328f9feb1f88c36c9db04e9b00fe717d877459f92fcd892f5e4c349fa"
-
-[[asset]]
-path = "assets/icons/panels-top-left.svg"
-title = "Lucide icon \"panels-top-left\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/panels-top-left.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "321a2a5500f2b814a2e62eb73c4b01dc65c7334fe2e6f7d77517239383e26bb1"
 
 [[asset]]
 path = "assets/icons/paperclip.svg"
@@ -1604,17 +1340,6 @@ licence_file = "assets/icons/LICENSE-lucide.txt"
 kind = "icon"
 usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "a73f639dbe723e9aea20a08ecd48b0e1aa50d7a176c71ac615bdfa720c3b6e86"
-
-[[asset]]
-path = "assets/icons/pipette.svg"
-title = "Lucide icon \"pipette\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/pipette.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "dad18ee11312000529dbfaa6c60fa8da00773eebe91e23633d8f4baca8421cdc"
 
 [[asset]]
 path = "assets/icons/plus.svg"
@@ -1804,17 +1529,6 @@ usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "0ae27fd0f81999229e3127ac96c5b32edfea448e291d509e76212b917551d66b"
 
 [[asset]]
-path = "assets/icons/share-2.svg"
-title = "Lucide icon \"share-2\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/share-2.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "dafcc50305ff3f26016016d6ba8eedae5ae2861c03e4f534423a8220a5eb4056"
-
-[[asset]]
 path = "assets/icons/shield-check.svg"
 title = "Lucide icon \"shield-check\""
 author = "Lucide Contributors (portions Cole Bemis, Feather)"
@@ -1881,17 +1595,6 @@ usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "01f48e7e8757bdcc015741a543530bf97a7815647c5dc20450a2d26501bb94ff"
 
 [[asset]]
-path = "assets/icons/square-dashed.svg"
-title = "Lucide icon \"square-dashed\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/square-dashed.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "bb7958e30d2658e90c3eaaa01d4808fa7a7427bc1ae1744a0fe016ddda258b2a"
-
-[[asset]]
 path = "assets/icons/square.svg"
 title = "Lucide icon \"square\""
 author = "Lucide Contributors (portions Cole Bemis, Feather)"
@@ -1901,17 +1604,6 @@ licence_file = "assets/icons/LICENSE-lucide.txt"
 kind = "icon"
 usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "bd979354f0ab184b95cecf03eedefe40c2dc65830ac6d7e60017b2b25a354acb"
-
-[[asset]]
-path = "assets/icons/squares-subtract.svg"
-title = "Lucide icon \"squares-subtract\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/squares-subtract.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "662139de4397f334617c9fbfbd733e3f0581d4eb375b02ec496de3d45b1e95d8"
 
 [[asset]]
 path = "assets/icons/stamp.svg"
@@ -1969,17 +1661,6 @@ usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "a3955c8b0425fcc5c9ba12d2bdd77fe53b2cd5dd05e7742a56f342e996fb2ef8"
 
 [[asset]]
-path = "assets/icons/swatch-book.svg"
-title = "Lucide icon \"swatch-book\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/swatch-book.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "08e8ae6cead6b01282961d90a891a1d4332495b8fe8df616a17b2b2e249d37cc"
-
-[[asset]]
 path = "assets/icons/tag.svg"
 title = "Lucide icon \"tag\""
 author = "Lucide Contributors (portions Cole Bemis, Feather)"
@@ -2024,17 +1705,6 @@ usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "6758190a97e7cd6b857e0cf244130726265643a5adfffe3df1ace2792e1ecd16"
 
 [[asset]]
-path = "assets/icons/trash.svg"
-title = "Lucide icon \"trash\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/trash.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "27299f69ad7c6272be64b1b8e2d48cbd6dcf0ef0d4f92827a1affa945c91700e"
-
-[[asset]]
 path = "assets/icons/triangle-alert.svg"
 title = "Lucide icon \"triangle-alert\""
 author = "Lucide Contributors (portions Cole Bemis, Feather)"
@@ -2077,39 +1747,6 @@ licence_file = "assets/icons/LICENSE-lucide.txt"
 kind = "icon"
 usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
 sha256 = "efad2edbbd2be6038cc23fd64df2d012fad5cc6460dfbf227cfa3d990e9e897f"
-
-[[asset]]
-path = "assets/icons/user-round.svg"
-title = "Lucide icon \"user-round\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/user-round.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "15811db4bba24c2f413a252a78e5ba885e8fe9234ca0f182d0b6039685dee6b0"
-
-[[asset]]
-path = "assets/icons/wand-sparkles.svg"
-title = "Lucide icon \"wand-sparkles\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/wand-sparkles.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "d73067ff2463118d4f11f9c532e7162be45f96835b966b4fc89977ca47a7317d"
-
-[[asset]]
-path = "assets/icons/wrench.svg"
-title = "Lucide icon \"wrench\""
-author = "Lucide Contributors (portions Cole Bemis, Feather)"
-source = "https://github.com/lucide-icons/lucide (npm lucide-static 1.49.0, icons/wrench.svg)"
-licence = "ISC"
-licence_file = "assets/icons/LICENSE-lucide.txt"
-kind = "icon"
-usage = "UI icon, embedded via crates/ui-egui/src/icon_data.rs"
-sha256 = "5566c462ba64bc343dd7dd0ba3a45c6b916fdd6f20ff8ffc2099551a3443dd21"
 
 [[asset]]
 path = "assets/icons/x.svg"
@@ -3205,7 +2842,7 @@ name = "craft-fonts"
 option = "CRAFT_FONTS_DIR"
 title = "Japanese fonts: BIZ UDPGothic (Regular, Bold), Shippori Mincho, BIZ UDMincho; Arabic font: Noto Sans Arabic"
 author = "The BIZ UDGothic and BIZ UDMincho Project Authors (Morisawa Inc.), The Shippori Mincho Project Authors (FONTDASU), The Noto Project Authors (Noto Sans Arabic)"
-source = "https://github.com/storytold/craft-fonts (pinned by commit in .github/workflows/release.yml)"
+source = "https://github.com/storytold/craft-fonts (pinned by commit in .github/workflows/ci.yml)"
 licence = "OFL-1.1"
 attribution = "https://github.com/storytold/craft-fonts/blob/main/ATTRIBUTION.md"
 kind = "font"
@@ -3242,4 +2879,4 @@ licence = "MIT OR Apache-2.0"
 licence_file = "LICENSE-MIT"
 kind = "translation"
 usage = "Slovene UI strings, compiled in by crates/ui-egui/src/i18n/mod.rs"
-sha256 = "433a1e2e050960552fcfdfa07d7e4c3bd17ceb6ba720e567a02cffd4c31cc1d8"
+sha256 = "6e2cc1090f3d53ae85857b7148e6aa4c997ec4ccb2c44bfcc34a28a3a6cc2583"

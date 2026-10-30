@@ -150,11 +150,11 @@ fn run(
         set(0, None);
         let out = match pdfcraft_engine::export::extract_images(&src, &pages, min_side) {
             Ok(o) => o,
-            Err(e) => return crate::i18n::fmt(tl!("Export stopped: {e}"), &[("e", &e.to_string())]),
+            Err(e) => return crate::i18n::fmt(tl!("Export stopped: {e}"), &[("e", &e)]),
         };
         for (k, img) in out.images.iter().enumerate() {
             if let Err(e) = sink(&pdfcraft_engine::export::image_file_name(&stem, img, k + 1), img.data.clone()) {
-                return crate::i18n::fmt(tl!("Export stopped: {e}"), &[("e", &e.to_string())]);
+                return crate::i18n::fmt(tl!("Export stopped: {e}"), &[("e", &e)]);
             }
         }
         let n = out.images.len();
@@ -180,7 +180,7 @@ fn run(
                 set(k, None);
                 let result = ex.image(*p, dpi, format).and_then(|img| sink(&format!("{stem}_page_{}.{}", p + 1, format.extension()), img));
                 if let Err(e) = result {
-                    return crate::i18n::fmt(tl!("Export stopped: {e}"), &[("e", &e.to_string())]);
+                    return crate::i18n::fmt(tl!("Export stopped: {e}"), &[("e", &e)]);
                 }
             }
             let mut msg = if total == 1 {
@@ -209,7 +209,7 @@ fn run(
                         crate::i18n::fmt(tl!("Exported the text of {n} pages"), &[("n", &total.to_string())])
                     }
                 }
-                Err(e) => crate::i18n::fmt(tl!("Export stopped: {e}"), &[("e", &e.to_string())]),
+                Err(e) => crate::i18n::fmt(tl!("Export stopped: {e}"), &[("e", &e)]),
             }
         }
     }

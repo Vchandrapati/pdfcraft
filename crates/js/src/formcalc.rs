@@ -10,6 +10,7 @@
 //! `Get`, `Post`, `Put` (network) refuse.
 
 use std::collections::{HashMap, HashSet};
+use std::fmt::Write as _;
 use std::rc::Rc;
 
 use crate::Limits;
@@ -2012,7 +2013,7 @@ fn word_num(n: f64, cents: bool) -> String {
         let c = cents_total % 100;
         let dollars = if whole == 1 { "Dollar" } else { "Dollars" };
         let cent = if c == 1 { "Cent" } else { "Cents" };
-        out.push_str(&format!(" {dollars} And {c:02} {cent}"));
+        let _ = write!(out, " {dollars} And {c:02} {cent}");
     }
     out
 }

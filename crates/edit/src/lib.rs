@@ -16,10 +16,12 @@
 
 use pdfcraft_cos::{Dict, Document, Object, Stream};
 use pdfcraft_fonts::{helvetica_width, literal, win_ansi};
+use std::fmt::Write as _;
 
 #[derive(Debug, thiserror::Error, PartialEq)]
 pub enum EditError {
-    #[error("page {0} does not exist")]
+    /// Holds the 0-based index; the message names the 1-based page a user counts (#1550).
+    #[error("page {} does not exist", .0.saturating_add(1))]
     NoSuchPage(usize),
     #[error("{0}")]
     Invalid(String),
@@ -171,8 +173,8 @@ pub struct Context {
     pub date: (i64, u32, u32),
 }
 
-fn n(v: f64) -> String {
-    pdfcraft_content::number(v, 3)
+fn n(v: f64) -> pdfcraft_content::Num {
+    pdfcraft_content::Num(v, 3)
 }
 
 fn rgb(c: Rgb) -> String {
@@ -234,10 +236,6 @@ fn bates_start(template: &str) -> Option<u64> {
     let t = &template[i + 2..];
     let t = &t[..t.find(">>")?];
     t.split('#').nth(2).and_then(|s| s.parse().ok()).or(Some(1))
-}
-
-fn page_list(doc: &Document) -> Vec<pdfcraft_model::Page> {
-    pdfcraft_model::pages(doc)
 }
 
 fn check(pages: &[usize], count: usize) -> Result<(), EditError> {
@@ -351,17 +349,17 @@ fn place_tagged(doc: &mut Document, page: &pdfcraft_model::Page, tag: &str, cont
 /// available as `/PCHelv`. The stream is tagged `tag` (not a mark kind, so Remove never takes
 /// it away); the original content is wrapped in q/Q first. Used for applied redaction boxes.
 pub fn stamp(doc: &mut Document, page: usize, tag: &str, content: Vec<u8>) -> Result<(), EditError> {
-    let all = page_list(doc);
+    let all = pdfcraft_model::pages(doc);
     check(&[page], all.len())?;
     add_resources(doc, &all[page], None, Some(&content))?;
-    let p = page_list(doc).swap_remove(page);
+    let p = all[page].refreshed(doc);
     place_tagged(doc, &p, tag, content, false)
 }
 
 /// Like [`stamp`], for content that brings its own fonts: `build` writes the content and adds the
 /// fonts it names to the page's font resources, which it is given (the OCR text layer).
 pub fn stamp_with(doc: &mut Document, page: usize, tag: &str, build: impl FnOnce(&mut Document, &mut Dict) -> Vec<u8>) -> Result<(), EditError> {
-    let all = page_list(doc);
+    let all = pdfcraft_model::pages(doc);
     check(&[page], all.len())?;
     let p = &all[page];
     let mut res = p.dict.get(b"Resources").map(|r| doc.resolve(r)).and_then(|r| r.as_dict().cloned()).unwrap_or_default();
@@ -370,7 +368,7 @@ pub fn stamp_with(doc: &mut Document, page: usize, tag: &str, build: impl FnOnce
     res.set(b"Font".to_vec(), Object::Dict(fonts));
     // The page gets its own (possibly copied) resources; shared dictionaries stay untouched.
     doc.update_dict(p.obj, |d| d.set(b"Resources".to_vec(), Object::Dict(res)))?;
-    let p = page_list(doc).swap_remove(page);
+    let p = p.refreshed(doc);
     place_tagged(doc, &p, tag, content, false)
 }
 
@@ -419,7 +417,7 @@ fn text_op(x: f64, y: f64, text: &str) -> Vec<u8> {
 /// Add a header and footer to `pages` (0-based). With `replace`, existing headers and footers on
 /// those pages are removed first (Acrobat's Replace Existing).
 pub fn add_header_footer(doc: &mut Document, pages: &[usize], hf: &HeaderFooter, replace: bool, cx: &Context) -> Result<(), EditError> {
-    let all = page_list(doc);
+    let all = pdfcraft_model::pages(doc);
     check(pages, all.len())?;
     if hf.text.iter().all(|t| t.trim().is_empty()) {
         return Err(EditError::Invalid("type the header or footer text first".into()));
@@ -447,7 +445,7 @@ pub fn add_header_footer(doc: &mut Document, pages: &[usize], hf: &HeaderFooter,
     if replace {
         remove_marks(doc, pages, MarkKind::HeaderFooter)?;
     }
-    let all = page_list(doc);
+    let all = pdfcraft_model::pages(doc);
     let count = all.len();
     let bates0 = hf.text.iter().find_map(|t| bates_start(t)).unwrap_or(1);
     for (k, &i) in pages.iter().enumerate() {
@@ -478,7 +476,7 @@ pub fn add_header_footer(doc: &mut Document, pages: &[usize], hf: &HeaderFooter,
                 let y = if header { h - top - size * 0.8 - li as f64 * line_h } else { bottom + (lines.len() - 1 - li) as f64 * line_h };
                 body.extend(text_op(x, y, line));
                 if hf.underline {
-                    underlines.push_str(&format!("{} {} {} {} re f\n", n(x), n(y - size * 0.15), n(tw), n((size * 0.06).max(0.4))));
+                    let _ = writeln!(underlines, "{} {} {} {} re f", n(x), n(y - size * 0.15), n(tw), n((size * 0.06).max(0.4)));
                 }
             }
         }
@@ -490,15 +488,14 @@ pub fn add_header_footer(doc: &mut Document, pages: &[usize], hf: &HeaderFooter,
         content.extend(body);
         content.extend_from_slice(END.as_bytes());
         add_resources(doc, page, None, None)?;
-        let page = &page_list(doc)[i];
-        place(doc, page, MarkKind::HeaderFooter, content, false)?;
+        place(doc, &page.refreshed(doc), MarkKind::HeaderFooter, content, false)?;
     }
     Ok(())
 }
 
 /// Add a text watermark to `pages`.
 pub fn add_watermark(doc: &mut Document, pages: &[usize], wm: &Watermark, replace: bool) -> Result<(), EditError> {
-    let all = page_list(doc);
+    let all = pdfcraft_model::pages(doc);
     check(pages, all.len())?;
     let text = wm.text.trim();
     if text.is_empty() && wm.source.is_none() {
@@ -521,17 +518,16 @@ pub fn add_watermark(doc: &mut Document, pages: &[usize], wm: &Watermark, replac
     let opacity = wm.opacity.clamp(0.0, 1.0);
     let lines: Vec<&str> = text.lines().collect();
     for &i in pages {
-        let page = page_list(doc)[i].clone();
+        let page = all[i].refreshed(doc);
         let (w, h) = page.display_size(doc);
         if let Some(src) = &wm.source {
             let mut content = begin(MarkKind::Watermark, "Watermark", page.view_matrix(doc));
-            content.push_str(&format!("/PCGS{} gs\n", (opacity * 100.0).round() as i64));
+            let _ = writeln!(content, "/PCGS{} gs", (opacity * 100.0).round() as i64);
             content.push_str(&picture(src, (w, h), wm.scale, wm.rotation, wm.offset));
             content.push_str(END);
             add_resources(doc, &page, Some(opacity), None)?;
-            add_picture_resource(doc, &page_list(doc)[i].clone(), src)?;
-            let page = &page_list(doc)[i];
-            place(doc, page, MarkKind::Watermark, content.into_bytes(), wm.behind)?;
+            add_picture_resource(doc, &page.refreshed(doc), src)?;
+            place(doc, &page.refreshed(doc), MarkKind::Watermark, content.into_bytes(), wm.behind)?;
             continue;
         }
         let widest = lines.iter().map(|l| helvetica_width(l, 1.0)).fold(0.0, f64::max).max(0.01);
@@ -563,27 +559,26 @@ pub fn add_watermark(doc: &mut Document, pages: &[usize], wm: &Watermark, replac
         content.extend_from_slice(b"ET\n");
         content.extend_from_slice(END.as_bytes());
         add_resources(doc, &page, Some(opacity), None)?;
-        let page = &page_list(doc)[i];
-        place(doc, page, MarkKind::Watermark, content, wm.behind)?;
+        place(doc, &page.refreshed(doc), MarkKind::Watermark, content, wm.behind)?;
     }
     Ok(())
 }
 
 /// Add a solid-colour background behind the content of `pages`.
 pub fn add_background(doc: &mut Document, pages: &[usize], bg: &Background, replace: bool) -> Result<(), EditError> {
-    let all = page_list(doc);
+    let all = pdfcraft_model::pages(doc);
     check(pages, all.len())?;
     if replace {
         remove_marks(doc, pages, MarkKind::Background)?;
     }
     let opacity = if bg.opacity.is_finite() { bg.opacity.clamp(0.0, 1.0) } else { 1.0 };
     for &i in pages {
-        let page = page_list(doc)[i].clone();
+        let page = all[i].refreshed(doc);
         let (w, h) = page.display_size(doc);
         let mut content = begin(MarkKind::Background, "Background", page.view_matrix(doc));
         match &bg.source {
             Some(src) => {
-                content.push_str(&format!("/PCGS{} gs\n", (opacity * 100.0).round() as i64));
+                let _ = writeln!(content, "/PCGS{} gs", (opacity * 100.0).round() as i64);
                 content.push_str(&picture(src, (w, h), bg.scale, 0.0, [0.0; 2]));
             }
             None => content.push_str(&format!("/PCGS{} gs\n{}\n0 0 {} {} re f\n", (opacity * 100.0).round() as i64, rgb(bg.color), n(w), n(h))),
@@ -591,10 +586,9 @@ pub fn add_background(doc: &mut Document, pages: &[usize], bg: &Background, repl
         content.push_str(END);
         add_resources(doc, &page, Some(opacity), None)?;
         if let Some(src) = &bg.source {
-            add_picture_resource(doc, &page_list(doc)[i].clone(), src)?;
+            add_picture_resource(doc, &page.refreshed(doc), src)?;
         }
-        let page = &page_list(doc)[i];
-        place(doc, page, MarkKind::Background, content.into_bytes(), true)?;
+        place(doc, &page.refreshed(doc), MarkKind::Background, content.into_bytes(), true)?;
     }
     Ok(())
 }
@@ -602,7 +596,7 @@ pub fn add_background(doc: &mut Document, pages: &[usize], bg: &Background, repl
 /// Remove marks of `kind` from `pages`; returns how many were removed. When no mark is left on
 /// top of a page, the q/Q wrapper goes too, restoring the original content list.
 pub fn remove_marks(doc: &mut Document, pages: &[usize], kind: MarkKind) -> Result<usize, EditError> {
-    let all = page_list(doc);
+    let all = pdfcraft_model::pages(doc);
     check(pages, all.len())?;
     let mut removed = 0;
     for &i in pages {

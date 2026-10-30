@@ -154,6 +154,19 @@ fn field_flags_reject_values_outside_the_unsigned_32_bit_domain() {
 /// annotations: the tree walk alone finds nothing, and Acrobat and the browsers fill them anyway.
 /// The pages' widgets are adopted as fields, after the listed tree fields.
 #[test]
+fn a_push_button_goto_names_its_target_page() {
+    let objs: Vec<String> = vec![
+        "<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R] >> >>".into(), // 1
+        "<< /Type /Pages /Kids [3 0 R 4 0 R] /Count 2 /MediaBox [0 0 600 800] >>".into(), // 2
+        "<< /Type /Page /Parent 2 0 R /Annots [5 0 R] >>".into(),                   // 3
+        "<< /Type /Page /Parent 2 0 R >>".into(),                                   // 4
+        "<< /Type /Annot /Subtype /Widget /FT /Btn /Ff 65536 /T (next) /Rect [50 700 150 720] /P 3 0 R /A << /S /GoTo /D [4 0 R /Fit] >> >>".into(), // 5
+    ];
+    let doc = document(&objs);
+    assert_eq!(field(&fields(&doc), "next").button, Some(af::ButtonAction::GoTo(1)));
+}
+
+#[test]
 fn fields_listed_only_on_the_pages_are_adopted() {
     let objs: Vec<String> = vec![
         "<< /Type /Catalog /Pages 2 0 R /AcroForm 4 0 R >>".into(),                 // 1
@@ -1884,4 +1897,82 @@ fn a_literal_off_value_reads_as_off_outside_buttons() {
     add_field(&mut doc, 0, [50.0, 600.0, 70.0, 620.0], &NewField::CheckBox, Some("power")).unwrap();
     set_value(&mut doc, "power", &FieldValue::Check(false)).unwrap();
     assert!(field(&fields(&doc), "power").value.is_empty());
+}
+
+#[test]
+fn page_shapes_preserves_closed_path_rectangle_height() {
+    let shapes = |content: &[u8]| {
+        let mut doc = fixture();
+        let page = pdfcraft_model::pages(&doc)[0].obj;
+        let stream = doc.add(Object::Stream(pdfcraft_cos::Stream::flate(Default::default(), content)));
+        doc.update_dict(page, |d| d.set(b"Contents".to_vec(), Object::Ref(stream))).unwrap();
+        crate::detect::page_shapes(&doc, 0)
+    };
+    let shorthand = shapes(b"50 100 120 40 re S");
+    let outlined = shapes(b"50 100 m 170 100 l 170 140 l 50 140 l h S");
+    assert_eq!(outlined, shorthand, "equivalent rectangle encodings must have equal detection geometry");
+    let fields = crate::detect::detect(&[], &outlined, &[], &[]);
+    assert_eq!(fields.len(), 1);
+    assert_eq!(fields[0].rect, [51.0, 101.0, 169.0, 139.0]);
+}
+
+fn detection_test_shapes(content: &[u8]) -> crate::detect::Shapes {
+    let mut doc = fixture();
+    let page = pdfcraft_model::pages(&doc)[0].obj;
+    let stream = doc.add(Object::Stream(pdfcraft_cos::Stream::flate(Default::default(), content)));
+    doc.update_dict(page, |d| d.set(b"Contents".to_vec(), Object::Ref(stream))).unwrap();
+    crate::detect::page_shapes(&doc, 0)
+}
+
+#[test]
+fn page_shapes_accepts_rectangle_closure_and_paint_variants() {
+    for end in ["h S", "s", "50 100 l S", "f", "F", "f*", "B", "B*", "b", "b*"] {
+        let content = format!("50 100 m 170 100 l 170 140 l 50 140 l {end}");
+        let shapes = detection_test_shapes(content.as_bytes());
+        assert_eq!(shapes.boxes, [[50.0, 100.0, 170.0, 140.0]], "{end}");
+        assert!(shapes.rules.is_empty(), "rectangle edges must not become extra fields: {end}");
+    }
+}
+
+#[test]
+fn page_shapes_rejects_open_diagonal_curved_and_complex_rectangles() {
+    for content in [
+        "50 100 m 170 100 l 170 140 l 50 140 l S",
+        "50 100 m 170 110 l 170 150 l 50 140 l h S",
+        "50 100 m 170 100 l 170 140 l 100 150 80 150 50 140 c h S",
+        "50 100 m 170 100 l 170 140 l h 50 140 l f",
+        "50 100 m 170 100 l 50 100 l 50 140 l h S",
+    ] {
+        assert!(detection_test_shapes(content.as_bytes()).boxes.is_empty(), "{content}");
+    }
+}
+
+#[test]
+fn page_shapes_preserves_multiple_subpaths_and_discards_unpainted_paths() {
+    let shapes = detection_test_shapes(b"50 100 120 40 re 200 100 m 320 100 l 320 140 l 200 140 l h 50 400 m 170 400 l S");
+    assert_eq!(shapes.boxes, [[50.0, 100.0, 170.0, 140.0], [200.0, 100.0, 320.0, 140.0]]);
+    assert_eq!(shapes.rules, [[50.0, 400.0, 170.0, 400.0]]);
+    assert_eq!(detection_test_shapes(b"50 100 m 170 100 l 170 140 l 50 140 l h W n"), crate::detect::Shapes::default());
+    let continued = detection_test_shapes(b"50 100 120 40 re 170 100 l 170 140 l 50 140 l h S");
+    assert_eq!(continued.boxes, [[50.0, 100.0, 170.0, 140.0]], "continuing re must not invent a second box");
+}
+
+#[test]
+fn page_shapes_transforms_path_rectangles_and_preserves_rules() {
+    let scaled = detection_test_shapes(b"q 2 0 0 2 0 0 cm 50 100 m 170 100 l 170 140 l 50 140 l h S Q 10 20 m 100 20 l S");
+    assert_eq!(scaled.boxes, [[100.0, 200.0, 340.0, 280.0]]);
+    assert_eq!(scaled.rules, [[10.0, 20.0, 100.0, 20.0]]);
+    let rotated = detection_test_shapes(b"0 1 -1 0 300 0 cm 50 100 m 170 100 l 170 140 l 50 140 l h S");
+    assert_eq!(rotated.boxes, [[160.0, 50.0, 200.0, 170.0]]);
+}
+
+#[test]
+fn page_shapes_closes_only_last_stroked_subpath_but_all_filled_subpaths() {
+    let paths = "50 100 m 170 100 l 170 140 l 50 140 l 200 100 m 320 100 l 320 140 l 200 140 l";
+    let stroked = detection_test_shapes(format!("{paths} s").as_bytes());
+    assert_eq!(stroked.boxes, [[200.0, 100.0, 320.0, 140.0]]);
+    assert_eq!(stroked.rules, [[50.0, 100.0, 170.0, 100.0], [50.0, 140.0, 170.0, 140.0]]);
+    let filled = detection_test_shapes(format!("{paths} f").as_bytes());
+    assert_eq!(filled.boxes, [[50.0, 100.0, 170.0, 140.0], [200.0, 100.0, 320.0, 140.0]]);
+    assert!(filled.rules.is_empty());
 }

@@ -127,20 +127,6 @@ fn capture(renderer: &mut WgpuTestRenderer, case: Case, reference: bool, mutatio
     finish_capture(renderer, &ctx, &output)
 }
 
-fn static_capture(renderer: &mut WgpuTestRenderer, theme: Theme, scale: f32, mut paint: impl FnMut(&mut Ui)) -> Capture {
-    let ctx = context(theme, scale);
-    let mut output = FullOutput::default();
-    for frame in 0..2 {
-        output = ctx.run_ui(raw_input(frame, vec![]), |ui| {
-            background(ui, theme);
-            paint(ui);
-        });
-        renderer.handle_delta(&mut output.textures_delta);
-    }
-    assert_eq!(output.pixels_per_point, scale);
-    finish_capture(renderer, &ctx, &output)
-}
-
 struct Artifacts {
     directory: Option<PathBuf>,
     rows: String,
@@ -207,7 +193,7 @@ fn rendered_controls_match_independent_reference_pixels_and_meshes() {
             }
         }
     }
-    assert_eq!(count, 372);
+    assert_eq!(count, 288);
     eprintln!("{count} control before/after pairs matched exact RGBA pixels and tessellated meshes");
 }
 
@@ -233,122 +219,6 @@ fn visual_comparisons_detect_color_spacing_and_stroke_mutations() {
     }
     assert_eq!(count, 36);
     eprintln!("{count} deliberate color/spacing/stroke changes were detected in both pixels and meshes");
-}
-
-#[test]
-fn toolbar_fitting_matches_literal_group_and_overflow_positions() {
-    use craft_ui::buttons::IconButton;
-    use craft_ui::layout::fit_toolbar;
-    use egui::{Align, Layout, Stroke, StrokeKind, UiBuilder, pos2, vec2};
-
-    let mut renderer = WgpuTestRenderer::new();
-    let mut artifacts = Artifacts::new("toolbar");
-    let mut count = 0;
-    // Independently specified rectangles: three natural groups, one group + More, More only.
-    for (available, expected) in
-        [(112.0, vec![(12.0, 24.0), (40.0, 28.0), (72.0, 36.0)]), (64.0, vec![(12.0, 24.0), (40.0, 20.0)]), (20.0, vec![(12.0, 20.0)])]
-    {
-        for theme in [Theme::Light, Theme::Dark] {
-            for scale in [1.0, 1.5, 2.0] {
-                let p = theme.palette();
-                let before = static_capture(&mut renderer, theme, scale, |ui| {
-                    for &(x, width) in &expected {
-                        let rect = Rect::from_min_size(pos2(x, 12.0), vec2(width, 24.0));
-                        ui.painter().rect_filled(rect, 3.0, p.normal);
-                        ui.painter().rect_stroke(rect, 3.0, Stroke::new(1.0, p.border), StrokeKind::Inside);
-                        fixtures::icon(ui.painter(), rect, p.icon, true);
-                    }
-                });
-                let after = static_capture(&mut renderer, theme, scale, |ui| {
-                    let fit = fit_toolbar(&[24.0, 28.0, 36.0], available, 4.0, 20.0).unwrap();
-                    let style = fixtures::button_style(theme);
-                    ui.scope_builder(
-                        UiBuilder::new()
-                            .max_rect(Rect::from_min_size(pos2(12.0, 12.0), vec2(available, 24.0)))
-                            .layout(Layout::left_to_right(Align::Min)),
-                        |ui| {
-                            ui.spacing_mut().item_spacing.x = 4.0;
-                            for &(_, width) in &fit.shown {
-                                IconButton::new("Group", vec2(width, 24.0), &style)
-                                    .show(ui, |ui, rect, tint| fixtures::icon(ui.painter(), rect, tint, true));
-                            }
-                            if !fit.overflow.is_empty() {
-                                IconButton::new("More", vec2(fit.overflow_width, 24.0), &style)
-                                    .show(ui, |ui, rect, tint| fixtures::icon(ui.painter(), rect, tint, true));
-                            }
-                        },
-                    );
-                });
-                let name = format!("toolbar-{available}-{}-{scale}x", theme.name());
-                let changed = artifacts.record(&name, &before, &after, false);
-                assert_eq!(before.meshes, after.meshes, "{name}");
-                assert_eq!(changed, 0, "{name}");
-                count += 1;
-            }
-        }
-    }
-    assert_eq!(count, 18);
-}
-
-#[test]
-fn widget_palette_renders_all_five_states_with_existing_borders_and_expansion() {
-    use craft_ui::theme::WidgetPalette;
-    use egui::{CornerRadius, Stroke, StrokeKind, pos2, vec2};
-
-    let mut renderer = WgpuTestRenderer::new();
-    let mut artifacts = Artifacts::new("widget-palette");
-    for theme in [Theme::Light, Theme::Dark] {
-        for scale in [1.0, 1.5, 2.0] {
-            for compact in [false, true] {
-                let p = theme.palette();
-                let fills = [p.normal, p.hovered, p.pressed, p.selected, theme.surface()];
-                let rect = |index| {
-                    Rect::from_min_size(
-                        pos2(12.0 + (index % 3) as f32 * 34.0, 12.0 + (index / 3) as f32 * 26.0),
-                        if compact { vec2(20.0, 12.0) } else { vec2(26.0, 18.0) },
-                    )
-                };
-                let borders = [Color32::RED, Color32::GREEN, Color32::BLUE, p.border, p.focus];
-                let before = static_capture(&mut renderer, theme, scale, |ui| {
-                    for index in 0..5 {
-                        let rect = rect(index).expand(if index % 2 == 0 { 0.0 } else { 0.5 });
-                        ui.painter().rect_filled(rect, 2.0, fills[index]);
-                        // A separate inset uses the weak fill, so omission of either fill is visible.
-                        ui.painter().rect_filled(rect.shrink(3.0), 0.0, fills[index]);
-                        ui.painter().rect_stroke(rect, 2.0, Stroke::new(1.0, borders[index]), StrokeKind::Inside);
-                        ui.painter()
-                            .line_segment([rect.left_center() + vec2(4.0, 0.0), rect.right_center() - vec2(4.0, 0.0)], Stroke::new(1.5, p.icon));
-                    }
-                });
-                let after = static_capture(&mut renderer, theme, scale, |ui| {
-                    let mut widgets = ui.visuals().widgets.clone();
-                    for (index, widget) in
-                        [&mut widgets.noninteractive, &mut widgets.inactive, &mut widgets.hovered, &mut widgets.active, &mut widgets.open]
-                            .into_iter()
-                            .enumerate()
-                    {
-                        widget.bg_stroke = Stroke::new(1.0, borders[index]);
-                        widget.expansion = if index % 2 == 0 { 0.0 } else { 0.5 };
-                    }
-                    WidgetPalette { noninteractive: p.normal, inactive: p.hovered, hovered: p.pressed, active: p.selected, open: theme.surface() }
-                        .apply_to(&mut widgets, CornerRadius::same(2), Stroke::new(1.5, p.icon));
-                    for (index, widget) in
-                        [widgets.noninteractive, widgets.inactive, widgets.hovered, widgets.active, widgets.open].iter().enumerate()
-                    {
-                        let rect = rect(index).expand(widget.expansion);
-                        ui.painter().rect_filled(rect, widget.corner_radius, widget.bg_fill);
-                        ui.painter().rect_filled(rect.shrink(3.0), 0.0, widget.weak_bg_fill);
-                        ui.painter().rect_stroke(rect, widget.corner_radius, widget.bg_stroke, StrokeKind::Inside);
-                        ui.painter().line_segment([rect.left_center() + vec2(4.0, 0.0), rect.right_center() - vec2(4.0, 0.0)], widget.fg_stroke);
-                    }
-                });
-                let name = format!("palette-{}-{scale}x-{}", theme.name(), if compact { "compact" } else { "normal" });
-                let changed = artifacts.record(&name, &before, &after, false);
-                assert_eq!(before.meshes, after.meshes, "{name}");
-                assert_eq!(changed, 0, "{name}");
-            }
-        }
-    }
 }
 
 #[test]

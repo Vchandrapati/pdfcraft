@@ -63,6 +63,30 @@ pub(crate) struct DecodedImageCache {
     pub(crate) preview: bool,
 }
 
+/// PdfCraft patch: a decoded-image cache several interpreter caches share, one per document
+/// across a pool of render threads, so an image is decoded once however many threads draw it
+/// (each thread kept its own copy before: up to seven decodes and seven budgets of pixels).
+#[derive(Clone)]
+pub struct SharedImageCache(pub(crate) DecodedImageCache);
+
+impl SharedImageCache {
+    /// An empty cache.
+    pub fn new() -> Self {
+        Self(DecodedImageCache::new())
+    }
+
+    /// How many bytes of decoded images it holds.
+    pub fn cached_bytes(&self) -> usize {
+        self.0.inner.lock().map(|locked| locked.bytes).unwrap_or(0)
+    }
+}
+
+impl Default for SharedImageCache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// PdfCraft patch: what a decoded image depends on. Two images share an entry only when all of
 /// it is equal:
 /// - where the stream's dictionary lies in the document's data (`dict_at`, `dict_len`): a

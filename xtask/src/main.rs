@@ -3,13 +3,13 @@
 use std::process::ExitCode;
 
 mod assets;
+mod clif;
 mod corpus;
 mod demo_pdf;
 mod fuzz;
 mod gates;
 mod layers;
 mod macos_integration;
-mod parity;
 mod screenshots;
 mod version;
 
@@ -18,19 +18,15 @@ type Command = fn(&[String]) -> anyhow::Result<()>;
 /// Every subcommand: name, one-line summary, entry point.
 const COMMANDS: &[(&str, &str, Command)] = &[
     ("version", "Print the workspace version, or `version set X.Y.Z[-pre]` to change it and refresh Cargo.lock", version_cmd),
-    ("layers", "Enforce the crate dependency layering (plan/architecture.md §3)", gates::layers),
+    ("layers", "Enforce the crate dependency layering (docs/architecture.md, Layers)", gates::layers),
     ("wasm", "cargo check --target wasm32-unknown-unknown for every crate below L8", gates::wasm),
     ("deny", "Dependency licences, bans, sources and advisories (deny.toml; needs cargo-deny)", gates::deny),
+    ("clif", "Debug builds and tests with the Cranelift backend on nightly, in target/clif (`clif build -p pdfcraft`, `clif test`)", clif::clif),
     ("ci", "fmt --check, clippy -D warnings, test, layers, wasm, assets, deny (stops at first failure)", gates::ci),
     ("assets", "Enforce the asset policy (AGENTS.md §1) against ATTRIBUTION.toml; --write regenerates ATTRIBUTION.md", assets::run),
     ("corpus", "Fetch the pinned pdf.js test corpus into corpus/ (git-ignored) and verify it; --update-pin re-records the pin", gates::corpus),
     ("check", "Robustness sweep over corpus/ with pdfcraft-cli; fails on crashes or regressions vs xtask/baselines", gates::check),
     ("fuzz", "Mutation fuzzing of open/render/edit/save in child processes; findings in fuzz-out/ (--time 300)", fuzz::run),
-    (
-        "parity",
-        "Validate parity/acrobat-features.toml against the registry, tools and tests; report progress (--json, --partial); optional, not part of ci",
-        parity::run,
-    ),
     (
         "macos-integration",
         "Report macOS bundle, Quick Look, Spotlight and PDF integration diagnostics without mutating system state",

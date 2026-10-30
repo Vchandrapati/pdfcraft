@@ -72,14 +72,12 @@
 	Home	Ana Sayfa
 	Open	Aç
 	Open a PDF ({key})	Bir PDF aç ({key})
-	Dark gray theme	Koyu gri tema
 	Light theme	Açık tema
 	All tools	Tüm araçlar
 	Read	Oku
 	Convert	Dönüştür
 	E-Sign	E-İmza
 	Print ({key})	Yazdır ({key})
-	Save (M4)	Kaydet (M4)
 	Document properties ({key})	Belge özellikleri ({key})
 	Find tools and commands	Araçları ve komutları bul
 	Fit to height	Yüksekliğe sığdır
@@ -116,11 +114,9 @@
 	Next page	Sonraki sayfa
 	Previous page	Önceki sayfa
 	Current page — type a page number or label (such as iv) and press Enter	Geçerli sayfa — bir sayfa numarası veya etiketi (örneğin iv) yazıp Enter'a basın
-	Use now	Şimdi kullan
 	Open file	Dosya aç
 	Recent	Son kullanılanlar
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	PdfCraft'ta açtığınız dosyalar burada görünür. Açmak için bir PDF'i herhangi bir yere bırakın.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Komut dosyaları dosya veya ağ erişimi olmadan yalıtılmış alanda (sandbox) çalışır. JavaScript kapalıyken bile Acrobat'ın standart biçimlendirme, doğrulama ve hesaplama işlevleri çalışmaya devam eder.
 	Back to all tools	Tüm araçlara geri dön
 	Close panel	Paneli kapat
 	View less	Daha az göster
@@ -258,7 +254,6 @@
 	Export a PDF	PDF'i dışa aktar
 	Export to	Şuraya aktar
 	Microsoft Word (.docx)	Microsoft Word (.docx)
-	Spreadsheet (.xlsx)	Elektronik Tablo (.xlsx)
 	Presentation (.pptx)	Sunum (.pptx)
 	Image (PNG)	Resim (PNG)
 	Export all images	Tüm resimleri dışa aktar
@@ -381,7 +376,6 @@
 	Fix hairlines	Kılcal çizgileri düzelt
 	Measure objects	Nesneleri ölç
 	Measure	Ölç
-	Measuring tool	Ölçüm aracı
 	Geospatial location	Coğrafi konum
 	Compare files	Dosyaları karşılaştır
 	Select files to compare	Karşılaştırılacak dosyaları seç
@@ -719,7 +713,6 @@
 	{verb} Header and Footer	Üstbilgi ve Altbilgi: {verb}
 	{verb} Watermark	Filigran: {verb}
 	{verb} Background	Arka Plan: {verb}
-	Margins (in)	Kenar boşlukları (inç)
 	Left Header Text	Sol Üstbilgi Metni
 	Center Header Text	Orta Üstbilgi Metni
 	Right Header Text	Sağ Üstbilgi Metni
@@ -1174,9 +1167,6 @@
 	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	Metin tanıma yüklü değil: model dosyaları eksik. PdfCraft'ı yeniden yükleyin veya PDFCRAFT_MODELS ortam değişkenini bunları içeren klasöre ayarlayın.
 	Settings	Ayarlar
 	Optional	İsteğe bağlı
-	Planned · {m}	Planlandı · {m}
-	Planned for milestone {m} — open to see what it will include	Kilometre taşı {m} için planlandı — neler içereceğini görmek için açın
-	Coming in milestone {m}. Items marked Ready work today.	Kilometre taşı {m} ile gelecek. Hazır olarak işaretlenen öğeler bugün çalışmaktadır.
 	1 mark	1 işaret
 	{n} marks	{n} işaret
 	Dynamic	Dinamik
@@ -1532,7 +1522,6 @@
 	Sent to {printer}	{printer} yazıcısına gönderildi
 	Sent to {printer}: {msg}	{printer} yazıcısına gönderildi: {msg}
 	Choose a folder for the searchable files	Aranabilir dosyalar için bir klasör seçin
-	Files are combined in this order. Leave Pages empty to take every page.	Dosyalar bu sırada birleştirilir. Tüm sayfaları almak için Sayfalar alanını boş bırakın.
 	Pages of {name} to combine, e.g. 1-3, 6	{name} belgesinin birleştirilecek sayfaları, ör. 1-3, 6
 	Remove {name}	{name} kaldır
 	Add files…	Dosya ekle…
@@ -1607,7 +1596,6 @@
 	watermark	filigran
 	background	arka plan
 	This document isn't password-protected	Bu belge parola korumalı değil
-	Only the document's owner can change its security (open it with the permissions password)	Yalnızca belge sahibi güvenliğini değiştirebilir (izinler parolasıyla açın)
 	The document's security settings don't allow this change	Belgenin güvenlik ayarları bu değişikliğe izin vermiyor
 	Open a document first	Önce bir belge açın
 	Security will be removed when you save	Kaydettiğinizde güvenlik kaldırılacaktır
@@ -1641,7 +1629,6 @@
 	At least one signature has problems.	En az bir imzada sorun var.
 	This document is secured. Some changes are restricted by its security settings.	Bu belge güvenlidir. Bazı değişiklikler güvenlik ayarlarıyla kısıtlanmıştır.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Bu, PdfCraft'ın henüz görüntüleyemediği dinamik bir XFA formudur. Gördüğünüz şey dosyanın yer tutucu sayfasıdır.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Bu form aynı zamanda PdfCraft'ın henüz okumadığı XFA verilerini de içerir. Alanlarını doldurabilirsiniz ancak Acrobat bunun yerine XFA değerlerini gösterebilir.
 	This document contains {n} interactive form fields.	Bu belge {n} etkileşimli form alanı içeriyor.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Bu dosya hasarlıydı ve onarıldı. Kaydetmek onarılan sürümü korur.
 	Dismiss	Kapat
@@ -1673,8 +1660,6 @@
 	Page	Sayfa
 	None	Yok
 	Delete selected fields	Seçili alanları sil
-	Diagnostic details	Tanılama ayrıntıları
-	The operation failed.	İşlem başarısız oldu.
 	no such document	böyle bir belge yok
 	nothing to undo	geri alınacak bir şey yok
 	nothing to redo	yinelenecek bir şey yok
@@ -1825,10 +1810,7 @@
 	Set status Cancelled	İptal Edildi durumunu ayarla
 	Set status Completed	Tamamlandı durumunu ayarla
 	Set status None	Durumu Yok olarak ayarla
-	Set status Unmarked	Durumu İşaretsiz olarak ayarla
-	Save as PDF/A-1b	PDF/A-1b olarak kaydet
 	Save as PDF/A-2b	PDF/A-2b olarak kaydet
-	Save as PDF/A-3b	PDF/A-3b olarak kaydet
 	Fill & Sign: change signature	Doldur ve İmzala: imzayı değiştir
 	Fill & Sign: change initials	Doldur ve İmzala: parafı değiştir
 	Fill & Sign: remove saved signature	Doldur ve İmzala: kayıtlı imzayı kaldır
@@ -1956,7 +1938,6 @@
 	Save these pages as one PDF	Bu sayfaları tek bir PDF olarak kaydet
 	No changes to save	Kaydedilecek değişiklik yok
 	Created a PDF from {n} files; left out: {names}	{n} dosyadan bir PDF oluşturuldu; hariç tutulanlar: {names}
-	Created a PDF from the first {n} files	İlk {n} dosyadan bir PDF oluşturuldu
 	None of those files can be made into a PDF; use PDFs, images or .txt files	Bu dosyaların hiçbiri PDF'e dönüştürülemez; PDF'ler, resimler veya .txt dosyaları kullanın
 	1 file	1 dosya
 	1 file needs attention	1 dosya ilgi gerektiriyor
@@ -1966,18 +1947,14 @@
 	Add folder and subfolders…	Klasör ve alt klasörleri ekle…
 	Add folder…	Klasör ekle…
 	Add open documents	Açık belgeleri ekle
-	Add the PDFs to combine	Birleştirilecek PDF'leri ekleyin
 	Added more than once	Birden fazla kez eklendi
 	All open documents	Tüm açık belgeler
 	Can't be read: {e}	Okunamıyor: {e}
 	Check the pages of {name}: {why}	{name} sayfalarını denetleyin: {why}
 	Click to sort, drag to move the column. Drag its edge to resize it.	Sıralamak için tıklayın, sütunu taşımak için sürükleyin. Yeniden boyutlandırmak için kenarını sürükleyin.
 	Drag to reorder	Yeniden sıralamak için sürükleyin
-	Drop PDFs or folders here, or choose them.	PDF'leri veya klasörleri buraya bırakın ya da seçin.
 	Enter the password that opens it	Açan parolayı girin
 	Enter the permissions password to allow combining	Birleştirmeye izin vermek için izinler parolasını girin
-	Every PDF in the folder	Klasördeki her PDF
-	Every PDF in the folder and the folders inside it	Klasördeki ve içindeki klasörlerdeki her PDF
 	File name	Dosya adı
 	Files are combined from top to bottom. Leave Pages empty to take every page.	Dosyalar yukarıdan aşağıya doğru birleştirilir. Tüm sayfaları almak için Sayfalar alanını boş bırakın.
 	Hide password	Parolayı gizle
@@ -2041,8 +2018,6 @@
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Yalnızca bu belgeye güveniyorsanız devam edin. Bir adres, formuna yazdıklarınız gibi belgeden bilgi taşıyabilir.
 	Print single-sided. Keep the sheets in order, cut at the marks, then stack the piles left to right, top to bottom.	Tek taraflı yazdırın. Sayfaları sırayla tutun, işaretlerden kesin, ardından desteleri soldan sağa, yukarıdan aşağıya istifleyin.
 	Unlocked {n} of {m} files	{n} / {m} dosyanın kilidi açıldı
-	No PDFs found in {folder}	{folder} içinde PDF bulunamadı
-	Added the first {n} PDFs in {folder}	{folder} içindeki ilk {n} PDF eklendi
 comment menu	Edit	Düzenle
 	Undo {action}	{action} geri al
 	Redo {action}	{action} yinele
@@ -2289,3 +2264,5 @@ scroll speed	Fast	Hızlı
 	Quick tools	Hızlı araçlar
 	Merge	Birleştir
 	Reorder	Yeniden sırala
+	Other colour…	Diğer renk…
+	Recent colours	Son kullanılan renkler

@@ -140,6 +140,14 @@ impl<'a> InterpreterCache<'a> {
             decoded_cache: DecodedImageCache::new(),
         }
     }
+
+    /// PdfCraft patch: a cache whose decoded images live in `images`, shared with other caches.
+    pub fn with_image_cache(images: &crate::SharedImageCache) -> Self {
+        Self {
+            decoded_cache: images.0.clone(),
+            ..Self::new()
+        }
+    }
 }
 
 /// A per-page interpretation context that borrows shared data from an [`InterpreterCache`].

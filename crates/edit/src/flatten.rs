@@ -9,18 +9,14 @@
 //! form's field tree.
 
 use std::collections::HashSet;
+use std::fmt::Write as _;
 
 use pdfcraft_cos::{Dict, Document, ObjRef, Object};
 
-use crate::{EditError, check, n, page_list, place_tagged};
+use crate::{EditError, check, n, place_tagged};
 
 const HIDDEN: i64 = 2;
 const NO_VIEW: i64 = 32;
-
-fn nums(doc: &Document, o: Option<&Object>) -> Option<Vec<f64>> {
-    let o = doc.resolve(o?);
-    o.as_array()?.iter().map(|x| doc.resolve(x).as_f64()).collect()
-}
 
 /// The appearance stream to draw for an annotation, if it has one.
 fn appearance(doc: &Document, d: &Dict) -> Option<ObjRef> {
@@ -38,8 +34,8 @@ fn appearance(doc: &Document, d: &Dict) -> Option<ObjRef> {
 
 /// Algorithm 8.1: the matrix that maps the form's bounding box onto the annotation rectangle.
 fn placement(doc: &Document, form: &Dict, rect: [f64; 4]) -> Option<[f64; 6]> {
-    let bbox = nums(doc, form.get(b"BBox")).filter(|b| b.len() == 4)?;
-    let m = nums(doc, form.get(b"Matrix")).filter(|m| m.len() == 6).unwrap_or_else(|| vec![1.0, 0.0, 0.0, 1.0, 0.0, 0.0]);
+    let bbox = doc.numbers(form.get(b"BBox")).filter(|b| b.len() == 4)?;
+    let m = doc.numbers(form.get(b"Matrix")).filter(|m| m.len() == 6).unwrap_or_else(|| vec![1.0, 0.0, 0.0, 1.0, 0.0, 0.0]);
     let pts = [(bbox[0], bbox[1]), (bbox[2], bbox[1]), (bbox[0], bbox[3]), (bbox[2], bbox[3])]
         .map(|(x, y)| (m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]));
     let (x0, x1) = pts.iter().fold((f64::MAX, f64::MIN), |(a, b), p| (a.min(p.0), b.max(p.0)));
@@ -123,7 +119,7 @@ fn undrawn_on(doc: &Document, all: &[pdfcraft_model::Page], pages: &[usize], whi
 }
 
 fn flatten_which(doc: &mut Document, pages: &[usize], which: Which) -> Result<usize, EditError> {
-    let all = page_list(doc);
+    let all = pdfcraft_model::pages(doc);
     check(pages, all.len())?;
     // `?` in an appearance can still be fixed (a field's value, a comment's text are stored as
     // typed, and other viewers redraw form fields); flattened, it would be the page for good.
@@ -168,8 +164,9 @@ fn flatten_which(doc: &mut Document, pages: &[usize], which: Which) -> Result<us
             if flags & (HIDDEN | NO_VIEW) != 0 || appearance(doc, &d).is_some() {
                 continue;
             }
-            // A subtype this build cannot draw only fails here; it is still removed below. (Text
-            // the standard fonts can't draw was refused before anything changed: `undrawn_on`.)
+            // A subtype this build cannot draw fails here and is kept below, so the comment is
+            // not deleted with nothing drawn in its place. (Text the standard fonts can't draw
+            // was refused before anything changed: `undrawn_on`.)
             let _ = pdfcraft_annot::set_appearance(doc, r);
         }
         for (k, entry) in list.iter().enumerate() {
@@ -184,15 +181,23 @@ fn flatten_which(doc: &mut Document, pages: &[usize], which: Which) -> Result<us
             if flags & (HIDDEN | NO_VIEW) != 0 {
                 continue;
             }
-            let rect = nums(doc, d.get(b"Rect")).filter(|r| r.len() == 4).map(|r| [r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])]);
+            let rect = doc.numbers(d.get(b"Rect")).filter(|r| r.len() == 4).map(|r| [r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])]);
+            let mut drew = false;
             if let (Some(ap), Some(rect)) = (appearance(doc, d), rect) {
                 let form = doc.get(ap).as_dict().cloned().unwrap_or_default();
                 if let Some(m) = placement(doc, &form, rect) {
                     let name = xobject_name(&existing_xo, &xobjects, &mut name_n);
-                    content.push_str(&format!("q {} {} {} {} {} {} cm /{name} Do Q\n", n(m[0]), n(m[1]), n(m[2]), n(m[3]), n(m[4]), n(m[5])));
+                    let _ = writeln!(content, "q {} {} {} {} {} {} cm /{name} Do Q", n(m[0]), n(m[1]), n(m[2]), n(m[3]), n(m[4]), n(m[5]));
                     xobjects.set(name.into_bytes(), Object::Ref(ap));
                     drawn += 1;
+                    drew = true;
                 }
+            }
+            // A comment whose ink was not written into the page stays. Removing it would drop
+            // the annotation (a cloudy square this builder cannot draw, for example) with nothing
+            // left on the page. Widgets are form fields: flattening still removes them.
+            if !widget && !drew {
+                continue;
             }
             match entry.as_ref() {
                 Some(r) => {
@@ -234,10 +239,9 @@ fn flatten_which(doc: &mut Document, pages: &[usize], which: Which) -> Result<us
             }
             res.set(b"XObject".to_vec(), Object::Dict(xo));
             doc.update_dict(page.obj, |d| d.set(b"Resources".to_vec(), Object::Dict(res)))?;
-            let page = page_list(doc)[i].clone();
-            place_tagged(doc, &page, "Flattened", content.into_bytes(), false)?;
+            place_tagged(doc, &page.refreshed(doc), "Flattened", content.into_bytes(), false)?;
         }
-        let page_now = page_list(doc)[i].clone();
+        let page_now = page.refreshed(doc);
         match page_now.dict.get(b"Annots").and_then(|a| a.as_ref()).filter(|r| doc.get(*r).as_array().is_some()) {
             Some(r) => doc.set(r, Object::Array(kept)),
             None => doc.update_dict(page.obj, |d| {
@@ -253,7 +257,7 @@ fn flatten_which(doc: &mut Document, pages: &[usize], which: Which) -> Result<us
     // document must still take it out of the form, or other software keeps seeing one (#1470).
     let orphans = matches!(which, Which::Comments { fields: true, .. }) && (0..all.len()).all(|i| pages.contains(&i));
     if !removed_widgets.is_empty() || orphans {
-        let on_page: HashSet<ObjRef> = page_list(doc)
+        let on_page: HashSet<ObjRef> = pdfcraft_model::pages(doc)
             .iter()
             .filter_map(|p| p.dict.get(b"Annots").map(|a| doc.resolve(a)).and_then(|a| a.as_array().cloned()))
             .flatten()

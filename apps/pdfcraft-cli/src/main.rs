@@ -51,6 +51,7 @@ pdfcraft-cli render <file.pdf> --page N [--dpi 96] --out x.png   (.png, .jpg, .t
 pdfcraft-cli text   <file.pdf> [--page N]                  extracted text (pages separated by form feeds)
 pdfcraft-cli edit   <in.pdf> --out out.pdf [--rotate 1,3:90] [--delete 2,4] [--move 5:1]
                       [--insert-blank 1] [--title T] [--author A] [--full]
+                      (options run in order; page numbers refer to the document after the earlier options)
 pdfcraft-cli combine <a.pdf> <b.pdf> … --out combined.pdf
 pdfcraft-cli extract <in.pdf> --pages 1,3,5 --out out.pdf
 pdfcraft-cli split   <in.pdf> (--every N | --before 3,7) [--out-dir DIR]
@@ -328,10 +329,19 @@ fn text(args: &[String]) -> Result<(), CliError> {
     // no pages, and "extract every page" of nothing would print nothing and exit 0 (#132). Ask
     // `inspect` why instead, so a protected file fails the same way `info` does.
     if r.page_count() == 0 {
-        let info = inspect(bytes, password).map_err(|e| format!("text: {e}"))?;
+        let info = inspect(bytes.clone(), password).map_err(|e| format!("text: {e}"))?;
         if !info.pages.is_empty() {
             return Err("text: the document could not be parsed".into());
         }
+    }
+    // Printing the text is copying it, so ask what `text_extract` asks (#1645): without the
+    // permissions password, a document that doesn't allow copying gives no text.
+    let mut session = pdfcraft_engine::Session::new();
+    if let Some(doc) = session.open(path, None, bytes, password).ok().and_then(|id| session.get(id)) {
+        // The engine's hint is about editing in the app; on the command line the way in is
+        // `--password`.
+        doc.check_copying()
+            .map_err(|_| "text: the document's permissions don't allow copying its text; pass the owner password with --password to extract it")?;
     }
     let pages: Vec<usize> = match selected_page {
         Some(page) => vec![page],
@@ -435,6 +445,17 @@ fn edit(args: &[String]) -> Result<(), CliError> {
         };
         if let Some((option, at)) = destination.filter(|(_, at)| *at > n) {
             return Err(format!("{option} {} is past the end: it must be between 1 and {} (the document has {n} pages)", at + 1, n + 1).into());
+        }
+        // Pages count from the document as the earlier options left it, so a page past the end is
+        // reported with its own option and the current page count (#1550).
+        let listed = match &e {
+            Edit::RotatePages { pages, .. } => Some(("--rotate", pages)),
+            Edit::DeletePages { pages } => Some(("--delete", pages)),
+            Edit::MovePages { pages, .. } => Some(("--move", pages)),
+            _ => None,
+        };
+        if let Some((option, bad)) = listed.and_then(|(option, pages)| pages.iter().find(|p| **p >= n).map(|p| (option, *p))) {
+            return Err(format!("{option}: page {} does not exist; after the earlier options the document has {n} pages", bad + 1).into());
         }
         session.apply(id, e).map_err(|e| e.to_string())?;
     }
@@ -607,8 +628,20 @@ fn short(s: &str) -> String {
 fn collect(paths: &[&str]) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let mut stack: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
+    let mut visited = std::collections::HashSet::new();
     while let Some(p) = stack.pop() {
         if p.is_dir() {
+            // Directory aliases and symlink cycles must not scan the same tree repeatedly.
+            let identity = match p.canonicalize() {
+                Ok(identity) => identity,
+                Err(error) => {
+                    eprintln!("{}: could not resolve directory: {error}", p.display());
+                    continue;
+                }
+            };
+            if !visited.insert(identity) {
+                continue;
+            }
             if let Ok(rd) = std::fs::read_dir(&p) {
                 stack.extend(rd.flatten().map(|e| e.path()));
             }

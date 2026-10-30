@@ -906,7 +906,6 @@
 	Document JavaScripts	文档 JavaScript
 	Script Name:	脚本名称：
 	This document has no document-level scripts.	本文档没有文档级脚本。
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	脚本在无文件和网络访问权限的沙盒中运行。关闭 JavaScript 后，Acrobat 的标准格式化、验证和计算函数仍可使用。
 	No form fields were detected	未检测到表单域
 	Detected 1 form field	检测到 1 个表单域
 	Detected {n} form fields	检测到 {n} 个表单域
@@ -1021,7 +1020,6 @@
 	Convert colors	转换颜色
 	Add printer marks	添加打印机标记
 	Fix hairlines	修复细线
-	Measuring tool	测量工具
 	Geospatial location	地理空间位置
 	Select files to compare	选择要比较的文件
 	Action Wizard	操作向导
@@ -1043,10 +1041,7 @@
 	Optional	可选
 	Ready	就绪
 	Available	可用
-	Planned · {m}	计划中 · {m}
-	Planned for milestone {m} — open to see what it will include	计划于 {m} 里程碑——打开查看将包含的内容
 	Optional: needs an AI provider you configure	可选：需要您自行配置 AI 服务商
-	Coming in milestone {m}. Items marked Ready work today.	{m} 里程碑推出。标记为就绪的项目现已可用。
 	1 mark	1 个标记
 	{n} marks	{n} 个标记
 	Back to all tools	返回所有工具
@@ -1103,7 +1098,6 @@
 	Previous page	上一页
 	Current page — type a page number or label (such as iv) and press Enter	当前页 — 输入页码或标签（如 iv）后按 Enter
 	Open a PDF ({key})	打开 PDF ({key})
-	Dark gray theme	深灰色主题
 	Light theme	浅色主题
 	Appearance mode	外观模式
 	Light	浅色
@@ -1726,7 +1720,6 @@
 	At least one signature has problems.	至少一个签名存在问题。
 	This document is secured. Some changes are restricted by its security settings.	本文档已加密。其安全设置限制了部分更改。
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	这是动态 XFA 表单，PdfCraft 暂无法显示。您看到的是文件的占位页面。
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	此表单还包含 XFA 数据，PdfCraft 暂不读取。您可以填写字段，但 Acrobat 可能显示 XFA 值。
 	This document contains {n} interactive form fields.	本文档包含 {n} 个交互式表单域。
 	This file was damaged and has been repaired. Saving keeps the repaired version.	此文件已损坏并已修复。保存将保留修复后的版本。
 	Dismiss	关闭
@@ -1765,7 +1758,6 @@
 	Read	阅读
 	Convert	转换
 	E-Sign	电子签名
-	Use now	立即使用
 	Recent	最近
 	Export to image…	导出为图像…
 	Reduce file size…	减小文件大小…
@@ -1924,7 +1916,6 @@
 	Delete page	删除页面
 	Device colour is used, but there is no PDF/A output intent	使用了设备颜色，但未设置 PDF/A 输出意图
 	DeviceCMYK is used: it needs a CMYK output intent (not added automatically)	使用了 DeviceCMYK：需要设置 CMYK 输出意图（不会自动添加）
-	Diagnostic details	诊断详情
 	Diamond	菱形
 	Double-click	双击
 	Draw your {what} below.	请在下方绘制您的{what}。
@@ -1985,9 +1976,7 @@
 	Rotate image	旋转图像
 	Rotate page	旋转页面
 	Run JavaScript	运行 JavaScript
-	Save as PDF/A-1b	另存为 PDF/A-1b
 	Save as PDF/A-2b	另存为 PDF/A-2b
-	Save as PDF/A-3b	另存为 PDF/A-3b
 	Save as PDF/UA	另存为 PDF/UA
 	Save as PDF/X	另存为 PDF/X
 	Select a file for the stamp	选择图章文件
@@ -1998,10 +1987,8 @@
 	Set status Completed	将状态设为已完成
 	Set status None	将状态设为无
 	Set status Rejected	将状态设为已拒绝
-	Set status Unmarked	将状态设为未标记
 	Set tab order	设置 Tab 键顺序
 	Set the image of {name}	设置 {name} 的图像
-	Spreadsheet (.xlsx)	电子表格（.xlsx）
 	Square	正方形
 	Star	星形
 	The document has additional actions (/AA)	文档包含附加动作（/AA）
@@ -2014,7 +2001,6 @@
 	the document is protected by a password	文档受密码保护
 	The form asks viewers to make appearances (NeedAppearances)	表单要求阅读器生成外观（NeedAppearances）
 	the image is empty	图像为空
-	The operation failed.	操作失败。
 	the password is incorrect	密码不正确
 	the text recognition models are not installed (reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them)	尚未安装文本识别模型（请重新安装 PdfCraft，或将 PDFCRAFT_MODELS 设置为包含这些模型的文件夹）
 	The title in the metadata and the document information differ	元数据与文档信息中的标题不一致
@@ -2089,14 +2075,12 @@
 	Save these pages as one PDF	将这些页面保存为一个 PDF
 	No changes to save	没有要保存的更改
 	Created a PDF from {n} files; left out: {names}	已从 {n} 个文件创建 PDF；已忽略：{names}
-	Created a PDF from the first {n} files	已从前 {n} 个文件创建 PDF
 	None of those files can be made into a PDF; use PDFs, images or .txt files	这些文件都无法转换为 PDF；请使用 PDF、图像或 .txt 文件
 	Choose a PNG or JPEG image (up to 4 MiB). Transparency is preserved.	选择 PNG 或 JPEG 图像（最大 4 MiB）。透明度会保留。
 	Couldn't import the signature image: {e}	无法导入签名图像：{e}
 	Go to page…	转到页面…
 	For page sizes and margins.	用于页面尺寸和边距。
 	The PDF text fonts can't draw “{c}” ({code}). Choose supported text.	PDF 文本字体无法显示“{c}”（{code}）。请选择受支持的文本。
-	The standard fonts can't draw “{c}” ({code}). Only Western European characters can be added as text for now.	标准字体无法显示“{c}”（{code}）。目前只能添加西欧字符作为文本。
 	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	此字段的字体无法显示“{c}”（{code}），PdfCraft 会在该处显示 ?。值已保存，其他 PDF 阅读器会根据该值重新绘制此字段。
 	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	PdfCraft 写入时使用的字体无法显示“{c}”（{code}），因此它在所有 PDF 阅读器中都会显示为 ?。文本已保存。
 	Larger pages	放大页面
@@ -2257,3 +2241,5 @@ scroll speed	Fast	快
 	Quick tools	快捷工具
 	Merge	合并
 	Reorder	重新排序
+	Other colour…	其他颜色…
+	Recent colours	最近使用的颜色

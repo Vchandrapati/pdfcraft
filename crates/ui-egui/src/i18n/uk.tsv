@@ -106,7 +106,6 @@
 	Home	Головна
 	Open	Відкрити
 	Open a PDF ({key})	Відкрити PDF ({key})
-	Dark gray theme	Темно-сіра тема
 	Light theme	Світла тема
 	Appearance mode	Режим вигляду
 	Light	Світлий
@@ -156,11 +155,9 @@
 	Next page	Наступна сторінка
 	Previous page	Попередня сторінка
 	Current page — type a page number or label (such as iv) and press Enter	Поточна сторінка — введіть номер або позначку сторінки (наприклад iv) і натисніть Enter
-	Use now	Використати зараз
 	Open file	Відкрити файл
 	Recent	Нещодавні
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Тут з’являються файли, які ви відкриваєте в PdfCraft. Перетягніть PDF будь-куди, щоб відкрити його.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Сценарії виконуються в ізольованому середовищі без доступу до файлів і мережі. Коли JavaScript вимкнено, стандартні функції форматування, перевірки й обчислення Acrobat усе одно працюють.
 	Back to all tools	Назад до всіх інструментів
 	Close panel	Закрити панель
 	View less	Показати менше
@@ -298,7 +295,6 @@
 	Export a PDF	Експортувати PDF
 	Export to	Експортувати в
 	Microsoft Word (.docx)	Microsoft Word (.docx)
-	Spreadsheet (.xlsx)	Електронна таблиця (.xlsx)
 	Presentation (.pptx)	Презентація (.pptx)
 	Image (PNG)	Зображення (PNG)
 	Export all images	Експортувати всі зображення
@@ -421,7 +417,6 @@
 	Fix hairlines	Виправити надтонкі лінії
 	Measure objects	Виміряти об’єкти
 	Measure	Виміряти
-	Measuring tool	Інструмент вимірювання
 	Geospatial location	Геопросторове розташування
 	Compare files	Порівняти файли
 	Select files to compare	Вибрати файли для порівняння
@@ -761,7 +756,6 @@
 	{verb} Header and Footer	{verb}: колонтитули
 	{verb} Watermark	{verb}: водяний знак
 	{verb} Background	{verb}: тло
-	Margins (in)	Поля (дюйми)
 	Left Header Text	Текст ліворуч у верхньому колонтитулі
 	Center Header Text	Текст по центру у верхньому колонтитулі
 	Right Header Text	Текст праворуч у верхньому колонтитулі
@@ -1214,9 +1208,6 @@
 	Text recognition isn't installed: its model files are missing. Reinstall PdfCraft, or set PDFCRAFT_MODELS to the folder that holds them.	Розпізнавання тексту не встановлено: бракує файлів моделей. Перевстановіть PdfCraft або задайте в PDFCRAFT_MODELS теку, у якій вони лежать.
 	Settings	Налаштування
 	Optional	Необов’язково
-	Planned · {m}	Заплановано · {m}
-	Planned for milestone {m} — open to see what it will include	Заплановано на етап {m} — відкрийте, щоб побачити, що він міститиме
-	Coming in milestone {m}. Items marked Ready work today.	З’явиться на етапі {m}. Елементи з позначкою «Готово» вже працюють.
 	1 mark	1 позначка
 	{n} marks	Позначок: {n}
 	Dynamic	Динамічні
@@ -1741,7 +1732,6 @@
 	At least one signature has problems.	Щонайменше один підпис має проблеми.
 	This document is secured. Some changes are restricted by its security settings.	Цей документ захищено. Деякі зміни обмежено налаштуваннями захисту.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	Це динамічна форма XFA, яку PdfCraft ще не може відобразити. Ви бачите сторінку-заглушку файлу.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Ця форма також містить дані XFA, які PdfCraft ще не читає. Ви можете заповнювати поля, але Acrobat може показувати натомість значення XFA.
 	This document contains {n} interactive form fields.	Цей документ містить інтерактивні поля форми: {n}.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Цей файл було пошкоджено й виправлено. Збереження збереже виправлену версію.
 	Dismiss	Приховати
@@ -1773,8 +1763,6 @@
 	Page	Сторінка
 	None	Немає
 	Delete selected fields	Видалити вибрані поля
-	Diagnostic details	Діагностичні відомості
-	The operation failed.	Операція завершилася невдало.
 	no such document	такого документа немає
 	nothing to undo	немає дій для скасування
 	nothing to redo	немає дій для повторення
@@ -1925,10 +1913,7 @@
 	Set status Cancelled	Задати статус «Скасовано»
 	Set status Completed	Задати статус «Завершено»
 	Set status None	Задати статус «Немає»
-	Set status Unmarked	Задати статус «Без позначки»
-	Save as PDF/A-1b	Зберегти як PDF/A-1b
 	Save as PDF/A-2b	Зберегти як PDF/A-2b
-	Save as PDF/A-3b	Зберегти як PDF/A-3b
 	Fill & Sign: change signature	Заповнення й підпис: змінити підпис
 	Fill & Sign: change initials	Заповнення й підпис: змінити ініціали
 	Fill & Sign: remove saved signature	Заповнення й підпис: видалити збережений підпис
@@ -2032,12 +2017,10 @@
 	Save these pages as one PDF	Зберегти ці сторінки як один PDF
 	No changes to save	Немає змін для збереження
 	Created a PDF from {n} files; left out: {names}	Створено PDF із файлів ({n}); пропущено: {names}
-	Created a PDF from the first {n} files	Створено PDF із перших файлів: {n}
 	Go to page…	Перейти до сторінки…
 	Optimization is already running	Оптимізація вже виконується
 	Optimization cancelled	Оптимізацію скасовано
 	Couldn't optimize the file	Не вдалося оптимізувати файл
-	Files are combined in this order. Leave Pages empty to take every page.	Файли об’єднуються в цьому порядку. Залиште «Сторінки» порожнім, щоб узяти всі сторінки.
 	Portable mode is off: {folder} can't be written ({error}). Settings are kept in your user folder instead.	Портативний режим вимкнено: неможливо записати в {folder} ({error}). Налаштування зберігаються у вашій користувацькій теці.
 	PdfCraft is drawing without a graphics processor, so it may be slow. Updating the graphics driver may help.	PdfCraft малює без графічного процесора, тому може працювати повільно. Оновлення графічного драйвера може допомогти.
 	Show	Показувати
@@ -2147,7 +2130,6 @@ calendar date	December	грудня
 	Reverse closed arrow	Зворотна закрита стрілка
 	Slash	Коса риска
 	The PDF text fonts can't draw “{c}” ({code}). Choose supported text.	Шрифти тексту PDF не можуть відобразити «{c}» ({code}). Виберіть підтримуваний текст.
-	The standard fonts can't draw “{c}” ({code}). Only Western European characters can be added as text for now.	Стандартні шрифти не можуть відобразити «{c}» ({code}). Поки що як текст можна додавати лише західноєвропейські символи.
 	This field's font can't draw “{c}” ({code}), so PdfCraft shows ? in its place. The value is saved, and other PDF viewers redraw the field from it.	Шрифт цього поля не може відобразити «{c}» ({code}), тому PdfCraft показує на його місці ?. Значення збережено, і інші програми перегляду PDF перемалюють поле за ним.
 	The fonts PdfCraft writes with can't draw “{c}” ({code}), so it shows as ? in every PDF viewer. The text is saved.	Шрифти, якими пише PdfCraft, не можуть відобразити «{c}» ({code}), тому в усіх програмах перегляду PDF на його місці буде ?. Текст збережено.
 	Larger pages	Більші сторінки
@@ -2315,3 +2297,5 @@ scroll speed	Fast	Швидка
 	Quick tools	Швидкі інструменти
 	Merge	Об’єднати
 	Reorder	Змінити порядок
+	Other colour…	Інший колір…
+	Recent colours	Нещодавні кольори

@@ -1,4 +1,4 @@
-//! Dependency layering rules (plan/architecture.md §3), enforced by `cargo xtask layers`.
+//! Dependency layering rules (docs/architecture.md, Layers), enforced by `cargo xtask layers`.
 //!
 //! The rule engine works on a small, metadata-independent model so it can be unit-tested;
 //! `from_metadata` builds that model from `cargo metadata`. (Structure shared with PhotoCraft.)
@@ -95,10 +95,10 @@ pub const TABLE: &[(&str, Class)] = &[
     ("xtask", Class::Exempt),
 ];
 
-/// Workspace crates a standalone crate may use (architecture §3 rule 3: `cos → filters, crypt, geom`).
+/// Workspace crates a standalone crate may use (`cos → filters, crypt, geom`).
 pub const STANDALONE_DEPS: &[(&str, &[&str])] = &[("cos", &["filters", "crypt", "geom"])];
 
-/// Allowed same-layer edges (architecture §3 rule 1). `forms → js` is deliberately absent.
+/// Allowed same-layer edges. `forms → js` is deliberately absent.
 pub const SIDEWAYS: &[(&str, &str)] = &[
     ("redact", "edit"),
     ("audit", "edit"),
@@ -173,7 +173,7 @@ impl std::fmt::Display for Violation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Violation::Unregistered { krate } => {
-                write!(f, "{krate}: unknown workspace crate; register it in xtask/src/layers.rs TABLE (plan/architecture.md §3)")
+                write!(f, "{krate}: unknown workspace crate; register it in xtask/src/layers.rs TABLE (docs/architecture.md, Layers)")
             }
             Violation::Upward { krate, dep, from, to, kind } => {
                 write!(f, "{krate} (L{from}) -> {dep} (L{to}) [{kind:?}]: may only depend on lower layers (or an allowed sideways edge)")

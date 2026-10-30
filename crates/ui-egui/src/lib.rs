@@ -1,7 +1,7 @@
 //! pdfcraft-ui-egui — the first PdfCraft shell (L7).
 //!
-//! Layout grammar follows plan/acrobat/02-ui-ux.md §1: tab strip, mode bar, left tool panel,
-//! floating quick-action bar, document area, right panel + right rail with page navigation.
+//! Layout grammar: tab strip, mode bar, left tool panel, floating quick-action bar, document
+//! area, right panel + right rail with page navigation.
 //! Everything here is presentation: documents, rendering and the tool catalogue live in
 //! `pdfcraft-engine`.
 
@@ -454,6 +454,9 @@ pub struct PdfCraftApp {
     /// The user closed the Comments panel, so picking a comment tool leaves it closed until they
     /// open it again (#225). Remembered across restarts.
     pub comments_panel_closed: bool,
+    /// The user closed the right panel, so opening a document leaves it closed instead of
+    /// showing its comments or bookmarks (#1590). Remembered across restarts.
+    pub right_panel_closed: bool,
     pub quick_tool: QuickTool,
     /// The tool to go back to when Space, held for a temporary Hand, is released.
     space_hand: Option<QuickTool>,
@@ -633,6 +636,8 @@ pub struct PdfCraftApp {
     pub recoverable: Vec<RecoveryMeta>,
     recovery_keys: std::collections::HashMap<DocId, String>,
     last_autosave: f64,
+    /// The periodic autosave being written in the background (see `recovery`).
+    autosave_job: recovery::AutosaveJob,
     allow_quit: bool,
     /// Shortcuts pressed while a text field had the keyboard, run on the next frame (see
     /// `registry_shortcuts`).
@@ -686,6 +691,8 @@ pub struct PdfCraftApp {
     pub field_props: Option<prepare::FieldDraft>,
     pub bulk_field_props: Option<bulk_fields::Draft>,
     pub redact_prefs: RedactPrefs,
+    /// The redaction settings Redaction Tool Properties opened with (restored by Cancel).
+    redact_props_before: Option<RedactPrefs>,
     pub redact_pages_draft: RedactPagesDraft,
     pub redact_search: RedactSearchDraft,
     pub hidden_draft: HiddenDraft,
@@ -783,6 +790,7 @@ impl PdfCraftApp {
             right: None,
             right_before_read: None,
             comments_panel_closed: false,
+            right_panel_closed: false,
             quick_tool: QuickTool::Select,
             space_hand: None,
             comment_prefs: Default::default(),
@@ -887,6 +895,7 @@ impl PdfCraftApp {
             recoverable: Vec::new(),
             recovery_keys: Default::default(),
             last_autosave: 0.0,
+            autosave_job: Default::default(),
             allow_quit: false,
             deferred_commands: Vec::new(),
             dialog_seen: None,
@@ -919,6 +928,7 @@ impl PdfCraftApp {
             field_props: None,
             bulk_field_props: None,
             redact_prefs: RedactPrefs::default(),
+            redact_props_before: None,
             redact_pages_draft: RedactPagesDraft::default(),
             redact_search: RedactSearchDraft::default(),
             hidden_draft: HiddenDraft::default(),
@@ -1021,9 +1031,10 @@ impl PdfCraftApp {
         let doc = self.session.get(id).ok_or("the document could not be opened")?;
         let pages = doc.info.pages.len();
         // Acrobat opens straight to the Comments panel when a document has comments.
-        // Read mode opens with the panes closed; the rail still opens them (#932).
+        // Read mode opens with the panes closed; the rail still opens them (#932). A right panel
+        // the user closed stays closed (#1590).
         let opening_mode = self.mode_override.unwrap_or(self.default_mode);
-        if activate && self.right.is_none() && opening_mode != Mode::Read {
+        if activate && self.right.is_none() && !self.right_panel_closed && opening_mode != Mode::Read {
             self.right = if !doc.info.annotations.is_empty() {
                 Some(RightPanel::Comments)
             } else if !doc.info.outline.is_empty() {
@@ -1082,10 +1093,10 @@ impl PdfCraftApp {
         match f.bytes() {
             Ok(bytes) => {
                 if let Err(e) = self.open_bytes(&name, None, bytes) {
-                    self.notify_fmt("Couldn't open {name}: {e}", &[("name", &name), ("e", &e.to_string())]);
+                    self.notify_fmt("Couldn't open {name}: {e}", &[("name", &name), ("e", &e)]);
                 }
             }
-            Err(e) => self.notify_fmt("Couldn't read {name}: {e}", &[("name", &name), ("e", &e.to_string())]),
+            Err(e) => self.notify_fmt("Couldn't read {name}: {e}", &[("name", &name), ("e", &e)]),
         }
     }
 
@@ -1176,20 +1187,22 @@ impl PdfCraftApp {
         let Some(att) = d.info.attachments.get(index).cloned() else { return };
         let data = pdfcraft_render::attachment_data(&d.bytes, d.password.as_deref(), &att);
         match (data, open) {
-            (Err(e), _) => self.notify_fmt("Couldn't read {name}: {e}", &[("name", &att.name), ("e", &e.to_string())]),
+            (Err(e), _) => self.notify_fmt("Couldn't read {name}: {e}", &[("name", &att.name), ("e", &e)]),
             (Ok(bytes), true) => {
                 if let Err(e) = self.open_bytes(&att.name, None, bytes) {
-                    self.notify_fmt("Couldn't open {name}: {e}", &[("name", &att.name), ("e", &e.to_string())]);
+                    self.notify_fmt("Couldn't open {name}: {e}", &[("name", &att.name), ("e", &e)]);
                 }
             }
             (Ok(bytes), false) => {
                 #[cfg(not(target_arch = "wasm32"))]
-                self.ask_one(pickers::Ask::Save(rfd::AsyncFileDialog::new().set_file_name(&att.name)), None, move |app, path| {
-                    match crate::editing::write_atomically(&path.to_string_lossy(), &bytes) {
+                self.ask_one(
+                    pickers::Ask::Save(rfd::AsyncFileDialog::new().set_file_name(crate::files::attachment_file_name(&att.name))),
+                    None,
+                    move |app, path| match crate::editing::write_atomically(&path.to_string_lossy(), &bytes) {
                         Ok(()) => app.notify_fmt("Saved {name}", &[("name", &path.display().to_string())]),
                         Err(e) => app.notify_fmt("Couldn't save: {e}", &[("e", &e.to_string())]),
-                    }
-                });
+                    },
+                );
                 #[cfg(target_arch = "wasm32")]
                 self.notify_fmt("Downloading attachments on the web arrives with M3.10 ({n} bytes ready)", &[("n", &bytes.len().to_string())]);
             }
@@ -1214,7 +1227,7 @@ impl PdfCraftApp {
             return;
         };
         match self.try_open(&p.name, p.path, p.bytes, Some(&pw), p.activate) {
-            Err(e) => self.notify_fmt("Couldn't open {name}: {e}", &[("name", &p.name), ("e", &e.to_string())]),
+            Err(e) => self.notify_fmt("Couldn't open {name}: {e}", &[("name", &p.name), ("e", &e)]),
             // A recovered encrypted document is open once its prompt is gone.
             Ok(()) if self.password_prompt.is_none() => {
                 if let Some(meta) = &p.recovered {
@@ -1282,7 +1295,7 @@ impl PdfCraftApp {
         match std::fs::read(path) {
             Ok(bytes) => {
                 if let Err(e) = self.open_bytes(&name, Some(path.to_string()), bytes) {
-                    self.notify_fmt("Couldn't open {name}: {e}", &[("name", &name), ("e", &e.to_string())]);
+                    self.notify_fmt("Couldn't open {name}: {e}", &[("name", &name), ("e", &e)]);
                 } else if self.views.len() > tabs
                     && let Some(doc) = self.views.last().map(|v| v.id)
                 {
@@ -1372,8 +1385,9 @@ impl PdfCraftApp {
         client
     }
 
-    /// Open a web link in the system browser (a new tab on the web). Only for PdfCraft's own
-    /// links; an address that came from a document goes through [`Self::request_document_url`].
+    /// Open a web link in the system browser (a new tab on the web), with no check of its own. An
+    /// address that came from a document goes through [`Self::request_document_url`] first, and
+    /// reaches this only when the user allows it ([`Self::resolve_pending_link`]).
     pub fn open_url(&mut self, url: &str) {
         if let Some(ctx) = &self.ctx {
             ctx.open_url(egui::OpenUrl::new_tab(url));
@@ -1450,10 +1464,15 @@ impl PdfCraftApp {
         self.desktop_theme_enabled = true;
     }
 
-    /// Draw the running job's progress card and pass a Cancel click on to the job.
+    /// Draw the running job's progress card and pass a Cancel click on to the job. Optimize
+    /// polls after OCR, so while both run the card is the optimization's.
     fn show_progress(&mut self, ctx: &egui::Context) {
         if widgets::progress_notice(self, ctx) {
-            self.cancel_optimize();
+            if self.optimize_run.is_some() {
+                self.cancel_optimize();
+            } else {
+                self.cancel_ocr();
+            }
         }
     }
 
@@ -1610,6 +1629,11 @@ impl PdfCraftApp {
         } else if panel.is_none() && self.right == Some(RightPanel::Comments) {
             self.comments_panel_closed = true;
         }
+        if panel.is_some() {
+            self.right_panel_closed = false;
+        } else if self.right.is_some() {
+            self.right_panel_closed = true;
+        }
         self.right = panel;
         if panel.is_some() {
             self.pending_panel_reveals.push(docking::Panel::Inspector);
@@ -1673,6 +1697,7 @@ impl PdfCraftApp {
             "combine_view": self.combine_view.as_str(),
             "combine_zoom": self.combine_zoom,
             "comments_panel_closed": self.comments_panel_closed,
+            "right_panel_closed": self.right_panel_closed,
         })
         .to_string()
     }
@@ -1730,6 +1755,9 @@ impl PdfCraftApp {
         }
         if let Some(closed) = v["comments_panel_closed"].as_bool() {
             self.comments_panel_closed = closed;
+        }
+        if let Some(closed) = v["right_panel_closed"].as_bool() {
+            self.right_panel_closed = closed;
         }
         if let Some(defaults) = v["default_zoom"].as_str().and_then(|zoom| self.view_defaults.with_zoom(zoom)) {
             self.view_defaults = defaults;
@@ -2186,6 +2214,11 @@ impl PdfCraftApp {
                 }
             }
             self.tool_keys(i, ctx);
+            if self.quick_tool == QuickTool::EditText
+                && let Some(doc) = self.session.get(self.views[i].id).filter(|d| d.allows_modification())
+            {
+                object_ui::nudge_keys(ctx, &mut self.views[i], doc);
+            }
             canvas::shortcuts(&mut self.views[i], ctx);
             self.copy_key(i, ctx);
         }
@@ -2330,7 +2363,7 @@ impl eframe::App for PdfCraftApp {
         let arrived: Vec<(String, Vec<u8>)> = self.inbox.lock().map(|mut q| std::mem::take(&mut *q)).unwrap_or_default();
         for (name, bytes) in arrived {
             if let Err(e) = self.open_bytes(&name, None, bytes) {
-                self.notify_fmt("Couldn't open {name}: {e}", &[("name", &name), ("e", &e.to_string())]);
+                self.notify_fmt("Couldn't open {name}: {e}", &[("name", &name), ("e", &e)]);
             }
         }
         // Don't replace a pending prompt or import. A startup file may need its own password

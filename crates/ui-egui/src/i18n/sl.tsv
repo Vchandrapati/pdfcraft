@@ -147,7 +147,6 @@
 	Add strikethrough	Dodaj prečrtanje
 	Add text	Dodaj besedilo
 	Add text box	Dodaj besedilni okvir
-	Add the PDFs to combine	Dodajte datoteke PDF za združitev
 	Add the choices people pick from.	Dodajte možne izbire.
 	Add the steps this action runs, in order.	Dodajte korake, ki jih to dejanje izvede, po vrstnem redu.
 	Add to Trusted Certificates	Dodaj med zaupanja vredna potrdila
@@ -158,7 +157,6 @@
 	Add {what}	Dodaj {what}
 	Added 1 comment	1 komentar dodan
 	Added more than once	Večkrat dodano
-	Added the first {n} PDFs in {folder}	Dodanih je prvih {n} datotek PDF v mapi {folder}
 	Added {n} comments	Dodanih komentarjev: {n}
 	Adding images arrives on the web with file pickers for images	Dodajanje slik bo v spletni različici na voljo z izbirniki slikovnih datotek
 	Adds invisible text over each word; the page image is not changed	Doda nevidno besedilo čez vsako besedo; slika strani se ne spremeni
@@ -392,7 +390,6 @@
 	Combined {n} files	Združenih datotek: {n}
 	Combo	Kombinirano polje
 	Coming in milestone	Prihaja v fazi
-	Coming in milestone {m}. Items marked Ready work today.	Prihaja v fazi {m}. Elementi, označeni z Omogočeno, delujejo že danes.
 	Command	Ukaz
 	Comment and form data	Podatki komentarjev in obrazcev
 	Comment list	Seznam komentarjev
@@ -488,7 +485,6 @@
 	Create links from URLs	Ustvari povezave iz naslovov URL
 	Create {what}	Ustvari: {what}
 	Created 1 link	Ustvarjena je 1 povezava
-	Created a PDF from the first {n} files	Ustvarjen PDF iz prvih datotek: {n}
 	Created a PDF from {n} files	Ustvarjen PDF iz datotek: {n}
 	Created a PDF from {n} files; left out: {names}	Ustvarjen PDF iz datotek: {n}; izpuščeno: {names}
 	Created a comment summary	Ustvarjen je povzetek komentarjev
@@ -516,7 +512,6 @@
 	Cut {what}	Izreži: {what}
 	DPI sets the printed page size without resampling the image.	DPI določa velikost natisnjene strani brez ponovnega vzorčenja slike.
 	Dark gray	Temno siva
-	Dark gray theme	Temno siva tema
 	Dashed	Črtkano
 	Date	Datum
 	Date field	Polje za datum
@@ -558,7 +553,6 @@
 	Detected {n} form fields	Zaznanih polj obrazca: {n}
 	Device colour is used, but there is no PDF/A output intent	Uporabljena je barva naprave, vendar ni izhodnega namena PDF/A
 	DeviceCMYK is used: it needs a CMYK output intent (not added automatically)	Uporabljen je DeviceCMYK: potrebuje izhodni namen CMYK (ni dodan samodejno)
-	Diagnostic details	Diagnostične podrobnosti
 	Diamond	Romb
 	Digital ID	Digitalna identiteta
 	Digital ID password	Geslo digitalne identitete
@@ -602,7 +596,6 @@
 	Document is not image-only PDF	Dokument ni PDF samo s slikami
 	Document is tagged PDF	Dokument je označen PDF
 	Document language	Jezik dokumenta
-	Document properties (⌘D)	Lastnosti dokumenta (⌘D)
 	Document properties…	Lastnosti dokumenta…
 	Document sanitized. Save to finish: saving rewrites the whole file.	Dokument je očiščen. Shranite za dokončanje: shranjevanje prepiše celotno datoteko.
 	Document structure provides a logical reading order	Struktura dokumenta zagotavlja logičen vrstni red branja
@@ -635,7 +628,6 @@
 	Draw your {what} below.	Spodaj narišite: {what}.
 	Drawing	Risba
 	Drawing scale	Merilo risbe
-	Drop PDFs or folders here, or choose them.	Spustite datoteke PDF ali mape sem ali jih izberite.
 	Drop-down list	Spustni seznam
 	Dropdown Properties	Lastnosti spustnega seznama
 	Duplicate "{name}" onto:	Podvoji „{name}“ na:
@@ -689,8 +681,6 @@
 	Even and Odd Pages	Sode in lihe strani
 	Even pages	Sode strani
 	Even pages only	Samo sode strani
-	Every PDF in the folder	Vsak PDF v mapi
-	Every PDF in the folder and the folders inside it	Vsak PDF v mapi in v mapah v njej
 	Everything on a page must be tagged or marked as an artifact (decoration, headers, footers). Tag the untagged content.	Vse na strani mora biti označeno ali označeno kot artefakt (okras, glave, noge). Označite neoznačeno vsebino.
 	Example: {sample}	Primer: {sample}
 	Exclude images smaller than	Izključi slike, manjše od
@@ -764,7 +754,6 @@
 	File name	Ime datoteke
 	File size	Velikost datoteke
 	Files are combined from top to bottom. Leave Pages empty to take every page.	Datoteke se združijo od zgoraj navzdol. Če pustite Strani prazno, se vzamejo vse strani.
-	Files are combined in this order. Leave Pages empty to take every page.	Datoteke se združijo v tem vrstnem redu. Če pustite Strani prazno, se vzamejo vse strani.
 	Files for {name}	Datoteke za {name}
 	Files you open in PdfCraft appear here. Drop a PDF anywhere to open it.	Datoteke, ki jih odprete v PdfCraftu, se prikažejo tukaj. Spustite PDF kamor koli, da ga odprete.
 	Fill	Izpolni
@@ -1034,7 +1023,6 @@
 	Make scans searchable, then make them smaller.	Skenirane dokumente naredite iskalne, nato pa jih zmanjšajte.
 	Manage embedded index	Upravljaj vdelani indeks
 	March	Marec
-	Margins (in)	Robovi (palci)
 	Mark Page Range	Označi obseg strani
 	Mark all	Označi vse
 	Mark as Confidential	Označi kot zaupno
@@ -1058,7 +1046,6 @@
 	Measure perimeter	Izmeri obseg
 	Measurement information	Podatki o meritvah
 	Measurement snapping	Pripenjanje meritev
-	Measuring tool	Orodje za merjenje
 	Medium	Srednja
 	Merge data files into spreadsheet…	Združi podatkovne datoteke v preglednico…
 	Merged 1 file into {path}	Združena je 1 datoteka v {path}
@@ -1111,10 +1098,8 @@
 	New Action…	Novo dejanje…
 	New blank PDF	Nov prazen PDF
 	New bookmark	Nov zaznamek
-	New bookmark (⌘B)	Nov zaznamek (⌘B)
 	New file:	Nova datoteka:
 	New {tool} comments will look like this one	Novi komentarji ({tool}) bodo videti tako kot ta
-	Next (⌘G)	Naslednja (⌘G)
 	Next / previous match	Naslednje / prejšnje ujemanje
 	Next figure	Naslednja slika
 	Next month	Naslednji mesec
@@ -1122,7 +1107,6 @@
 	Next sheet	Naslednji list
 	Next view	Naslednji pogled
 	No	Ne
-	No PDFs found in {folder}	V mapi {folder} ni najdenih datotek PDF
 	No PDFs in this folder yet	V tej mapi še ni datotek PDF
 	No actions	Ni dejanj
 	No changes allowed	Spremembe niso dovoljene
@@ -1182,12 +1166,10 @@
 	On the web, open or drop an image to convert it	V spletni različici odprite ali spustite sliko za pretvorbo
 	One {f} file per page, named after the document.	Ena datoteka {f} na stran, poimenovana po dokumentu.
 	Only continue if you trust this document. An address can carry information from the document, such as what you typed into its form.	Nadaljujte samo, če temu dokumentu zaupate. Naslov lahko prenaša podatke iz dokumenta, na primer to, kar ste vnesli v njegov obrazec.
-	Only the document's owner can change its security (open it with the permissions password)	Varnostne nastavitve lahko spremeni samo lastnik dokumenta (odprite ga z geslom za dovoljenja)
 	Only the page content changes: links, comments, form fields and bookmarks on the original pages stay.	Spremeni se samo vsebina strani: povezave, komentarji, polja obrazca in zaznamki na izvirnih straneh ostanejo.
 	Opacity	Neprosojnost
 	Open	Odpri
 	Open Recent	Odpri nedavne
-	Open a PDF (⌘O)	Odpri PDF (⌘O)
 	Open a PDF to measure it.	Odprite PDF, da ga izmerite.
 	Open a document first	Najprej odprite dokument
 	Open a web link	Odpri spletno povezavo
@@ -1309,8 +1291,6 @@
 	Plain text in reading order; pages are separated by form feeds.	Navadno besedilo v vrstnem redu branja; strani so ločene z znaki za prelom strani.
 	Planned	Načrtovano
 	Planned for milestone	Načrtovano za mejnik
-	Planned for milestone {m} — open to see what it will include	Načrtovano za mejnik {m} — odprite, da vidite, kaj bo vključeval
-	Planned · {m}	Načrtovano · {m}
 	Points from the page's bottom-left corner.	Točke od spodnjega levega kota strani.
 	Polygon	Mnogokotnik
 	Polyline	Lomljenica
@@ -1333,7 +1313,6 @@
 	Presentation (.pptx)	Predstavitev (.pptx)
 	Preview	Predogled
 	Preview: page {p} of {n}	Predogled: stran {p} od {n}
-	Previous (⇧⌘G)	Prejšnja (⇧⌘G)
 	Previous / next page	Prejšnja / naslednja stran
 	Previous figure	Prejšnja slika
 	Previous month	Prejšnji mesec
@@ -1342,7 +1321,6 @@
 	Previous view	Prejšnji pogled
 	Primary language	Glavni jezik
 	Print	Natisni
-	Print (⌘P)	Natisni (⌘P)
 	Print in grayscale	Natisni v sivinah
 	Print page border	Natisni rob strani
 	Print production	Priprava za tisk
@@ -1509,13 +1487,10 @@
 	Sanitizing removes hidden information from the document: metadata, file attachments, comments, form fields (flattened), hidden text and layers, bookmarks, links, actions and scripts, and private application data.	Čiščenje odstrani skrite podatke iz dokumenta: metapodatke, priponke datotek, komentarje, polja obrazca (sploščena), skrito besedilo in plasti, zaznamke, povezave, dejanja in skripte ter zasebne podatke programov.
 	Save	Shrani
 	Save & Close	Shrani in zapri
-	Save (M4)	Shrani (M4)
 	Save Image As…	Shrani sliko kot…
 	Save as PDF	Shrani kot PDF
 	Save as PDF/A	Shrani kot PDF/A
-	Save as PDF/A-1b	Shrani kot PDF/A-1b
 	Save as PDF/A-2b	Shrani kot PDF/A-2b
-	Save as PDF/A-3b	Shrani kot PDF/A-3b
 	Save as PDF/UA	Shrani kot PDF/UA
 	Save as PDF/X	Shrani kot PDF/X
 	Save as…	Shrani kot…
@@ -1543,7 +1518,6 @@
 	Scripted content must be usable with a keyboard and assistive technology. Check the document's scripts.	Vsebina s skripti mora biti uporabna s tipkovnico in podpornimi tehnologijami. Preverite skripte dokumenta.
 	Scripts	Skripti
 	Scripts run in a sandbox without file or network access. A script that asks to open a web page needs your permission first. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Skripti se izvajajo v peskovniku brez dostopa do datotek ali omrežja. Skript, ki želi odpreti spletno stran, najprej potrebuje vaše dovoljenje. Ko je JavaScript izklopljen, Acrobatove standardne funkcije za oblikovanje, preverjanje in izračun še vedno delujejo.
-	Scripts run in a sandbox without file or network access. With JavaScript off, Acrobat's standard format, validate and calculate functions still work.	Skripti se izvajajo v peskovniku brez dostopa do datotek ali omrežja. Ko je JavaScript izklopljen, Acrobatove standardne funkcije za oblikovanje, preverjanje in izračun še vedno delujejo.
 	Scroll long text	Pomikaj dolgo besedilo
 	Search	Iskanje
 	Search comments	Išči po komentarjih
@@ -1600,7 +1574,6 @@
 	Set status Completed	Nastavi status Končano
 	Set status None	Nastavi status Brez
 	Set status Rejected	Nastavi status Zavrnjeno
-	Set status Unmarked	Nastavi status Neoznačeno
 	Set tab order	Nastavi vrstni red tabulatorja
 	Set the image of {name}	Nastavi sliko za {name}
 	Set to current page ({n})	Nastavi na trenutno stran ({n})
@@ -1668,7 +1641,6 @@
 	Split document	Razdeli dokument
 	Split document…	Razdeli dokument…
 	Split into files…	Razdeli na datoteke…
-	Spreadsheet (.xlsx)	Preglednica (.xlsx)
 	Square	Kvadrat
 	Squiggly	Valovito
 	Squiggly underline	Valovita podčrtava
@@ -1740,7 +1712,6 @@
 	Text language is specified	Jezik besedila je določen
 	Text must contrast enough with its background for people with low vision. Check the colours by eye or with a contrast tool.	Besedilo mora imeti dovolj kontrasta z ozadjem za slabovidne ljudi. Barve preverite na oko ali z orodjem za kontrast.
 	Text recognition is already running	Prepoznavanje besedila že poteka
-	Text recognition isn't installed: its models are missing (run `cargo xtask models`, or set PDFCRAFT_MODELS).	Prepoznavanje besedila ni nameščeno: manjkajo njegovi modeli (zaženite `cargo xtask models` ali nastavite PDFCRAFT_MODELS).
 	Text to find	Besedilo za iskanje
 	Text to insert	Besedilo za vstavljanje
 	That didn't work: an internal error stopped it ({m}).	To ni uspelo: ustavila ga je notranja napaka ({m}).
@@ -1766,7 +1737,6 @@
 	The key is in the Windows certificate store, which may ask to allow PdfCraft to use it.	Ključ je v shrambi potrdil Windows, ki lahko zahteva dovoljenje, da ga PdfCraft uporabi.
 	The key is in the macOS Keychain, which may ask to allow PdfCraft to use it.	Ključ je v macOS Keychain, ki lahko zahteva dovoljenje, da ga PdfCraft uporabi.
 	The newest {n} of {total} PDFs	Najnovejših {n} od {total} datotek PDF
-	The operation failed.	Operacija ni uspela.
 	The pages were extracted but not deleted, because the document changed while you were choosing a folder.	Strani so bile izvlečene, a ne izbrisane, ker se je dokument spremenil, medtem ko ste izbirali mapo.
 	The password is only used to read the file; it isn't saved.	Geslo se uporabi samo za branje datoteke; ni shranjeno.
 	The passwords don't match.	Gesli se ne ujemata.
@@ -1811,7 +1781,6 @@
 	This field is locked. Unlock it to change its properties.	To polje je zaklenjeno. Odklenite ga, da spremenite njegove lastnosti.
 	This file was damaged and has been repaired. Saving keeps the repaired version.	Ta datoteka je bila poškodovana in je bila popravljena. Shranjevanje obdrži popravljeno različico.
 	This folder isn't available right now. It may have moved, or its drive or cloud sync is offline.	Ta mapa trenutno ni na voljo. Morda je bila premaknjena ali pa je njen pogon ali sinhronizacija v oblaku brez povezave.
-	This form also contains XFA data, which PdfCraft doesn't read yet. You can fill its fields, but Acrobat may show the XFA values instead.	Ta obrazec vsebuje tudi podatke XFA, ki jih PdfCraft še ne bere. Polja lahko izpolnite, vendar Acrobat morda prikaže vrednosti XFA.
 	This is a dynamic XFA form, which PdfCraft can't display yet. What you see is the file's placeholder page.	To je dinamični obrazec XFA, ki ga PdfCraft še ne more prikazati. Tisto, kar vidite, je nadomestna stran datoteke.
 	This measurement needs at least {n} points.	Ta meritev potrebuje vsaj točk: {n}.
 	This page couldn't be displayed.\n{e}	Te strani ni bilo mogoče prikazati.\n{e}
@@ -1885,7 +1854,6 @@
 	Use each image's embedded DPI; use 72 DPI when it is absent.	Uporabi vdelani DPI vsake slike; če ga ni, uporabi 72 DPI.
 	Use guided actions	Uporabi vodena dejanja
 	Use image resolution	Uporabi ločljivost slike
-	Use now	Uporabi zdaj
 	Use overlay text	Uporabi besedilo prekrivanja
 	Use print production	Uporabi pripravo za tisk
 	Use system setting	Uporabi sistemsko nastavitev
@@ -1951,10 +1919,8 @@
 	Zip Code + 4	Poštna številka + 4
 	Zoom	Povečava
 	Zoom in	Povečaj
-	Zoom in (⌘+)	Povečaj (⌘+)
 	Zoom in / out (also pinch or ⌘-scroll)	Povečaj / pomanjšaj (tudi s ščipanjem ali ⌘ + pomikanjem)
 	Zoom out	Pomanjšaj
-	Zoom out (⌘−)	Pomanjšaj (⌘−)
 	Zoom to page level	Povečaj na raven strani
 	`{command}` {when}	`{command}` {when}
 	a bookmark cannot be moved inside itself	zaznamka ni mogoče premakniti vase
@@ -2298,3 +2264,5 @@ scroll speed	Fast	Hitro
 	Quick tools	Hitra orodja
 	Merge	Združi
 	Reorder	Preuredi
+	Other colour…	Druga barva…
+	Recent colours	Nedavne barve

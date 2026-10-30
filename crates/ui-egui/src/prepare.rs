@@ -171,15 +171,9 @@ fn screen_rect(xf: &PageXform, info: &DocInfo, page: usize, r: [f64; 4]) -> Rect
     xf.user_rect(info, page, [r[0] as f32, r[1] as f32, r[2] as f32, r[3] as f32])
 }
 
-fn to_user(xf: &PageXform, info: &DocInfo, page: usize, p: Pos2) -> [f64; 2] {
-    let (vx, vy) = xf.screen_to_view(p);
-    let u = info.pages[page].view_to_user(vx, vy);
-    [u[0] as f64, u[1] as f64]
-}
-
 /// A screen rect → a normalised user-space rect.
 fn user_rect(xf: &PageXform, info: &DocInfo, page: usize, r: Rect) -> [f64; 4] {
-    let (a, b) = (to_user(xf, info, page, r.min), to_user(xf, info, page, r.max));
+    let (a, b) = (xf.to_user(info, page, r.min), xf.to_user(info, page, r.max));
     [a[0].min(b[0]), a[1].min(b[1]), a[0].max(b[0]), a[1].max(b[1])]
 }
 
@@ -279,7 +273,7 @@ pub(crate) fn page_input(
                     let rect = user_rect(xf, info, page, r);
                     let rect = if r.width() < 4.0 || r.height() < 4.0 {
                         // A click: the default size, top-left at the pointer.
-                        let at = to_user(xf, info, page, from);
+                        let at = xf.to_user(info, page, from);
                         let (w, h) = tool.default_size();
                         [at[0], at[1] - h, at[0] + w, at[1]]
                     } else {
@@ -319,7 +313,7 @@ pub(crate) fn page_input(
             if resp.clicked() {
                 // A click without a drag: finish at once.
                 prep.grab = None;
-                let at = to_user(xf, info, page, p);
+                let at = xf.to_user(info, page, p);
                 let (w, h) = tool.default_size();
                 let join = prep.selected.as_ref().and_then(|(n, _)| form.iter().find(|f| &f.name == n));
                 prep.select_added = Some(form.len());
@@ -1004,10 +998,7 @@ pub(crate) fn body(ui: &mut egui::Ui, d: &mut FieldDraft, t: &crate::theme::Toke
                             ui.label(label);
                             ui.push_id(("field-color", index), |ui| {
                                 ui.horizontal(|ui| {
-                                    let mut none = slot.is_none();
-                                    if ui.add(widgets::checkbox(&mut none, tl!("No color"))).changed() {
-                                        *slot = if none { None } else { Some([0.0; 3]) };
-                                    }
+                                    crate::comments::no_colour_checkbox(ui, tl!("No color"), slot);
                                     if let Some(c) = crate::comments::swatch_grid(ui, *slot) {
                                         *slot = Some(c);
                                     }

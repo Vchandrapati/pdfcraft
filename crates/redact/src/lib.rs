@@ -1,4 +1,4 @@
-//! Redaction (architecture §11.2, execution plan M8.5–M8.7). Layer L4.
+//! Redaction (execution plan M8.5–M8.7). Layer L4.
 //!
 //! Content is marked for redaction with Redact annotations (§12.5.6.23); `pdfcraft-annot`
 //! creates them. [`apply`] then removes everything under the marks, for good:
@@ -42,7 +42,9 @@ pub enum RedactError {
     /// A mark's overlay text has a character Helvetica can't draw; nothing was redacted.
     #[error("{0}")]
     Undrawable(String),
-    #[error("page {0} has vertical-writing text under a redaction mark, which PdfCraft cannot remove yet, so nothing was changed")]
+    #[error(
+        "page {0} has vertical-writing text while a redaction mark is pending, and PdfCraft cannot tell whether that text lies under the mark yet, so nothing was changed"
+    )]
     VerticalText(usize),
     #[error(transparent)]
     Edit(#[from] pdfcraft_edit::EditError),
@@ -212,12 +214,14 @@ fn overlay_content(marks: &[&Mark]) -> Vec<u8> {
     };
     let mut c: Vec<u8> = Vec::new();
     for m in marks {
-        let Some(fill) = m.fill else { continue };
-        c.extend(format!("q {} {} {} rg\n", n(fill[0]), n(fill[1]), n(fill[2])).bytes());
-        for r in &m.rects {
-            c.extend(format!("{} {} {} {} re f\n", n(r[0]), n(r[1]), n(r[2] - r[0]), n(r[3] - r[1])).bytes());
+        // The box ("No colour": none, the area is just left empty); the overlay text either way.
+        if let Some(fill) = m.fill {
+            c.extend(format!("q {} {} {} rg\n", n(fill[0]), n(fill[1]), n(fill[2])).bytes());
+            for r in &m.rects {
+                c.extend(format!("{} {} {} {} re f\n", n(r[0]), n(r[1]), n(r[2] - r[0]), n(r[3] - r[1])).bytes());
+            }
+            c.extend_from_slice(b"Q\n");
         }
-        c.extend_from_slice(b"Q\n");
         if m.overlay.is_empty() {
             continue;
         }
@@ -387,6 +391,8 @@ pub fn apply(doc: &mut Document, pages: Option<&[usize]>) -> Result<Report, Reda
     report.pages = by_page.len();
     localize_resources(doc, &by_page)?;
     let mut doomed_fields: Vec<String> = Vec::new();
+    // The original image and form XObjects the rewrite drops or replaces, on any page.
+    let mut doomed_xobjects: Vec<ObjRef> = Vec::new();
     let widget_owner: Vec<(ObjRef, String)> =
         pdfcraft_forms::fields(doc).into_iter().flat_map(|f| f.widgets.iter().map(|w| (w.obj, f.name.clone())).collect::<Vec<_>>()).collect();
 
@@ -403,12 +409,14 @@ pub fn apply(doc: &mut Document, pages: Option<&[usize]>) -> Result<Report, Reda
             process(doc, &mut scope, &data, &resources, pdfcraft_content::Matrix::IDENTITY)
         };
         // Fail closed: the interpreter lays vertical-writing text out horizontally, so it cannot
-        // place such glyphs under a mark or confirm they are gone. Rather than report success and
-        // ship the text under the box, refuse the whole operation (the caller keeps the previous
-        // document). Full vertical-text removal is a future enhancement.
+        // tell whether those glyphs lie under a mark. Rather than report success and possibly
+        // leave the text in place, refuse the whole operation (the caller keeps the previous
+        // document). The error does not claim the text was under the mark. Full vertical-text
+        // removal is a future enhancement.
         if out.vertical {
             return Err(RedactError::VerticalText(pi + 1));
         }
+        doomed_xobjects.extend_from_slice(&out.doomed);
         let mut new_list = list.clone();
         let mut changed = false;
         for (i, new) in out.streams.into_iter().enumerate() {
@@ -558,6 +566,10 @@ pub fn apply(doc: &mut Document, pages: Option<&[usize]>) -> Result<Report, Reda
             pdfcraft_edit::stamp(doc, pi, "Redaction", content)?;
         }
     }
+
+    // A removed image or form must not stay reachable through another resource dictionary (an
+    // inherited or shared /Resources): a full save keeps whatever is still referenced.
+    interp::unlink_doomed(doc, &doomed_xobjects)?;
 
     // 5. Verify: nothing readable may remain under a region.
     let mut residue = 0;

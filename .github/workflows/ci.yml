@@ -23,14 +23,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # No macOS on PRs, main or nightly: the org's 5 macOS slots are kept for release builds,
-        # and release.yml builds macOS (a failing release is fixed and rebuilt).
+        # No macOS runner: macOS is built and tested locally.
         os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The optional craft-fonts build input (Japanese fonts), so the Japanese font tests run on
-      # Linux; Windows tests the build without it. See craftrules standards/fonts.md.
+      # Linux; Windows tests the build without it (AGENTS.md §1.4).
       - name: Check out craft-fonts (Linux)
         if: runner.os == 'Linux'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

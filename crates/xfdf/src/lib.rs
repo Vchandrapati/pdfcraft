@@ -205,8 +205,8 @@ fn esc(s: &str) -> String {
     o
 }
 
-fn n(v: f64) -> String {
-    pdfcraft_content::number(v, 4)
+fn n(v: f64) -> pdfcraft_content::Num {
+    pdfcraft_content::Num(v, 4)
 }
 
 fn hex(c: &[f64]) -> Option<String> {
@@ -320,7 +320,7 @@ fn xfdf_annots(doc: &Document, out: &mut String) {
             }
             let quads = nums_of(doc, d.get(b"QuadPoints"));
             if !quads.is_empty() {
-                let _ = write!(attrs, " coords=\"{}\"", quads.iter().map(|v| n(*v)).collect::<Vec<_>>().join(","));
+                let _ = write!(attrs, " coords=\"{}\"", quads.iter().map(|v| n(*v).to_string()).collect::<Vec<_>>().join(","));
             }
             let l = nums_of(doc, d.get(b"L"));
             if l.len() == 4 {
@@ -335,10 +335,10 @@ fn xfdf_annots(doc: &Document, out: &mut String) {
             // A callout: its leader path, text-box inset, intent and (single-name) line ending.
             let cl = nums_of(doc, d.get(b"CL"));
             if cl.len() == 4 || cl.len() == 6 {
-                let _ = write!(attrs, " callout=\"{}\"", cl.iter().map(|v| n(*v)).collect::<Vec<_>>().join(","));
+                let _ = write!(attrs, " callout=\"{}\"", cl.iter().map(|v| n(*v).to_string()).collect::<Vec<_>>().join(","));
                 let rd = nums_of(doc, d.get(b"RD"));
                 if rd.len() == 4 {
-                    let _ = write!(attrs, " fringe=\"{}\"", rd.iter().map(|v| n(*v)).collect::<Vec<_>>().join(","));
+                    let _ = write!(attrs, " fringe=\"{}\"", rd.iter().map(|v| n(*v).to_string()).collect::<Vec<_>>().join(","));
                 }
                 if let Some(it) = d.get(b"IT").map(|o| doc.resolve(o)).and_then(|o| o.as_name().map(|x| String::from_utf8_lossy(x).into_owned())) {
                     let _ = write!(attrs, " intent=\"{}\"", esc(&it));
@@ -1094,10 +1094,11 @@ fn import_table(doc: &mut Document, text: &str) -> Result<Report, DataError> {
         tab_delimited(t)?
     } else {
         // CSV with quotes: a quoted value may hold commas, doubled quotes and line breaks.
-        let mut records: Vec<Vec<String>> = Vec::new();
+        let mut records: Vec<(Vec<String>, bool)> = Vec::new();
         let mut record = Vec::new();
         let mut cur = String::new();
         let mut quoted = false;
+        let mut has_quotes = false;
         let mut chars = t.chars().peekable();
         while let Some(c) = chars.next() {
             match c {
@@ -1105,20 +1106,25 @@ fn import_table(doc: &mut Document, text: &str) -> Result<Report, DataError> {
                     cur.push('"');
                     chars.next();
                 }
-                '"' => quoted = !quoted,
+                '"' => {
+                    quoted = !quoted;
+                    has_quotes = true;
+                }
                 ',' if !quoted => record.push(std::mem::take(&mut cur)),
                 '\r' if !quoted && chars.peek() == Some(&'\n') => {}
                 '\n' if !quoted => {
                     record.push(std::mem::take(&mut cur));
-                    records.push(std::mem::take(&mut record));
+                    records.push((std::mem::take(&mut record), std::mem::take(&mut has_quotes)));
                 }
                 c => cur.push(c),
             }
         }
         record.push(cur);
-        records.push(record);
-        // Blank lines (such as the one a trailing line break leaves) are not records.
-        let mut records = records.into_iter().filter(|r| !matches!(r.as_slice(), [only] if only.is_empty()));
+        records.push((record, has_quotes));
+        // Blank lines (such as the one a trailing line break leaves) are not records, but a
+        // quoted empty value is a record that clears a field.
+        let mut records =
+            records.into_iter().filter(|(r, has_quotes)| *has_quotes || !matches!(r.as_slice(), [only] if only.is_empty())).map(|(r, _)| r);
         let (Some(head), Some(row)) = (records.next(), records.next()) else { return Err(DataError::UnknownFormat) };
         // Text exported from a one-field form has no tab to show for it (#1321). CSV quotes a
         // value with a comma, so one name over several unquoted cells is that text, not CSV.

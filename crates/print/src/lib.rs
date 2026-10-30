@@ -19,6 +19,7 @@
 
 use pdfcraft_content::Matrix;
 use pdfcraft_cos::{Dict, Document, ObjRef, Object, SaveOptions, Stream, write_full};
+use std::fmt::Write as _;
 
 pub mod range;
 pub mod spool;
@@ -162,6 +163,9 @@ pub enum Layout {
     Multiple {
         cols: usize,
         rows: usize,
+        /// Source pages on each sheet, at most `cols × rows`: three per sheet uses a 2 × 2 grid
+        /// with one cell left blank.
+        per_sheet: usize,
         order: PageOrder,
         border: bool,
         auto_rotate: bool,
@@ -198,7 +202,7 @@ impl Layout {
                 (c, n.div_ceil(c).max(1))
             }
         };
-        Layout::Multiple { cols, rows, order: PageOrder::Horizontal, border: false, auto_rotate: true }
+        Layout::Multiple { cols, rows, per_sheet: per_sheet.max(1), order: PageOrder::Horizontal, border: false, auto_rotate: true }
     }
 }
 
@@ -343,11 +347,16 @@ pub fn layout(sizes: &[(f64, f64)], settings: &Settings) -> Result<Vec<Sheet>, P
                 sheets.push(Sheet { size, placed: vec![place_in(p, d, [0.0, 0.0, size.0, size.1], s, false)], ..Sheet::default() });
             }
         }
-        Layout::Multiple { cols, rows, order, border, auto_rotate } => {
+        Layout::Multiple { cols, rows, per_sheet, order, border, auto_rotate } => {
             let cells = cols.checked_mul(rows).filter(|&n| n > 0 && n <= 256);
             let Some(cells) = cells else {
                 return Err(PrintError::Invalid("invalid number of pages per sheet".into()));
             };
+            // The grid can have more cells than the pages asked for on each sheet; the rest stay blank.
+            let per_sheet = per_sheet.min(cells);
+            if per_sheet == 0 {
+                return Err(PrintError::Invalid("invalid number of pages per sheet".into()));
+            }
             // A grid with more columns than rows wants a landscape sheet, and the reverse.
             let first = pages.first().and_then(|&p| sizes.get(p)).copied().ok_or(PrintError::NoPages)?;
             let page_landscape = first.0 > first.1;
@@ -366,7 +375,7 @@ pub fn layout(sizes: &[(f64, f64)], settings: &Settings) -> Result<Vec<Sheet>, P
             if cw <= 0.0 || ch <= 0.0 {
                 return Err(PrintError::Invalid("the page grid does not fit on the paper".into()));
             }
-            let sheet_count = pages.len().div_ceil(cells);
+            let sheet_count = pages.len().div_ceil(per_sheet);
             for sheet_index in 0..sheet_count {
                 let mut sheet = Sheet { size, ..Sheet::default() };
                 if order == PageOrder::CutStack {
@@ -381,13 +390,13 @@ pub fn layout(sizes: &[(f64, f64)], settings: &Settings) -> Result<Vec<Sheet>, P
                         sheet.lines.extend([[MARGIN, y, MARGIN + 8.0, y], [size.0 - MARGIN - 8.0, y, size.0 - MARGIN, y]]);
                     }
                 }
-                for k in 0..cells {
+                for k in 0..per_sheet {
                     // A cell's pile gets consecutive pages. Missing pages leave blank cells,
                     // rather than shifting later piles left on the final sheets.
                     let index = if order == PageOrder::CutStack {
                         k.checked_mul(sheet_count).and_then(|n| n.checked_add(sheet_index))
                     } else {
-                        sheet_index.checked_mul(cells).and_then(|n| n.checked_add(k))
+                        sheet_index.checked_mul(per_sheet).and_then(|n| n.checked_add(k))
                     };
                     let Some(p) = index.and_then(|i| pages.get(i)).copied() else { continue };
 
@@ -498,8 +507,8 @@ pub fn layout(sizes: &[(f64, f64)], settings: &Settings) -> Result<Vec<Sheet>, P
     Ok(sheets)
 }
 
-fn n(v: f64) -> String {
-    pdfcraft_content::number(v, 4)
+fn n(v: f64) -> pdfcraft_content::Num {
+    pdfcraft_content::Num(v, 4)
 }
 
 fn decoded_contents(doc: &Document, page: &Dict) -> Vec<u8> {
@@ -680,10 +689,10 @@ pub fn impose(src: &Document, settings: &Settings) -> Result<Vec<u8>, PrintError
         if !sheet.borders.is_empty() || !sheet.lines.is_empty() {
             c.push_str("q 0 G 0.5 w\n");
             for r in &sheet.borders {
-                c.push_str(&format!("{} {} {} {} re S\n", n(r[0]), n(r[1]), n(r[2] - r[0]), n(r[3] - r[1])));
+                let _ = writeln!(c, "{} {} {} {} re S", n(r[0]), n(r[1]), n(r[2] - r[0]), n(r[3] - r[1]));
             }
             for l in &sheet.lines {
-                c.push_str(&format!("{} {} m {} {} l S\n", n(l[0]), n(l[1]), n(l[2]), n(l[3])));
+                let _ = writeln!(c, "{} {} m {} {} l S", n(l[0]), n(l[1]), n(l[2]), n(l[3]));
             }
             c.push_str("Q\n");
         }

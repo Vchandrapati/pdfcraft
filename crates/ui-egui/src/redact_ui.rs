@@ -109,12 +109,6 @@ pub(crate) const MAX_WORD_LIST_BYTES: usize = 1 << 20;
 /// A box being drawn with the Redact tool: (page, start).
 pub type AreaDrag = Option<(usize, Pos2)>;
 
-fn to_user(xf: &PageXform, info: &DocInfo, page: usize, p: Pos2) -> [f64; 2] {
-    let (vx, vy) = xf.screen_to_view(p);
-    let u = info.pages[page].view_to_user(vx, vy);
-    [u[0] as f64, u[1] as f64]
-}
-
 /// Redact tool input on a page. Presses on text are left to text selection (the selection is
 /// marked when it ends, see [`after_text`]); presses elsewhere draw a box. Returns `true` when
 /// the gesture is a box.
@@ -136,7 +130,7 @@ pub(crate) fn page_input(
             let end = pointer.unwrap_or(start);
             let r = Rect::from_two_pos(start, end).intersect(xf.rect);
             if r.width() >= 3.0 && r.height() >= 3.0 {
-                let (a, b) = (to_user(xf, info, page, r.min), to_user(xf, info, page, r.max));
+                let (a, b) = (xf.to_user(info, page, r.min), xf.to_user(info, page, r.max));
                 view.pending_redaction = Some((page, vec![rect_quad([a[0], a[1], b[0], b[1]])]));
             }
         }
@@ -319,10 +313,7 @@ pub(crate) fn props_body(ui: &mut egui::Ui, d: &mut RedactPrefs, _t: &Tokens) ->
     egui::Grid::new("redact-props").num_columns(2).spacing([12.0, 10.0]).show(ui, |ui| {
         ui.label(tl!("Redacted area fill colour:"));
         ui.horizontal(|ui| {
-            let mut none = d.fill.is_none();
-            if ui.add(widgets::checkbox(&mut none, tl!("No colour"))).changed() {
-                d.fill = if none { None } else { Some([0.0, 0.0, 0.0]) };
-            }
+            crate::comments::no_colour_checkbox(ui, tl!("No colour"), &mut d.fill);
         });
         ui.end_row();
         ui.label("");

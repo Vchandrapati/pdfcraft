@@ -227,3 +227,88 @@ fn self_drawing_form_fails_the_audit() {
     let result = audit_redactions(&open(b.build()));
     assert!(matches!(result, Err(crate::AuditError::TooDeep)), "{result:?}");
 }
+
+#[test]
+fn rectangle_drawn_as_a_path_covers_text_like_re() {
+    // The same cover as `re`, built from `m`/`l` (closed with `h`, a repeated start point, or
+    // only by the fill itself), or in a scaled user space: all are faux redactions (#1510).
+    let covers: [&[u8]; 5] = [
+        b"0 g\n100 688 220 32 re f\n",
+        b"0 g\n100 688 m 320 688 l 320 720 l 100 720 l h f\n",
+        b"0 g\n100 688 m 320 688 l 320 720 l 100 720 l 100 688 l h f\n",
+        b"0 g\n100 688 m 100 720 l 320 720 l 320 688 l f\n",
+        b"0 g\nq 2 0 0 2 0 0 cm 50 344 m 160 344 l 160 360 l 50 360 l h f Q\n",
+    ];
+    for cover in covers {
+        let mut content = b"BT /F1 24 Tf 100 700 Td (SECRET DATA 123) Tj ET\n".to_vec();
+        content.extend_from_slice(cover);
+        let findings = audit_redactions(&open(one_page(&content, ""))).expect("audit must run");
+        assert_eq!(findings.len(), 1, "{:?}: {findings:?}", String::from_utf8_lossy(cover));
+        assert_eq!(findings[0].kind, FindingKind::CoveredText);
+        assert_eq!(findings[0].rect, [100.0, 688.0, 320.0, 720.0]);
+        assert_eq!(findings[0].covered_text, "SECRET DATA 123");
+    }
+}
+
+#[test]
+fn non_rectangular_path_is_not_a_cover() {
+    // Each path's bounding box covers the text, but the shape itself does not hide it all.
+    let covers: [&[u8]; 5] = [
+        // A triangle.
+        b"0 g\n100 688 m 320 688 l 320 720 l h f\n",
+        // A triangle, then a line from its start point after `h`: not a fourth corner.
+        b"0 g\n100 688 m 320 688 l 320 720 l h 100 720 l f\n",
+        // A trapezoid: four corners, one slanted side.
+        b"0 g\n100 688 m 320 688 l 320 720 l 140 720 l h f\n",
+        // A rectangle rotated 5 degrees about the text by the CTM.
+        b"0 g\nq 0.9962 0.0872 -0.0872 0.9962 62.15 -15.63 cm 100 688 m 320 688 l 320 720 l 100 720 l h f Q\n",
+        // Two subpaths filled together: even-odd leaves the inner one as a hole.
+        b"0 g\n90 680 m 330 680 l 330 730 l 90 730 l h 100 688 m 320 688 l 320 720 l 100 720 l h f*\n",
+    ];
+    for cover in covers {
+        let mut content = b"BT /F1 24 Tf 100 700 Td (SECRET DATA 123) Tj ET\n".to_vec();
+        content.extend_from_slice(cover);
+        let findings = audit_redactions(&open(one_page(&content, ""))).expect("audit must run");
+        assert!(findings.is_empty(), "{:?}: {findings:?}", String::from_utf8_lossy(cover));
+    }
+}
+
+/// A page whose resources name colour spaces: `/Gray1` an ICC-based space with one component,
+/// `/Spot` a separation.
+fn page_with_colour_spaces(content: &[u8]) -> Vec<u8> {
+    let mut b = Builder::new();
+    b.add("<< /Type /Catalog /Pages 2 0 R >>");
+    b.add("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+    b.add(
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> /ColorSpace << /Gray1 6 0 R /Spot 7 0 R >> >> >>",
+    );
+    b.add_stream(content);
+    b.add(FONT);
+    b.add("[/ICCBased 8 0 R]");
+    b.add("[/Separation /Spot /DeviceGray << /FunctionType 2 /Domain [0 1] /C0 [1] /C1 [0] /N 1 >>]");
+    b.add_stream_with(b"icc", "/N 1");
+    b.build()
+}
+
+/// Colours set through a colour space (`cs` then `sc`/`scn`) count: a white rectangle painted in
+/// a one-component ICC space or in DeviceRGB over text is a background, not a cover, while a
+/// black one is. A colour in a space the audit doesn't model (a separation) is still treated as
+/// a possible cover rather than skipped.
+#[test]
+fn colours_set_through_a_colour_space_decide_whether_a_rectangle_covers() {
+    let text = b"BT /F1 24 Tf 100 700 Td (SECRET DATA 123) Tj ET\n";
+    for (fill, covers) in [
+        (&b"/Gray1 cs 1 sc"[..], false),
+        (b"/Gray1 cs 0 sc", true),
+        (b"/DeviceRGB cs 1 1 1 sc", false),
+        (b"/DeviceRGB cs 0 0 0 scn", true),
+        (b"/DeviceRGB cs", true),
+        (b"/Spot cs 0 scn", true),
+    ] {
+        let mut content = text.to_vec();
+        content.extend_from_slice(fill);
+        content.extend_from_slice(b"\n100 688 220 32 re f\n");
+        let findings = audit_redactions(&open(page_with_colour_spaces(&content))).expect("audit must run");
+        assert_eq!(!findings.is_empty(), covers, "{}: {findings:?}", String::from_utf8_lossy(fill));
+    }
+}

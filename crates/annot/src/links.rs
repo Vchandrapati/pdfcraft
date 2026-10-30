@@ -78,10 +78,6 @@ pub struct LinkItem {
     pub style: LinkStyle,
 }
 
-fn nums(doc: &Document, o: Option<&Object>) -> Vec<f64> {
-    o.map(|o| doc.resolve(o)).and_then(|a| a.as_array().map(|a| a.iter().filter_map(|x| doc.resolve(x).as_f64()).collect())).unwrap_or_default()
-}
-
 fn action_of(doc: &Document, d: &Dict, pages: &[ObjRef]) -> LinkAction {
     let dest_page = |dest: &Object| -> Option<usize> {
         let a = doc.resolve(dest);
@@ -110,10 +106,10 @@ fn style_of(doc: &Document, d: &Dict) -> LinkStyle {
     let bs = d.get(b"BS").and_then(|b| doc.resolve(b).as_dict().cloned());
     let width = match &bs {
         Some(b) => b.get(b"W").and_then(Object::as_f64).unwrap_or(1.0),
-        None => nums(doc, d.get(b"Border")).get(2).copied().unwrap_or(1.0),
+        None => doc.numbers(d.get(b"Border")).unwrap_or_default().get(2).copied().unwrap_or(1.0),
     };
     let s = bs.as_ref().and_then(|b| b.name(b"S").map(<[u8]>::to_vec)).unwrap_or_default();
-    let c = nums(doc, d.get(b"C"));
+    let c = doc.numbers(d.get(b"C")).unwrap_or_default();
     LinkStyle {
         visible: width > 0.0,
         color: if c.len() == 3 { [c[0], c[1], c[2]] } else { [0.0, 0.0, 1.0] },
@@ -139,7 +135,7 @@ pub fn list(doc: &Document) -> Vec<LinkItem> {
             if d.name(b"Subtype") != Some(b"Link") {
                 continue;
             }
-            let r = nums(doc, d.get(b"Rect"));
+            let r = doc.numbers(d.get(b"Rect")).unwrap_or_default();
             if r.len() != 4 {
                 continue;
             }

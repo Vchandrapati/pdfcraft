@@ -1,4 +1,4 @@
-//! pdfcraft-engine — the façade every frontend talks to (architecture §4).
+//! pdfcraft-engine — the façade every frontend talks to (L6 in `docs/architecture.md`, Layers).
 //!
 //! Holds open documents, their edit history and the tool catalogue. Frontends never touch the
 //! parsing, rendering or editing crates directly.
@@ -241,7 +241,8 @@ type Snapshot = (Label, pdfcraft_cos::Document, Keys, Scope);
 #[derive(Clone)]
 struct Editor {
     cos: pdfcraft_cos::Document,
-    undo: Vec<Snapshot>,
+    /// Oldest first; the oldest step goes when there are more than [`MAX_UNDO`].
+    undo: std::collections::VecDeque<Snapshot>,
     redo: Vec<Snapshot>,
     keys: Keys,
     /// Display appearances built for annotations without any, reused while no annotation edit
@@ -317,7 +318,7 @@ pub struct Document {
     /// Page marks present (headers and footers, watermarks, backgrounds), for Update/Remove.
     pub marks: Vec<MarkKind>,
     /// Text and images added with Edit a PDF ▸ Add content (still editable).
-    pub added: Vec<pdfcraft_edit::Added>,
+    pub added: Arc<Vec<pdfcraft_edit::Added>>,
     /// Link annotations, for Edit a PDF ▸ Link.
     pub links: Vec<pdfcraft_annot::links::LinkItem>,
     /// Signature fields, validated against the session's trust store (Signatures panel).
@@ -577,7 +578,7 @@ impl Document {
 
     /// What Undo would undo, in parts, for an interface that says it in another language.
     pub fn undo_label(&self) -> Option<&Label> {
-        self.editor.as_ref().and_then(|e| e.undo.last()).map(|(l, ..)| l)
+        self.editor.as_ref().and_then(|e| e.undo.back()).map(|(l, ..)| l)
     }
 
     /// What Redo would redo, in parts.
@@ -758,6 +759,74 @@ fn display_bytes(editor: Option<&mut Editor>, bytes: &Arc<Vec<u8>>) -> Arc<Vec<u
     };
     // Writing fails only as saving the document would; the page then shows as it always did.
     write_incremental(&display, &SaveOptions::default()).map(Arc::new).unwrap_or_else(|_| bytes.clone())
+}
+
+/// Fails when the renderer still draws text under an applied redaction mark.
+///
+/// Redaction decides what lies under a mark from the positions its own interpreter computes, and
+/// its verify pass reuses them. Where they differ from the renderer's (a standard font without
+/// /Widths, whose advances the interpreter approximates; a CMap, or a font set outside `Tf`,
+/// that it reads differently), a mark drawn over the text as displayed lies over glyphs the
+/// interpreter believes are elsewhere: they stay in the file and nothing notices. The renderer is
+/// what the user saw when placing the marks, so it is asked. `after` is written as a save would
+/// write it, without the marks' own overlay (the box and its label are drawn on purpose), its
+/// text is extracted, and a glyph still mostly inside a mark fails the edit: the caller keeps
+/// the document as it was.
+fn shown_under_redactions(
+    after: &pdfcraft_cos::Document,
+    marks: &[pdfcraft_redact::Mark],
+    pages: &[pdfcraft_render::PageInfo],
+    password: Option<&str>,
+) -> Result<(), EditError> {
+    use pdfcraft_cos::Object;
+    use pdfcraft_redact::RedactError;
+    let mut marked: Vec<usize> = marks.iter().map(|m| m.page).collect();
+    marked.sort_unstable();
+    marked.dedup();
+    if marked.is_empty() {
+        return Ok(());
+    }
+    let mut shown = after.clone();
+    let model = pdfcraft_model::pages(&shown);
+    for &pi in &marked {
+        let Some(page) = model.get(pi) else { continue };
+        let Some(Object::Array(list)) = page.dict.get(b"Contents").map(|c| (*shown.resolve(c)).clone()) else { continue };
+        let kept: Vec<Object> =
+            list.into_iter().filter(|o| shown.resolve(o).as_dict().and_then(|d| d.name(b"PCMark")) != Some(b"Redaction")).collect();
+        shown.update_dict(page.obj, |d| d.set(b"Contents".to_vec(), Object::Array(kept))).map_err(|e| EditError::Write(e.to_string()))?;
+    }
+    let bytes = write_incremental(&shown, &SaveOptions::default()).map_err(|e| EditError::Write(e.to_string()))?;
+    let config = RenderConfig { password: password.map(Arc::from), ..Default::default() };
+    let mut renderer = pdfcraft_render::PageRenderer::new(Arc::new(bytes), config);
+    let mut residue = 0;
+    for &pi in &marked {
+        let request = pdfcraft_render::RenderRequest { page: pi, kind: pdfcraft_render::RequestKind::Text, scale: 1.0, ..Default::default() };
+        // A page that cannot be read back cannot be confirmed clean.
+        let (Some(info), Some(text)) = (pages.get(pi), renderer.render(request).text) else { return Err(RedactError::Unreadable(pi + 1).into()) };
+        let rects: Vec<[f64; 4]> = marks
+            .iter()
+            .filter(|m| m.page == pi)
+            .flat_map(|m| m.rects.iter())
+            .map(|r| [r[0].min(r[2]), r[1].min(r[3]), r[0].max(r[2]), r[1].max(r[3])])
+            .collect();
+        for glyph in text.glyphs.iter().filter(|g| !g.text.trim().is_empty()) {
+            let [x0, y0, x1, y1] = info.view_rect_to_user(glyph.rect).map(f64::from);
+            let area = (x1 - x0) * (y1 - y0);
+            if area.is_nan() || area <= 0.0 {
+                continue;
+            }
+            // Redaction itself takes any glyph a fifth under a mark; one that is half under it
+            // and still drawn was not where redaction thought it was.
+            let under = |r: &[f64; 4]| (x1.min(r[2]) - x0.max(r[0])).max(0.0) * (y1.min(r[3]) - y0.max(r[1])).max(0.0) >= 0.5 * area;
+            if rects.iter().any(under) {
+                residue += 1;
+            }
+        }
+    }
+    if residue > 0 {
+        return Err(RedactError::Residue(residue).into());
+    }
+    Ok(())
 }
 
 fn render_threads() -> usize {
@@ -2072,7 +2141,7 @@ fn run_edit(doc: &mut pdfcraft_cos::Document, edit: &Edit, cx: &mut EditCtx) -> 
             let src = mark_source(doc, file)?;
             let (sw, sh) = (src.size.0.max(1.0), src.size.1.max(1.0));
             let natural = rect[2] == rect[0] && rect[3] == rect[1];
-            let rotation = if natural && src.image { pdfcraft_organize::page_rotation(doc, *page)? } else { 0 };
+            let rotation = pdfcraft_organize::page_rotation(doc, *page)?;
             let rect = if natural {
                 let k = (200.0 / sw.max(sh)).min(1.0);
                 let (w, h) = if matches!(rotation, 90 | 270) { (sh * k, sw * k) } else { (sw * k, sh * k) };
@@ -3048,7 +3117,7 @@ impl Session {
                 (
                     Some(Editor {
                         cos,
-                        undo: Vec::new(),
+                        undo: std::collections::VecDeque::new(),
                         redo: Vec::new(),
                         keys,
                         appearances: AppearanceCache::default(),
@@ -3108,7 +3177,7 @@ impl Session {
             read_only_reason,
             form: Arc::new(form),
             marks,
-            added,
+            added: Arc::new(added),
             links,
             signatures,
             trust: self.trust.clone(),
@@ -3179,6 +3248,14 @@ impl Session {
         // `next` is a copy: if the edit fails or crashes, the document is unchanged.
         guard(|| run_edit(&mut next, &edit, &mut cx))
             .unwrap_or_else(|m| Err(EditError::Invalid(format!("{} failed unexpectedly ({m}); the document was not changed", edit.label()))))?;
+        // Redaction removed what its own interpreter places under the marks. The marks were drawn
+        // over the page as the renderer shows it, so the renderer has the last word.
+        if let Edit::ApplyRedactions { pages } = &edit {
+            let marks: Vec<pdfcraft_redact::Mark> =
+                pdfcraft_redact::marks(&editor.cos).into_iter().filter(|m| pages.as_ref().is_none_or(|p| p.contains(&m.page))).collect();
+            guard(|| shown_under_redactions(&next, &marks, &doc.info.pages, doc.password.as_deref()))
+                .unwrap_or_else(|m| Err(EditError::Invalid(format!("{} failed unexpectedly ({m}); the document was not changed", edit.label()))))?;
+        }
         // Renamed fields are said, not slipped in: a repair-log note (with the caveat that
         // scripts were left alone) and a count in the undo step's label.
         let renamed_note = |renamed: &[(String, String)]| {
@@ -3267,9 +3344,9 @@ impl Session {
         let keys = keys_after(&edit).unwrap_or_else(|| editor.keys.clone());
         let previous_keys = std::mem::replace(&mut editor.keys, keys);
         let scope = scope_of(&edit);
-        editor.undo.push((label, previous, previous_keys, scope));
+        editor.undo.push_back((label, previous, previous_keys, scope));
         if editor.undo.len() > MAX_UNDO {
-            editor.undo.remove(0);
+            editor.undo.pop_front();
         }
         editor.redo.clear();
         Self::adopt_keys(doc);
@@ -3278,7 +3355,7 @@ impl Session {
         if let Err(e) = refreshed {
             // Roll back: the edit produced something we cannot display.
             if let Some(ed) = doc.editor.as_mut()
-                && let Some((_, prev, keys, _)) = ed.undo.pop()
+                && let Some((_, prev, keys, _)) = ed.undo.pop_back()
             {
                 ed.cos = prev;
                 ed.keys = keys;
@@ -3310,7 +3387,7 @@ impl Session {
         let doc = self.doc_mut(id)?;
         doc.edit_notices.clear();
         let editor = doc.editor.as_mut().ok_or(EditError::NothingToUndo)?;
-        let (label, prev, keys, scope) = editor.undo.pop().ok_or(EditError::NothingToUndo)?;
+        let (label, prev, keys, scope) = editor.undo.pop_back().ok_or(EditError::NothingToUndo)?;
         let current = std::mem::replace(&mut editor.cos, prev);
         let current_keys = std::mem::replace(&mut editor.keys, keys);
         editor.redo.push((label.clone(), current, current_keys, scope));
@@ -3328,7 +3405,7 @@ impl Session {
         let (label, next, keys, scope) = editor.redo.pop().ok_or(EditError::NothingToRedo)?;
         let current = std::mem::replace(&mut editor.cos, next);
         let current_keys = std::mem::replace(&mut editor.keys, keys);
-        editor.undo.push((label.clone(), current, current_keys, scope));
+        editor.undo.push_back((label.clone(), current, current_keys, scope));
         Self::adopt_keys(doc);
         Self::refresh_scoped(doc, scope).inspect_err(|_| Self::show_released(doc))?;
         doc.dirty = true;
@@ -3468,7 +3545,7 @@ impl Session {
         pdfcraft_render::check_pages(bytes.clone(), doc.password.as_deref(), doc.info.pages.len()).map_err(|e| EditError::Reopen(e.to_string()))?;
         let (touches_added, touches_marks) = Self::content_refresh_lists(edit);
         if touches_added {
-            doc.added = pdfcraft_edit::list_added(&editor.cos);
+            doc.added = Arc::new(pdfcraft_edit::list_added(&editor.cos));
         }
         if touches_marks {
             doc.marks = pdfcraft_edit::marks_present(&editor.cos);
@@ -3542,7 +3619,7 @@ impl Session {
         doc.form = Arc::new(form);
         let marker_scan = pdfcraft_edit::scan_markers(&editor.cos);
         doc.marks = marker_scan.marks;
-        doc.added = marker_scan.added;
+        doc.added = Arc::new(marker_scan.added);
         doc.links = pdfcraft_annot::links::list(&editor.cos);
         doc.signatures = signatures_of(&editor.cos, &bytes, &doc.trust, &doc.sig_cache);
         doc.display = display_bytes(Some(editor), &bytes);
@@ -3581,8 +3658,8 @@ impl Session {
         if let Some(editor) = doc.editor.as_mut() {
             // An encrypted file needs the password it is protected with now (the owner
             // password when known, so saving never downgrades this session's rights).
-            editor.cos = pdfcraft_cos::Document::open_with_password(bytes.clone(), editor.keys.reopen.as_deref())
-                .map_err(|e| EditError::Reopen(e.to_string()))?;
+            editor.cos =
+                pdfcraft_cos::Document::open_with_password(bytes, editor.keys.reopen.as_deref()).map_err(|e| EditError::Reopen(e.to_string()))?;
         }
         if let Some(p) = path {
             doc.name = std::path::Path::new(&p).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| p.clone());
@@ -4235,14 +4312,6 @@ impl Session {
         let editor = d.editor.as_ref().ok_or_else(|| EditError::ReadOnly(d.read_only_reason.clone().unwrap_or_default()))?;
         let date = if date.is_empty() { self.signing_date() } else { date };
         Ok(Arc::new(pdfcraft_sign::timestamp_document(&editor.cos, tsa, &date)?))
-    }
-
-    /// Embed revocation evidence into the catalog's `/DSS` with `/VRI` entries per signature
-    /// (PAdES B-LT): an incremental update that never rewrites signed bytes.
-    pub fn embed_ltv(&self, doc: DocId, evidence: &pdfcraft_sign::dss::Evidence) -> Result<Arc<Vec<u8>>, EditError> {
-        let d = self.get(doc).ok_or(EditError::NoDocument)?;
-        let editor = d.editor.as_ref().ok_or_else(|| EditError::ReadOnly(d.read_only_reason.clone().unwrap_or_default()))?;
-        Ok(Arc::new(pdfcraft_sign::dss::embed(&editor.cos, evidence)?))
     }
 
     /// Record that the signed file `bytes` was saved (to `path`): like [`Session::mark_saved`],

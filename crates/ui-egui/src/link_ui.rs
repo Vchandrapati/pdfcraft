@@ -43,12 +43,6 @@ fn screen_rect(xf: &PageXform, info: &DocInfo, page: usize, r: [f64; 4]) -> Rect
     xf.user_rect(info, page, [r[0] as f32, r[1] as f32, r[2] as f32, r[3] as f32])
 }
 
-fn to_user(xf: &PageXform, info: &DocInfo, page: usize, p: Pos2) -> [f64; 2] {
-    let (vx, vy) = xf.screen_to_view(p);
-    let u = info.pages[page].view_to_user(vx, vy);
-    [u[0] as f64, u[1] as f64]
-}
-
 /// Link tool input on one page. Returns `true` when the gesture belongs to the tool.
 pub(crate) fn page_input(
     ui: &egui::Ui,
@@ -69,7 +63,7 @@ pub(crate) fn page_input(
             let end = pointer.unwrap_or(start);
             let r = Rect::from_two_pos(start, end).intersect(xf.rect);
             if r.width() >= 4.0 && r.height() >= 4.0 {
-                let (a, b) = (to_user(xf, info, page, r.min), to_user(xf, info, page, r.max));
+                let (a, b) = (xf.to_user(info, page, r.min), xf.to_user(info, page, r.max));
                 lv.open_new = Some((page, [a[0].min(b[0]), a[1].min(b[1]), a[0].max(b[0]), a[1].max(b[1])]));
             }
         }

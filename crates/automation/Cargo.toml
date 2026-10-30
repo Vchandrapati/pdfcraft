@@ -29,5 +29,5 @@ mcp = ["dep:base64"]
 pdfcraft-fonts = { workspace = true }
 flate2.workspace = true
 pdfcraft-model = { workspace = true }
-pdfcraft-xfa = { workspace = true }
+pdfcraft-xfa = { workspace = true, features = ["fixtures"] }
 image = { version = "0.25", default-features = false, features = ["jpeg"] }

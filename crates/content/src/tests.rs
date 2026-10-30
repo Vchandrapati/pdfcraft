@@ -128,4 +128,7 @@ fn numbers_are_short_and_valid_pdf() {
     assert_eq!(crate::number(0.00004, 4), "0");
     assert_eq!(crate::number(f64::NAN, 3), "0");
     assert_eq!(crate::number(f64::INFINITY, 4), "0");
+    // Longer than the stack buffer: the same digits.
+    assert_eq!(crate::number(1e300, 3), format!("{:.0}", 1e300));
+    assert_eq!(format!("{} {} m", crate::Num(1.5, 3), crate::Num(-2.0, 3)), "1.5 -2 m");
 }
