@@ -30,7 +30,7 @@ cargo xtask version set 0.3.0       # or 0.3.0-rc.1; updates Cargo.toml and Carg
 | Web | `pdfcraft-web-<v>.zip` (a static site; see [`packaging/web/README.md`](../packaging/web/README.md)) | `ubuntu-latest` |
 
 The ARM64 Windows build is cross-compiled on x64, so signing and WiX work as for the other Windows
-builds; `.github/workflows/windows-arm64.yml` installs and runs it on ARM64 hardware.
+builds; test it by installing it on ARM64 hardware.
 
 Every binary reports its version (`pdfcraft --version`, `pdfcraft-cli --version`, *Help ▸ About*).
 `PDFCRAFT_BUILD_SHA` and `PDFCRAFT_BUILD_DATE` (filled in by `packaging/env.sh` when unset) are
@@ -90,8 +90,7 @@ neither the MSI nor the portable zip needs the Visual C++ redistributable.
   desktop shortcut (on by default) and an App Paths entry. Both shortcuts are plain links to
   `pdfcraft.exe`, not advertised MSI shortcuts (#107, #143). The MSI version is the numeric `X.Y.Z`
   (MSI has no pre-release field), and same-version upgrades are allowed so release candidates replace
-  each other. Icon ids end in `.ico` or `.exe` (Windows Installer requires it); packaging-lint checks
-  this.
+  each other. Icon ids end in `.ico` or `.exe` (Windows Installer requires it).
 - `installer-ui.wxs` supplies native welcome, maintenance, progress, files-in-use and outcome
   dialogs. Full UI confirms success with Finish; failures and cancellations have distinct messages.
   The welcome dialog has a "Create a desktop shortcut" checkbox and an "Edit with PdfCraft"
@@ -142,7 +141,7 @@ otherwise.
 **Flatpak:** `packaging/linux/flatpak-bundle.sh` turns each arch's tarball into a single-file bundle with
 `flatpak/ai.storyteller.pdfcraft.bundle.yml` (no Rust build; the same binaries).
 `flatpak/ai.storyteller.pdfcraft.yml` is the from-source manifest for a later Flathub submission;
-packaging-lint keeps the runtime and sandbox permissions (`finish-args`) of the two identical.
+keep the runtime and sandbox permissions (`finish-args`) of the two identical.
 Printing is not available in the Flatpak yet: it runs `lp`, which the freedesktop runtime lacks
 ; it needs the print portal. Users install the bundle with `flatpak install --user pdfcraft-<v>-linux-<arch>.flatpak`; the
 freedesktop runtime comes from Flathub.
@@ -152,8 +151,7 @@ Locally (on Linux, with nfpm): `packaging/linux/package.sh` or `--formats "deb t
 
 ### FreeBSD
 
-`packaging/freebsd/package.sh` runs on FreeBSD (CI builds in a VM: `.github/workflows/freebsd.yml`
-lists the packages it needs). The tarball is a `/usr/local`-style tree
+`packaging/freebsd/package.sh` runs on FreeBSD (its header lists what it needs). The tarball is a `/usr/local`-style tree
 with the same desktop entry, metainfo and icons as Linux. FreeBSD has no code signing for loose
 binaries; publish the tarball's SHA-256 beside it.
 
@@ -179,9 +177,9 @@ Signing is optional: without these environment variables the scripts warn and pr
 
 ## Checks
 
-`.github/workflows/packaging-lint.yml` runs on changes to `packaging/` and the workflows: actionlint, shellcheck,
-a PowerShell parse, xmllint (WiX, plist, MIME), `desktop-file-validate`, `appstreamcli validate`, and
-the MSI icon-id check. The FreeBSD and Windows ARM64 workflows also exercise their packaging.
+CI doesn't lint packaging. Before shipping, run what applies locally: actionlint, shellcheck
+(`packaging/.shellcheckrc`), xmllint on the WiX, plist and MIME files, `desktop-file-validate` and
+`appstreamcli validate`.
 
 ## Scanner detections
 

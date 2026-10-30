@@ -7,7 +7,7 @@
 #
 # Usage: packaging/freebsd/package.sh [--skip-build]
 # Needs: bash, a Rust toolchain, curl and the network (the English OCR model), and the GUI libraries
-# in .github/workflows/freebsd.yml. Installed packages also need Tesseract 5 (`pkg install tesseract`)
+# egui and winit link against (X11/Wayland, xkbcommon, GL). Installed packages also need Tesseract 5 (`pkg install tesseract`)
 # for OCR; the engine is not bundled in this tarball.
 set -euo pipefail
 # shellcheck source=../env.sh
