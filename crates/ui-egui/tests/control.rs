@@ -1321,7 +1321,7 @@ fn explicit_panel_requests_reveal_inactive_group_members() {
     h.get_by_role_and_label(egui::accesskit::Role::Tab, "Tools").click();
     h.run_steps(4);
     // Ordinary frames must preserve the user's selected tab.
-    h.get_by_label("View more");
+    h.get_by_label("Export a PDF");
     ok(&mut h, &c, "ui.set", json!({"key":"panel", "value":"bookmarks"}));
     h.run_steps(4);
     h.get_by_label("This document has no bookmarks.");

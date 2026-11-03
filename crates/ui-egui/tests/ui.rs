@@ -143,10 +143,9 @@ fn home_removes_one_recent_file_or_clears_them_all() {
 }
 
 #[test]
-fn every_catalog_tool_is_listed_after_view_more() {
-    let mut h = harness(|_| {});
-    h.get_by_label("View more").click();
-    h.run_steps(3);
+fn every_catalog_tool_is_listed_without_expanding() {
+    let h = harness(|_| {});
+    assert!(h.query_by_label("View more").is_none(), "All tools has no View more toggle");
     for g in pdfcraft_engine::catalog::TOOL_GROUPS {
         assert!(h.query_all_by_label(g.label).count() >= 1, "tool {} missing from All tools", g.label);
     }

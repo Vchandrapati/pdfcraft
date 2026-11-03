@@ -14,8 +14,6 @@ pub enum Availability {
     Ready,
     /// Planned; ships in the named milestone.
     Planned(&'static str),
-    /// Cloud-only in Acrobat; PdfCraft offers an optional pluggable provider instead.
-    Provider,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -39,7 +37,6 @@ pub struct ToolGroup {
     pub icon: &'static str,
     /// Icon tint, as Acrobat colour-codes its tool families.
     pub hue: [u8; 3],
-    pub badge: Option<&'static str>,
     pub availability: Availability,
     pub sections: &'static [ToolSection],
 }
@@ -48,7 +45,7 @@ const fn item(label: &'static str, icon: &'static str, command: &'static str, av
     ToolItem { label, icon, command, availability }
 }
 
-use Availability::{Planned, Provider, Ready};
+use Availability::{Planned, Ready};
 
 const RED: [u8; 3] = [0xE0, 0x3E, 0x3E];
 const PURPLE: [u8; 3] = [0x8E, 0x4E, 0xE6];
@@ -64,7 +61,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Export a PDF",
         icon: "file-output",
         hue: BLUE,
-        badge: None,
         availability: Ready,
         sections: &[ToolSection {
             title: "Export to",
@@ -86,7 +82,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Fill & Sign",
         icon: "pen-line",
         hue: PURPLE,
-        badge: None,
         availability: Ready,
         sections: &[ToolSection {
             title: "Fill",
@@ -109,7 +104,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Edit a PDF",
         icon: "file-pen-line",
         hue: PINK,
-        badge: None,
         availability: Planned("M7"),
         sections: &[
             ToolSection {
@@ -143,7 +137,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Create a PDF",
         icon: "file-plus-2",
         hue: RED,
-        badge: None,
         availability: Ready,
         sections: &[ToolSection {
             title: "Create from",
@@ -162,7 +155,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Combine files",
         icon: "files",
         hue: BLUE,
-        badge: None,
         availability: Ready,
         sections: &[ToolSection { title: "Combine", items: &[item("Add files to combine", "files", "page.combine", Ready)] }],
     },
@@ -171,7 +163,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Organize pages",
         icon: "layout-grid",
         hue: GREEN,
-        badge: None,
         availability: Ready,
         sections: &[
             ToolSection {
@@ -203,7 +194,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Add comments",
         icon: "message-square-text",
         hue: ORANGE,
-        badge: None,
         availability: Ready,
         sections: &[
             ToolSection {
@@ -243,7 +233,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Scan & OCR",
         icon: "scan-text",
         hue: GREEN,
-        badge: None,
         availability: Ready,
         sections: &[ToolSection {
             title: "Recognize text",
@@ -261,7 +250,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Protect a PDF",
         icon: "shield-check",
         hue: BLUE,
-        badge: None,
         availability: Planned("M8"),
         sections: &[
             ToolSection {
@@ -286,7 +274,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Redact a PDF",
         icon: "rectangle-horizontal",
         hue: RED,
-        badge: None,
         availability: Ready,
         sections: &[ToolSection {
             title: "Redact",
@@ -304,7 +291,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Compress a PDF",
         icon: "file-down",
         hue: RED,
-        badge: None,
         availability: Ready,
         sections: &[ToolSection {
             title: "Optimize",
@@ -320,7 +306,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Prepare a form",
         icon: "text-cursor-input",
         hue: PURPLE,
-        badge: None,
         availability: Ready,
         sections: &[
             ToolSection {
@@ -358,7 +343,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Add a stamp",
         icon: "stamp",
         hue: PURPLE,
-        badge: None,
         availability: Ready,
         sections: &[ToolSection { title: "Stamps", items: &[item("Stamp palette", "stamp", "comment.stamp", Ready)] }],
     },
@@ -367,7 +351,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Use a certificate",
         icon: "badge-check",
         hue: TEAL,
-        badge: None,
         availability: Ready,
         sections: &[ToolSection {
             title: "Certificates",
@@ -385,7 +368,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Use print production",
         icon: "printer",
         hue: PURPLE,
-        badge: None,
         availability: Planned("M11"),
         sections: &[ToolSection {
             title: "Print production",
@@ -404,7 +386,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Measure objects",
         icon: "ruler",
         hue: PINK,
-        badge: None,
         availability: Ready,
         sections: &[ToolSection {
             title: "Measure",
@@ -425,7 +406,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Compare files",
         icon: "git-compare",
         hue: PINK,
-        badge: None,
         availability: Ready,
         sections: &[ToolSection { title: "Compare", items: &[item("Select files to compare", "git-compare", "doc.compare", Ready)] }],
     },
@@ -434,7 +414,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Use guided actions",
         icon: "list-checks",
         hue: PURPLE,
-        badge: None,
         availability: Ready,
         sections: &[ToolSection {
             title: "Actions list",
@@ -452,7 +431,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Prepare for accessibility",
         icon: "accessibility",
         hue: PURPLE,
-        badge: None,
         availability: Ready,
         sections: &[ToolSection {
             title: "Accessibility",
@@ -471,7 +449,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Apply PDF standards",
         icon: "file-check",
         hue: RED,
-        badge: None,
         availability: Ready,
         sections: &[ToolSection {
             title: "Standards",
@@ -488,7 +465,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Add search index",
         icon: "file-search",
         hue: GREEN,
-        badge: None,
         availability: Planned("M12"),
         sections: &[ToolSection { title: "Index", items: &[item("Manage embedded index", "file-search", "search.index", Planned("M12"))] }],
     },
@@ -497,7 +473,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
         label: "Use JavaScript",
         icon: "braces",
         hue: BLUE,
-        badge: None,
         availability: Planned("M6"),
         sections: &[ToolSection {
             title: "JavaScript",
@@ -505,22 +480,6 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
                 item("Console", "braces", "js.console", Planned("M6")),
                 item("Document JavaScripts", "file-text", "js.document", Planned("M6")),
                 item("Document actions", "list-checks", "js.actions", Planned("M6")),
-            ],
-        }],
-    },
-    ToolGroup {
-        id: "ai",
-        label: "AI assistant",
-        icon: "sparkles",
-        hue: PINK,
-        badge: Some("Optional"),
-        availability: Provider,
-        sections: &[ToolSection {
-            title: "Bring your own model (off by default)",
-            items: &[
-                item("Summarize", "sparkles", "ai.summary", Provider),
-                item("Ask about this document", "message-circle-reply", "ai.ask", Provider),
-                item("Translate", "languages", "ai.translate", Provider),
             ],
         }],
     },

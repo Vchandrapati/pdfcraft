@@ -491,7 +491,6 @@ pub struct PdfCraftApp {
     pub(crate) print_tasks: print_ui::PrintTasks,
     pub palette_open: bool,
     pub palette_query: String,
-    pub all_tools_expanded: bool,
     pub recent: Vec<RecentFile>,
     /// Preferences: reopen the files that were open when PdfCraft last closed (#442).
     pub reopen_last_session: bool,
@@ -812,7 +811,6 @@ impl PdfCraftApp {
             print_tasks: print_ui::PrintTasks::default(),
             palette_open: false,
             palette_query: String::new(),
-            all_tools_expanded: false,
             recent: Vec::new(),
             reopen_last_session: false,
             last_session: Default::default(),
@@ -1527,7 +1525,6 @@ impl PdfCraftApp {
             .find(|i| i.command == command)
             .map(|i| match i.availability {
                 pdfcraft_engine::catalog::Availability::Planned(m) => crate::i18n::fmt(tl!("ships in milestone {m}"), &[("m", m)]),
-                pdfcraft_engine::catalog::Availability::Provider => tl!("needs an AI provider (off by default)").to_string(),
                 pdfcraft_engine::catalog::Availability::Ready => tl!("is available").to_string(),
             })
             .unwrap_or_else(|| tl!("is not available yet").to_string());
@@ -1977,7 +1974,6 @@ impl PdfCraftApp {
                     _ => Some(Dialog::About),
                 }
             }
-            ("tools", _) => self.all_tools_expanded = value != "collapsed",
             ("palette", _) => {
                 self.palette_open = true;
                 self.palette_query = value.to_string();
