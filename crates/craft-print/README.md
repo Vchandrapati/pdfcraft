@@ -16,8 +16,15 @@ opens Windows printer preferences and submits jobs with copies, collation, duple
 
 - **macOS/Linux:** CUPS `lpstat`, `lpoptions` and `lp`. Jobs stream through stdin. Exact-size
   sheets use `fit-to-page=false`; shrink-to-fit uses IPP `print-scaling=auto-fit`.
-- **Windows:** inbox Windows PowerShell, `Windows.Data.Pdf` and `System.Drawing.Printing`.
-  Each sheet is rasterized, with paper and orientation selected per page. Exact-size mode
+- **Windows:** inbox Windows PowerShell and `Windows.Data.Pdf`. Sheets print as **vectors**:
+  `Windows.Data.Pdf` draws each one into a Direct2D command list and Direct2D's print control
+  spools them as an XPS job (`windows_vector.cs`, compiled by the script; COM through vtable
+  slots, no `unsafe` Rust). Text keeps its fonts; only transparency is rasterized, by region, at
+  600 dpi. Copies, collation, duplex, colour and each sheet's paper and orientation go in
+  System.Printing print tickets, validated by the driver. If vector printing can't start
+  (no Direct2D, no print ticket) or `CRAFT_PRINT_RASTER=1` is set, the job prints as images
+  instead, through `System.Drawing.Printing`, and the receipt says why. In that mode each sheet
+  is rasterized, with paper and orientation selected per page. Exact-size mode
   preserves physical size and clips hardware margins. Shrink-to-fit uses matching driver
   paper or its default, centers in the printable area and never enlarges smaller sheets.
   Long-edge duplex uses `Vertical`; short-edge uses
@@ -35,12 +42,16 @@ Windows raster allocation is bounded to 64 million pixels per sheet and 32768 pe
 large sheets use lower raster resolution while retaining physical size. The backend supports
 sheets up to 128 inches and reports invalid sizes. It does not provide PostScript output,
 separations, trapping, colour-managed device rasterization or PDF passthrough on Windows.
+Print-to-PDF drivers that support neither custom sizes nor grayscale (Microsoft Print to PDF)
+keep the sheet's colours; exact-size sheets they can't take are refused before a job starts.
 
 `cargo test -p craft-print` tests CUPS transport (including pipe-sized jobs and refusal),
 printer parsing, PPD options and argument mapping. On Windows it also parses the embedded
 PowerShell, checks physical sheet geometry, duplex and raster bounds without hardware,
-renders a mixed-orientation PDF through WinRT, and attempts submission to a temporary paused
-queue. The queue portion explicitly skips if the driver or administrative rights are absent;
+renders a mixed-orientation PDF through WinRT both as images and into Direct2D command lists,
+prints it as vectors to the inbox Microsoft Print to PDF with the output captured in a file
+(checking sheet sizes and that no sheet became an image; skipped where that printer is absent),
+and attempts submission to a temporary paused queue. The queue portion explicitly skips if the driver or administrative rights are absent;
 rendering and geometry tests do not skip. With the inbox test driver installed, setting
 `CRAFT_PRINT_REQUIRE_QUEUE=1` makes queue preparation and submission mandatory.
 Physical printer fidelity remains a hardware check.

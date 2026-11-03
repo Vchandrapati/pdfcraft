@@ -314,6 +314,31 @@ fn the_print_script_renders_the_job_and_reaches_the_spooler() {
     assert!(cleaned.is_ok(), "the test printer is removed again: {cleaned:?}");
 }
 
+/// Windows, end to end through the vector path: a real job to the inbox "Microsoft Print to PDF",
+/// whose output goes to a file (`CRAFT_PRINT_OUTPUT_FILE`) instead of its Save dialog. Both
+/// sheets come back at their own sizes and without a single image: vectors, not the raster
+/// fallback (which the output file refuses). A machine without that printer skips.
+#[cfg(windows)]
+#[test]
+fn the_print_script_spools_vector_sheets() {
+    let printer = "Microsoft Print to PDF";
+    if !printers().iter().any(|p| p.name == printer) {
+        eprintln!("skipping the vector print: {printer} is not installed");
+        return;
+    }
+    let dir = tempfile::tempdir().unwrap();
+    let out = dir.path().join("vector.pdf");
+    let job = Job { printer: Some(printer.into()), title: "test.pdf".into(), ..Job::default() };
+    let sent = spool::windows_submit(&fixture(), &job, &[("CRAFT_PRINT_OUTPUT_FILE", out.to_str().unwrap())]);
+    assert_eq!(sent.as_deref(), Ok("spooled 2 sheet(s) as vector graphics"), "{sent:?}");
+    let printed = String::from_utf8_lossy(&std::fs::read(&out).unwrap()).into_owned();
+    let boxes: Vec<&str> = printed.split("/MediaBox").skip(1).filter_map(|s| s.split(']').next()).collect();
+    assert_eq!(boxes.len(), 2, "{boxes:?}");
+    assert!(boxes[0].contains("612") && boxes[0].contains("792"), "portrait Letter: {boxes:?}");
+    assert!(boxes[1].trim_start_matches([' ', '[']).starts_with("0.0 0.0 792"), "landscape Letter: {boxes:?}");
+    assert!(!printed.contains("/Image"), "no sheet was printed as an image");
+}
+
 /// A PPD shaped like a Fiery's: installable options, multi-line PostScript in the choices, Latin-1
 /// labels, options the Print dialog sets itself.
 const FIERY_PPD: &[u8] = b"*PPD-Adobe: \"4.3\"\n\

@@ -1,8 +1,10 @@
 //! The system print spooler. On macOS and Linux this is CUPS: printers come from `lpstat` — its
 //! queues, and the driverless destinations it can print to without one — and jobs are piped to
 //! `lp` with the job options (copies, collation, duplex, colour). On Windows the printers come
-//! from `Win32_Printer` and jobs are rendered with the in-box `Windows.Data.Pdf` and spooled
-//! with the driver's own settings — both through `powershell`, so no Win32 API is called here.
+//! from `Win32_Printer` and jobs are drawn by the in-box `Windows.Data.Pdf` through Direct2D into
+//! an XPS print job, as vectors, with the job's options in its print ticket (images through
+//! `System.Drawing.Printing` where that can't start) — all through `powershell`, so no Win32
+//! API is called here.
 //! Other platforms report that printing isn't available yet; the print-ready PDF can still be
 //! saved.
 
@@ -402,7 +404,7 @@ fn powershell_command(script: &str) -> std::process::Command {
     let mut c = std::process::Command::new(exe);
     use std::os::windows::process::CommandExt as _;
     c.args(["-NoProfile", "-NonInteractive", "-Command", script]).creation_flags(0x0800_0000);
-    c.env_remove("CRAFT_PRINT_DRYRUN").env_remove("CRAFT_PRINT_TEST_SETTINGS");
+    c.env_remove("CRAFT_PRINT_DRYRUN").env_remove("CRAFT_PRINT_TEST_SETTINGS").env_remove("CRAFT_PRINT_OUTPUT_FILE");
     c
 }
 
@@ -467,6 +469,7 @@ pub fn submit(pdf: &[u8], job: &Job) -> Result<String, Error> {
 pub(crate) fn windows_submit(pdf: &[u8], job: &Job, extra_envs: &[(&str, &str)]) -> Result<String, Error> {
     let path = windows_job_file(pdf)?;
     let mut ps = powershell_command(WINDOWS_PRINT_SCRIPT);
+    ps.env("CRAFT_PRINT_VECTOR_SOURCE", WINDOWS_VECTOR_SOURCE);
     for (key, value) in windows_env_vars(&path, job).into_iter().chain(extra_envs.iter().map(|(k, v)| (k.to_string(), v.to_string()))) {
         ps.env(key, value);
     }
@@ -534,6 +537,10 @@ pub(crate) fn windows_env_vars(path: &std::path::Path, job: &Job) -> Vec<(String
 /// The embedded print script (see [`windows_submit`]).
 #[cfg(windows)]
 pub(crate) const WINDOWS_PRINT_SCRIPT: &str = include_str!("windows_print.ps1");
+/// The script's vector printing (Direct2D to XPS), compiled by the script itself. An environment
+/// variable rather than part of the script: the script travels on the command line.
+#[cfg(windows)]
+const WINDOWS_VECTOR_SOURCE: &str = include_str!("windows_vector.cs");
 
 /// [`submit`] with the spooler command given, so tests can stand in for `lp`.
 ///

@@ -35,9 +35,10 @@ garbage-collected file (callers check the print permission).
 `spool` delegates discovery, driver options, preferences and submission to
 [`craft-print`](../craft-print/README.md), a workspace crate.
 PdfCraft retains page selection, imposition, annotations and print-permission checks.
-CUPS jobs stream through stdin with `fit-to-page=false`. Windows renders sheets through
-`Windows.Data.Pdf` and spools them at their physical PDF size with per-page paper and
-orientation, zero added margins and hardware-edge clipping. Long-edge and short-edge duplex
+CUPS jobs stream through stdin with `fit-to-page=false`. Windows draws sheets as vectors
+through `Windows.Data.Pdf` and Direct2D into an XPS job, at their physical PDF size with
+per-page paper and orientation in validated print tickets (images through
+`System.Drawing.Printing` where vector printing can't start). Long-edge and short-edge duplex
 use the corresponding Windows binding edges. Random, exclusively created Windows job files
 are removed on success and failure. Other targets offer the print-ready PDF instead.
 
@@ -67,7 +68,7 @@ this is not per-page paper-source selection.
 
 **PDF scale** describes the source-to-sheet transform in the previewed print-ready
 PDF, not measured physical output. Fit reserves an 18 pt margin and can reduce even
-a matching page. The current Windows backend still rasterises and can substitute
-paper/shrink a job if its driver lacks the requested size. These controls do not
-add #599's strict PrintTicket validation or vector spooler. Verify the driver's
-paper/scaling settings and physical calibration before relying on drawing scale.
+a matching page. On Windows the job is spooled as vectors with each sheet's paper in a
+driver-validated print ticket: an Actual-size sheet the driver can't take is refused
+rather than substituted (Shrink to fit uses the default paper instead). Verify physical
+calibration before relying on drawing scale.

@@ -2,13 +2,16 @@
 # variables, never as arguments: printer names contain spaces and quotes, and the document's
 # path must not be visible in the process list while it prints.
 #
-# The in-box Windows.Data.Pdf renders each sheet at the printer's own resolution and
-# System.Drawing.Printing spools it with the driver's settings — copies, collation, duplex and
-# colour reach the spooler as the job's, the way `lp -o` sends them on CUPS. No PDF reader is
-# needed, and the calling code touches no Win32 API.
+# Sheets print as vectors: the in-box Windows.Data.Pdf draws each one through Direct2D into an
+# XPS print job (windows_vector.cs), with copies, collation, duplex and colour in the job's print
+# ticket, the way `lp -o` sends them on CUPS. Where that can't start (no Direct2D, no print
+# ticket), and with CRAFT_PRINT_RASTER=1, Windows.Data.Pdf renders each sheet at the printer's
+# own resolution and System.Drawing.Printing spools the image with the driver's settings. No PDF
+# reader is needed, and the calling code touches no Win32 API.
 #
-# CRAFT_PRINT_DRYRUN=1 renders every sheet in memory and prints
-# nothing: the tests run the whole rendering path on machines without a printer, CI included.
+# CRAFT_PRINT_DRYRUN=1 renders every sheet in memory, both ways, and prints nothing: the tests
+# run the whole rendering path on machines without a printer, CI included.
+# CRAFT_PRINT_OUTPUT_FILE (tests) sends a vector job's output to that file instead of the port.
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 
@@ -159,6 +162,133 @@ function AwaitAct($action) {
     $task.Wait()
 }
 
+# Vector printing: Windows.Data.Pdf draws each sheet into a Direct2D command list, and Direct2D's
+# print control turns the command lists into an XPS print job — paths, text and images stay
+# vectors and fonts are embedded; only transparency is rasterized, region by region, at
+# CRAFT_RASTER_DPI. This is the Windows print path for PDFs:
+# https://learn.microsoft.com/en-us/windows/win32/direct2d/printing-and-command-lists
+# The COM calls go through each interface's vtable slot (the order in d2d1.h, d2d1_1.h,
+# windows.data.pdf.interop.h and documenttarget.h), so no interop assembly is needed.
+# The C# is windows_vector.cs, passed in CRAFT_PRINT_VECTOR_SOURCE (the script itself is passed
+# on the command line, which holds 32,767 characters).
+$vectorSource = $env:CRAFT_PRINT_VECTOR_SOURCE
+
+# Raster resolution for the parts of a sheet XPS can't express (transparency, blend modes).
+$CRAFT_RASTER_DPI = 600
+
+# The print queue for the job's printer (or the default), through System.Printing.
+function Get-JobQueue($name) {
+    $server = [System.Printing.LocalPrintServer]::new()
+    if (-not $name) { return $server.DefaultPrintQueue }
+    $kinds = [System.Printing.EnumeratedPrintQueueTypes[]]@('Local', 'Connections')
+    $queue = $server.GetPrintQueues($kinds) | Where-Object { $_.FullName -eq $name -or $_.Name -eq $name } | Select-Object -First 1
+    if (-not $queue) { throw ('the printer is not available: ' + $name) }
+    $queue
+}
+
+# The job's print ticket: the user's defaults for the printer plus this job's copies, collation,
+# duplex and colour, validated by the driver.
+function Get-JobTicket($queue) {
+    $base = $queue.UserPrintTicket
+    if (-not $base) { $base = $queue.DefaultPrintTicket }
+    $delta = [System.Printing.PrintTicket]::new()
+    $delta.CopyCount = [Math]::Min(32767, [Math]::Max(1, [int]$env:CRAFT_PRINT_COPIES))
+    $delta.Collation = if ($env:CRAFT_PRINT_COLLATE -eq '1') { 'Collated' } else { 'Uncollated' }
+    switch ($env:CRAFT_PRINT_DUPLEX) {
+        'long-edge' { $delta.Duplexing = 'TwoSidedLongEdge' }
+        'short-edge' { $delta.Duplexing = 'TwoSidedShortEdge' }
+        'off' { $delta.Duplexing = 'OneSided' }
+    }
+    if ($env:CRAFT_PRINT_GRAYSCALE -eq '1') { $delta.OutputColor = 'Grayscale' }
+    $queue.MergeAndValidatePrintTicket($base, $delta).ValidatedPrintTicket
+}
+
+# One sheet's placement: the paper (a print ticket), the page size handed to Direct2D, and the
+# scale and offset of the sheet on it. DIPs throughout (96/inch), as System.Printing uses.
+function Get-VectorSheet($queue, $jobTicket, $media, $width, $height) {
+    $null = Get-SheetGeometry $width $height
+    $short = [Math]::Min($width, $height)
+    $long = [Math]::Max($width, $height)
+    $landscape = $width -gt $height
+    $paper = $media | Where-Object {
+        $_.Width -and $_.Height -and
+        [Math]::Abs($_.Width - $short) -le 1.5 -and [Math]::Abs($_.Height - $long) -le 1.5
+    } | Select-Object -First 1
+    $shrink = $env:CRAFT_PRINT_SCALING -eq 'shrink-to-fit'
+    if (-not $paper) {
+        $paper = if ($shrink) { $jobTicket.PageMediaSize } else { [System.Printing.PageMediaSize]::new($short, $long) }
+    }
+    $delta = [System.Printing.PrintTicket]::new()
+    $delta.PageMediaSize = $paper
+    $delta.PageOrientation = if ($landscape) { 'Landscape' } else { 'Portrait' }
+    $ticket = $queue.MergeAndValidatePrintTicket($jobTicket, $delta).ValidatedPrintTicket
+    $got = $ticket.PageMediaSize
+    if (-not $got.Width -or -not $got.Height) { throw 'the printer reported no paper size' }
+    $gotShort = [Math]::Min($got.Width, $got.Height)
+    $gotLong = [Math]::Max($got.Width, $got.Height)
+    if (-not $shrink -and ([Math]::Abs($gotShort - $short) -gt 1.5 -or [Math]::Abs($gotLong - $long) -gt 1.5)) {
+        throw 'the printer cannot use the PDF sheet size; select matching paper and try again'
+    }
+    $pageW = if ($landscape) { $gotLong } else { $gotShort }
+    $pageH = if ($landscape) { $gotShort } else { $gotLong }
+    $scale = 1.0; $dx = 0.0; $dy = 0.0
+    if ($shrink) {
+        # Keep clear of the widest hardware margin on every side, whichever way the driver
+        # reports the imageable area for this orientation; never enlarge.
+        $margin = 0.0
+        $area = $queue.GetPrintCapabilities($ticket).PageImageableArea
+        if ($area) {
+            $margin = [Math]::Max(0.0, [Math]::Max([Math]::Max($area.OriginWidth, $area.OriginHeight),
+                [Math]::Max($gotShort - $area.OriginWidth - $area.ExtentWidth, $gotLong - $area.OriginHeight - $area.ExtentHeight)))
+        }
+        $availW = $pageW - 2 * $margin
+        $availH = $pageH - 2 * $margin
+        if ($availW -le 0 -or $availH -le 0) { throw 'the printer has no printable area' }
+        $scale = [Math]::Min(1.0, [Math]::Min($availW / $width, $availH / $height))
+        $dx = ($pageW - $width * $scale) / 2.0
+        $dy = ($pageH - $height * $scale) / 2.0
+    }
+    [pscustomobject]@{ Ticket = $ticket.GetXmlStream().ToArray(); Width = $pageW; Height = $pageH; Scale = $scale; Dx = $dx; Dy = $dy }
+}
+
+# Print every sheet as vectors. Returns $null when it printed, or why vector printing couldn't
+# start — nothing reached the printer then, and the raster path prints instead. A failure after
+# the job started cancels it and is the job's error.
+function Invoke-VectorPrint($document) {
+    try {
+        Add-Type -AssemblyName System.Printing, ReachFramework
+        if (-not ('CraftVectorJob' -as [type])) { Add-Type -TypeDefinition $vectorSource -Language CSharp }
+        $queue = Get-JobQueue $env:CRAFT_PRINT_PRINTER
+        $jobTicket = Get-JobTicket $queue
+        $media = @($queue.GetPrintCapabilities($jobTicket).PageMediaSizeCapability)
+        $sheets = for ($i = 0; $i -lt $document.PageCount; $i++) {
+            $page = $document.GetPage($i)
+            try { Get-VectorSheet $queue $jobTicket $media $page.Size.Width $page.Size.Height } finally { $page.Dispose() }
+        }
+        $output = if ($env:CRAFT_PRINT_OUTPUT_FILE) { $env:CRAFT_PRINT_OUTPUT_FILE } else { $null }
+        $job = [CraftVectorJob]::Start($queue.FullName, $env:CRAFT_PRINT_TITLE, $jobTicket.GetXmlStream().ToArray(), $output, $CRAFT_RASTER_DPI)
+    } catch {
+        # A missing printer, or a sheet size it can't take, is the raster path's answer too.
+        if ($_.Exception.Message -like 'the printer cannot use the PDF sheet size*' -or
+            $_.Exception.Message -like 'the printer is not available*') { throw }
+        $reason = $_.Exception
+        while ($reason.InnerException) { $reason = $reason.InnerException }
+        return $reason.Message
+    }
+    try {
+        $i = 0
+        foreach ($sheet in @($sheets)) {
+            $page = $document.GetPage($i)
+            try {
+                $job.AddSheet($page, $sheet.Width, $sheet.Height, $sheet.Ticket, $sheet.Scale, $sheet.Dx, $sheet.Dy)
+            } finally { $page.Dispose() }
+            $i++
+        }
+        $job.Close()
+    } finally { $job.Dispose() }
+    $null
+}
+
 # Render one sheet at its physical size; only raster resolution can be reduced for memory.
 function Render-Sheet($page, $sheet, $dpi) {
     $pixels = Get-RenderSize $sheet $dpi
@@ -196,8 +326,29 @@ if ($env:CRAFT_PRINT_DRYRUN -eq '1') {
             } finally { $bitmap.Dispose() }
         } finally { $page.Dispose() }
     }
+    # The vector path's renderer too: every sheet drawn into a Direct2D command list.
+    Add-Type -TypeDefinition $vectorSource -Language CSharp
+    $job = [CraftVectorJob]::Start($null, $null, $null, $null, $CRAFT_RASTER_DPI)
+    try {
+        for ($i = 0; $i -lt $document.PageCount; $i++) {
+            $page = $document.GetPage($i)
+            try { $job.AddSheet($page, $page.Size.Width, $page.Size.Height, $null, 1.0, 0.0, 0.0) } finally { $page.Dispose() }
+        }
+    } finally { $job.Dispose() }
     Write-Output ('rendered ' + $document.PageCount + ' sheet(s)')
     return
+}
+
+# Vectors unless CRAFT_PRINT_RASTER=1 asks for images, or vector printing can't start here.
+$vectorFailure = 'images were requested'
+if ($env:CRAFT_PRINT_RASTER -ne '1') {
+    $vectorFailure = Invoke-VectorPrint $document
+    if (-not $vectorFailure) {
+        Write-Output ('spooled ' + $document.PageCount + ' sheet(s) as vector graphics')
+        return
+    }
+    # The tests' output file is for vector jobs: the raster path would prompt for a file name.
+    if ($env:CRAFT_PRINT_OUTPUT_FILE) { throw ('vector printing failed: ' + $vectorFailure) }
 }
 
 $printer = [System.Drawing.Printing.PrintDocument]::new()
@@ -256,5 +407,5 @@ $printer.add_PrintPage({
 })
 try {
     $printer.Print()
-    Write-Output ('spooled ' + $document.PageCount + ' sheet(s)')
+    Write-Output ('spooled ' + $document.PageCount + ' sheet(s) as images (' + $vectorFailure + ')')
 } finally { $printer.Dispose() }
