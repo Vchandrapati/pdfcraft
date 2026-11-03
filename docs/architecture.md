@@ -1,15 +1,15 @@
 # PdfCraft architecture
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-11 · **Change:** minor (shared print spooler; Windows CI passes) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
+> **Last reviewed:** 2026-11-03 · **Last updated:** 2026-11-03 · **Change:** minor (personal fork: owned craft crates, Tesseract OCR, Linux-only CI) · **Target:** Adobe Acrobat Pro (Acrobat DC, continuous track 26.002.21931, macOS)
 
 How PdfCraft is built today: this file describes what is on `main`. Each crate's `README.md` has
 the detail.
 
 ## Shape
 
-One Cargo workspace (`Cargo.toml`, edition 2024, Rust ≥ 1.95, `MIT OR Apache-2.0`), 31 library
-crates in `crates/`, three binaries in `apps/`, build tooling in `xtask/`, and patched third-party
-crates in `vendor/`. About 152k lines of Rust and 1,765 tests (2026-10-10). Rust only: no
+One Cargo workspace (`Cargo.toml`, edition 2024, Rust ≥ 1.95, `MIT OR Apache-2.0`), 33 library
+crates in `crates/` (including owned copies of the Craft apps' `craft-ui` and `craft-print`), three binaries in `apps/`, build tooling in `xtask/`, and patched third-party
+crates in `vendor/`. About 222k lines of Rust outside `vendor/`, tests included (2026-11-03). Rust only: no
 handwritten JS/TS, in the product or the build.
 
 | Binary | What it is |
@@ -29,10 +29,10 @@ standalone and publishable.
 | L0 foundation | `geom`, `filters`, `crypt` | Geometry; stream filters (Flate, LZW, predictors, ASCII85, ASCIIHex, RunLength); standard security handler R2–R6 (RC4, AES-128/256, SASLprep) |
 | L1 objects | `cos` | Lazy, tolerant parser with xref repair; copy-on-write object graph; incremental and full writers with object streams; decryption on load and re-encryption on save |
 | L2 core model | `content`, `model`, `fonts` | Content-stream operators with source spans and a serializer; typed page tree with inherited attributes and display geometry (`/UserUnit`, `/Rotate`); font metrics and encodings for generated appearances |
-| L3 core services | `render`, `annot`, `forms`, `js`, `xfa` | Rendering (bootstrap: vendored `hayro`) and inspection (through `cos`); annotation builders and appearance streams; AcroForm model, filling, appearances; sandboxed JavaScript (boa) and FormCalc; XFA template layout and data |
+| L3 core services | `render`, `annot`, `forms`, `js`, `xfa`, `craft-print` | Rendering (bootstrap: vendored `hayro`) and inspection (through `cos`); annotation builders and appearance streams; AcroForm model, filling, appearances; sandboxed JavaScript (boa) and FormCalc; XFA template layout and data; the system print spooler |
 | L4 features | `edit`, `organize`, `redact`, `xfdf`, `sign`, `ocr`, `create`, `export`, `optimize`, `preflight`, `a11y`, `compare`, `measure`, `print` | One crate per Acrobat tool family |
 | L6 façade | `engine` | Session, open documents, edit history, the command registry and tool catalogue. Frontends never reach past it |
-| L7 platform and frontends | `platform`, `ui-egui`, `automation` | OS services; the egui shell (desktop and web); headless JSON-Schema tools, CLI and MCP |
+| L7 platform and frontends | `platform`, `ui-egui`, `craft-ui`, `automation` | OS services; the egui shell (desktop and web) and its shared controls; headless JSON-Schema tools, CLI and MCP |
 
 Planned crates that the layer table already reserves (`arlington`, `color`, `ops`, `text`, `ml`,
 `security`, `prepress`, `search`, `media`, `ai`, `viewport`, `tools`, `ui-common`) don't exist yet.
@@ -93,7 +93,8 @@ Every user-facing feature is reachable headlessly (`AGENTS.md` §3):
 - `unsafe_code = "forbid"` workspace-wide; crates deny `unwrap`/`expect`/`panic!`; engine entry
   points keep a last-resort `catch_unwind` (`AGENTS.md` §4).
 - Every input-derived size is bounded (decompression, images, recursion, content per page).
-- `cargo xtask fuzz` runs nightly; every finding becomes a synthetic regression test.
+- `cargo xtask fuzz` runs on demand (the CI `fuzz` job is manual); every finding becomes a synthetic
+  regression test.
 
 ## Build and quality gates
 
@@ -101,10 +102,12 @@ Every user-facing feature is reachable headlessly (`AGENTS.md` §3):
 `xtask assets` (asset licences and hashes) and `xtask deny` (dependency licences). Other tasks:
 `xtask fuzz`, `xtask corpus` and `xtask check` (robustness sweep over the pinned pdf.js corpus),
 `xtask text-oracle` (word F1 against `pdftotext`), `xtask demo-pdf`, `xtask screenshots`,
-`xtask models` (OCR models), `xtask version`.
+`xtask models` (Tesseract Best models for English, Japanese and Arabic; OCR runs a local Tesseract 5),
+`xtask version`. CI is one Linux job; Windows and macOS are built and tested locally.
 
 ## Revision history
 
 | Date | Change | Summary |
 |---|---|---|
 | 2026-10-10 | major | Created from the code on main (crate list, `xtask/src/layers.rs`, crate READMEs, `vendor/README.md`) |
+| 2026-11-03 | minor | Personal fork: `craft-ui`/`craft-print` in the layer table, Tesseract OCR, CI and fuzzing as run now, line count |
