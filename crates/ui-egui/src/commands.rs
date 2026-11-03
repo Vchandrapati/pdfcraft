@@ -86,6 +86,7 @@ impl PdfCraftApp {
         }
         commands::is_enabled(spec, &self.session, self.active_ids().map(|(_, id)| id))
             && (spec.needs != commands::Needs::TwoPageView || self.active.and_then(|i| self.views.get(i)).is_some_and(crate::DocView::cover_applies))
+            && (spec.id != "view.split" || self.views.len() >= 2 || self.split_view_indices().is_some())
     }
 
     /// Run a registered command by id. Returns `false` when the id is unknown or the command
@@ -137,6 +138,7 @@ impl PdfCraftApp {
                 }
                 commands::Needs::Copying if self.active.is_some() => crate::copy_refused().to_string(),
                 commands::Needs::TwoPageView if self.active.is_some() => tl!("Switch to two-page view first to show the cover page").to_string(),
+                _ if spec.id == "view.split" && self.active.is_some() => tl!("Open a second document to view side by side").to_string(),
                 _ => tl!("Open a document first").to_string(),
             };
             self.notify(why);
@@ -373,6 +375,11 @@ impl PdfCraftApp {
                 self.dialog = Some(Dialog::DocumentJs);
             }
             "app.preferences" => self.dialog = Some(Dialog::Preferences),
+            "view.split" => {
+                if !self.toggle_split() {
+                    return false;
+                }
+            }
             "ocr.recognize_batch" => self.ocr_files_dialog(),
             "edit.edit_text" => {
                 self.quick_tool = crate::QuickTool::EditText;

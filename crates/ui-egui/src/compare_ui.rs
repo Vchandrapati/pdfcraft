@@ -27,6 +27,23 @@ pub struct CompareState {
     pending_shortcuts: bool,
 }
 
+/// View ▸ View side by side: any two open documents in the comparison workspace's two panes,
+/// without a comparison. It shows while either document's tab is active.
+pub struct SplitState {
+    pub left: DocId,
+    pub right: DocId,
+    pub sync_navigation: bool,
+    last_navigation: Option<(DocId, crate::canvas::ViewNavigation)>,
+    pending_shortcuts: bool,
+}
+
+/// Which feature owns the two panes on screen.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Panes {
+    Compare,
+    Split,
+}
+
 /// Visual differences are shaded orange.
 pub const VISUAL: Color32 = Color32::from_rgb(0xF0, 0x8C, 0x1A);
 
@@ -176,16 +193,81 @@ impl PdfCraftApp {
     /// and full screen retain their ordinary single-document view.
     pub(crate) fn compare_view_indices(&self) -> Option<[usize; 2]> {
         let s = self.compare.as_ref().filter(|s| s.side_by_side)?;
+        self.pane_indices(s.old, s.new)
+    }
+
+    /// The two documents of View side by side, while one of them is the active tab.
+    pub fn split_view_indices(&self) -> Option<[usize; 2]> {
+        let s = self.split.as_ref()?;
+        self.pane_indices(s.left, s.right)
+    }
+
+    /// The panes on screen: a side-by-side comparison wins over View side by side.
+    pub(crate) fn pane_view_indices(&self) -> Option<[usize; 2]> {
+        self.panes().map(|(pair, _)| pair)
+    }
+
+    fn panes(&self) -> Option<([usize; 2], Panes)> {
+        self.compare_view_indices().map(|p| (p, Panes::Compare)).or_else(|| self.split_view_indices().map(|p| (p, Panes::Split)))
+    }
+
+    fn pane_indices(&self, a: DocId, b: DocId) -> Option<[usize; 2]> {
         let active = self.active_ids()?.1;
-        if self.full_screen || (active != s.old && active != s.new) {
+        if self.full_screen || (active != a && active != b) {
             return None;
         }
-        let old = self.views.iter().position(|v| v.id == s.old)?;
-        let new = self.views.iter().position(|v| v.id == s.new)?;
-        if old == new || [old, new].iter().any(|i| self.views.get(*i).is_some_and(|v| v.organize)) {
+        let a = self.views.iter().position(|v| v.id == a)?;
+        let b = self.views.iter().position(|v| v.id == b)?;
+        if a == b || [a, b].iter().any(|i| self.views.get(*i).is_some_and(|v| v.organize)) {
             return None;
         }
-        Some([old, new])
+        Some([a, b])
+    }
+
+    /// Show the active document and the tab at `other` side by side, with linked navigation.
+    pub(crate) fn start_split(&mut self, other: usize) -> bool {
+        let Some((_, left)) = self.active_ids() else { return false };
+        let Some(right) = self.views.get(other).map(|v| v.id).filter(|id| *id != left) else { return false };
+        for view in self.views.iter_mut().filter(|v| v.id == left || v.id == right) {
+            view.organize = false;
+        }
+        self.full_screen = false;
+        self.split = Some(SplitState { left, right, sync_navigation: true, last_navigation: None, pending_shortcuts: false });
+        true
+    }
+
+    /// View ▸ View side by side: leave it while it shows, otherwise pair the active document with
+    /// the tab before it (or after it, for the first tab).
+    pub(crate) fn toggle_split(&mut self) -> bool {
+        if self.split_view_indices().is_some() {
+            self.split = None;
+            return true;
+        }
+        let Some(active) = self.active else { return false };
+        let other = if active > 0 { active - 1 } else { active + 1 };
+        self.start_split(other)
+    }
+
+    fn set_pending_shortcuts(&mut self, panes: Panes) {
+        match panes {
+            Panes::Compare => {
+                if let Some(s) = self.compare.as_mut() {
+                    s.pending_shortcuts = true;
+                }
+            }
+            Panes::Split => {
+                if let Some(s) = self.split.as_mut() {
+                    s.pending_shortcuts = true;
+                }
+            }
+        }
+    }
+
+    fn take_pending_shortcuts(&mut self, panes: Panes) -> bool {
+        match panes {
+            Panes::Compare => self.compare.as_mut().is_some_and(|s| std::mem::take(&mut s.pending_shortcuts)),
+            Panes::Split => self.split.as_mut().is_some_and(|s| std::mem::take(&mut s.pending_shortcuts)),
+        }
     }
 
     pub(crate) fn clear_compare(&mut self) {
@@ -200,17 +282,31 @@ impl PdfCraftApp {
     }
 
     pub(crate) fn sync_compare_navigation(&mut self, ctx: &egui::Context) {
-        let Some(pair) = self.compare_view_indices() else { return };
+        let Some((pair, panes)) = self.panes() else { return };
         let Some(active) = self.active else { return };
         let Some(source) = self.views.get(active) else { return };
         let Some(mut navigation) = source.navigation() else { return };
         let source_id = source.id;
-        let Some(s) = self.compare.as_mut().filter(|s| s.sync_navigation) else { return };
-        if s.last_navigation == Some((source_id, navigation)) {
-            return;
-        }
-        s.last_navigation = Some((source_id, navigation));
-        let (from, to) = if source_id == s.old { s.navigation_pages } else { (s.navigation_pages.1, s.navigation_pages.0) };
+        // Compare links corresponding pages (after a selected difference); View side by side
+        // links page n to page n.
+        let (from, to) = match panes {
+            Panes::Compare => {
+                let Some(s) = self.compare.as_mut().filter(|s| s.sync_navigation) else { return };
+                if s.last_navigation == Some((source_id, navigation)) {
+                    return;
+                }
+                s.last_navigation = Some((source_id, navigation));
+                if source_id == s.old { s.navigation_pages } else { (s.navigation_pages.1, s.navigation_pages.0) }
+            }
+            Panes::Split => {
+                let Some(s) = self.split.as_mut().filter(|s| s.sync_navigation) else { return };
+                if s.last_navigation == Some((source_id, navigation)) {
+                    return;
+                }
+                s.last_navigation = Some((source_id, navigation));
+                (0, 0)
+            }
+        };
         navigation.page = if navigation.page >= from { to.saturating_add(navigation.page - from) } else { to.saturating_sub(from - navigation.page) };
         let other = if active == pair[0] { pair[1] } else { pair[0] };
         if let Some(target) = self.views.get_mut(other) {
@@ -221,7 +317,7 @@ impl PdfCraftApp {
 
     /// Resolve pointer focus before shortcuts and object input gates run in `logic`.
     pub(crate) fn focus_compare_pointer(&mut self, ctx: &egui::Context) -> bool {
-        let Some(pair) = self.compare_view_indices() else { return true };
+        let Some((pair, panes)) = self.panes() else { return true };
         if self.modal_open() || self.palette_open {
             return true;
         }
@@ -231,9 +327,7 @@ impl PdfCraftApp {
             if rects.iter().any(|r| !r.is_positive()) || rects[0].intersects(rects[1]) {
                 // Old single-document rectangles overlap when first entering the split. The
                 // Canvas wrapper knows the current layout; dispatch there instead of guessing.
-                if let Some(s) = self.compare.as_mut() {
-                    s.pending_shortcuts = true;
-                }
+                self.set_pending_shortcuts(panes);
                 return false;
             }
             for pane in pair {
@@ -364,7 +458,7 @@ impl PdfCraftApp {
 
 /// Render the comparison inside the ordinary Canvas panel, keeping its docking layout intact.
 pub(crate) fn document_area(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
-    let Some(pair) = app.compare_view_indices() else {
+    let Some((pair, panes)) = app.panes() else {
         crate::canvas::document_area(app, index, ui);
         return;
     };
@@ -385,11 +479,11 @@ pub(crate) fn document_area(app: &mut PdfCraftApp, index: usize, ui: &mut egui::
             }
         }
     }
-    if app.compare.as_mut().is_some_and(|s| std::mem::take(&mut s.pending_shortcuts)) {
+    if app.take_pending_shortcuts(panes) {
         app.shortcuts(ui.ctx());
     }
     // A deferred shortcut can close a member or open a report: resolve the pair again.
-    let Some(pair) = app.compare_view_indices() else {
+    let Some((pair, panes)) = app.panes() else {
         if let Some(active) = app.active {
             crate::canvas::document_area(app, active, ui);
         }
@@ -399,15 +493,36 @@ pub(crate) fn document_area(app: &mut PdfCraftApp, index: usize, ui: &mut egui::
     for pane in pair {
         app.views[pane].objects.set_input_blocked(blocked || app.active != Some(pane));
     }
-    for ((pane, rect), label) in pair.into_iter().zip([left, right]).zip([tl!("Old file:"), tl!("New file:")]) {
+    let labels = match panes {
+        Panes::Compare => [Some(tl!("Old file:")), Some(tl!("New file:"))],
+        Panes::Split => [None, None],
+    };
+    for (side, ((pane, rect), label)) in pair.into_iter().zip([left, right]).zip(labels).enumerate() {
         // The canvas supplies its own stable global document scope inside this pane.
         ui.scope_builder(egui::UiBuilder::new().id_salt(("document-pane", app.views[pane].id)).max_rect(rect), |ui| {
             ui.set_clip_rect(rect.intersect(ui.clip_rect()));
             ui.horizontal(|ui| {
-                ui.label(label);
-                let name = app.session.get(app.views[pane].id).map(|d| d.name.as_str()).unwrap_or("");
+                if let Some(label) = label {
+                    ui.label(label);
+                }
+                let name = app.session.get(app.views[pane].id).map(|d| d.display_name()).unwrap_or_default();
                 if ui.selectable_label(app.active == Some(pane), name).clicked() {
                     app.active = Some(pane);
+                }
+                // View side by side keeps its controls on the right pane's header.
+                if panes == Panes::Split && side == 1 {
+                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                        if ui.button(tl!("Close side by side")).clicked() {
+                            app.split = None;
+                        }
+                        if let Some(s) = app.split.as_mut() {
+                            let mut linked = s.sync_navigation;
+                            if ui.add(widgets::checkbox(&mut linked, tl!("Link scrolling and zoom"))).changed() {
+                                s.sync_navigation = linked;
+                                s.last_navigation = None;
+                            }
+                        }
+                    });
                 }
             });
             ui.separator();

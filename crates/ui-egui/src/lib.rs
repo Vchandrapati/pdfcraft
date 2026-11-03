@@ -578,6 +578,8 @@ pub struct PdfCraftApp {
     /// Compare files: the chosen older document and the last result.
     pub compare_old: Option<DocId>,
     pub compare: Option<compare_ui::CompareState>,
+    /// View side by side: two open documents in two panes.
+    pub split: Option<compare_ui::SplitState>,
     /// The JavaScript console and the Document JavaScripts draft.
     pub js_console: js_ui::JsConsole,
     pub doc_js: js_ui::DocJsDraft,
@@ -861,6 +863,7 @@ impl PdfCraftApp {
             pdfa: Default::default(),
             compare_old: None,
             compare: None,
+            split: None,
             js_console: Default::default(),
             doc_js: Default::default(),
             a11y: a11y_ui::A11yState::default(),
@@ -2531,9 +2534,9 @@ impl PdfCraftApp {
     fn finish_render_frame(&mut self, ctx: &egui::Context) {
         // The Combine grid's thumbnails, whichever tab shows (renders under way still finish).
         self.combine_thumbs_frame(ctx);
-        let pair = self.compare_view_indices();
+        let pair = self.pane_view_indices();
         // Retire hidden documents before admitting results for the active view and its visible
-        // comparison partner. Each visible view retains its existing bounded caches.
+        // comparison (or side-by-side) partner. Each visible view retains its existing bounded caches.
         for (i, view) in self.views.iter_mut().enumerate() {
             if Some(i) != self.active
                 && !pair.is_some_and(|pair| pair.contains(&i))

@@ -52,8 +52,10 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                     app.active = None;
                     app.combine_tab.focused = false;
                 }
-                // Keep the theme and shortcut buttons and their gaps outside the scrolling tabs.
-                let controls_width = 2.0 * button + 2.0 * ui.spacing().item_spacing.x;
+                // Keep the theme, Settings and shortcut buttons and their gaps outside the scrolling
+                // tabs (Settings is a ghost button: its text plus 38 points of icon and padding).
+                let settings_width = ui.fonts_mut(|f| f.layout_no_wrap(tl!("Settings").into(), theme::medium(13.0), t.text).size().x) + 38.0;
+                let controls_width = 2.0 * button + settings_width + 3.0 * ui.spacing().item_spacing.x;
                 // Open stays in sight after the tabs: its icon, text and padding, and the gaps around it.
                 let open_width = ui.fonts_mut(|f| f.layout_no_wrap(tl!("Open").into(), theme::medium(13.0), t.text).size().x) + 38.0 + 12.0;
                 let mut tabs_width = (ui.available_width() - controls_width - open_width).max(0.0);
@@ -122,6 +124,15 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                                 if response.clicked() {
                                     app.active = Some(i);
                                 }
+                                // Another tab's menu pairs it with the active document.
+                                if app.active.is_some_and(|a| a != i) {
+                                    response.context_menu(|ui| {
+                                        if ui.button(tl!("View side by side")).clicked() {
+                                            app.start_split(i);
+                                            ui.close();
+                                        }
+                                    });
+                                }
                             }
                             if let Some(i) = close {
                                 app.request_close_tab(i);
@@ -187,6 +198,11 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                         });
                     }
                     egui::Popup::context_menu(&response).id(response.id.with("theme_menu")).show(|ui| appearance_menu(app, ui));
+                    // Labelled, beside the theme button, so Preferences is found without the menu.
+                    let tip = crate::commands::command_tip(ui.ctx(), tl!("Preferences ({key})"), "app.preferences");
+                    if widgets::ghost_button_sized(ui, "settings", tl!("Settings"), tab_h).on_hover_text(tip).clicked() {
+                        app.execute("app.preferences");
+                    }
                     if icons::button(ui, "circle-help", button, false, tl!("Keyboard shortcuts")).clicked() {
                         app.dialog = Some(Dialog::Shortcuts);
                     }
@@ -316,6 +332,11 @@ fn tab(
         };
         if bg.a() > 0 {
             ui.painter().rect_filled(rect, CornerRadius { nw: 7, ne: 7, sw: 0, se: 0 }, bg);
+        }
+        // The active tab's accent edge, so the open document reads at a glance in the dark strip.
+        if active {
+            let edge = Rect::from_min_max(rect.min + vec2(7.0, 0.0), egui::pos2(rect.max.x - 7.0, rect.min.y + 2.0));
+            ui.painter().rect_filled(edge, CornerRadius::same(1), t.accent);
         }
         icons::paint(
             ui,
