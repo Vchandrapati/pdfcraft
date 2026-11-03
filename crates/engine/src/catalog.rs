@@ -485,6 +485,20 @@ pub static TOOL_GROUPS: &[ToolGroup] = &[
     },
 ];
 
+impl ToolSection {
+    /// The items that work in this build.
+    pub fn ready_items(&self) -> impl Iterator<Item = &'static ToolItem> + use<> {
+        self.items.iter().filter(|i| i.availability == Availability::Ready)
+    }
+}
+
+impl ToolGroup {
+    /// Whether the group has anything that works in this build; tool lists hide the rest.
+    pub fn has_ready_items(&self) -> bool {
+        self.sections.iter().any(|s| s.ready_items().next().is_some())
+    }
+}
+
 pub fn group(id: &str) -> Option<&'static ToolGroup> {
     TOOL_GROUPS.iter().find(|g| g.id == id)
 }

@@ -30,38 +30,38 @@ fn harness(setup: impl FnOnce(&mut PdfCraftApp) + 'static) -> Harness<'static, P
 }
 
 #[test]
-fn home_shows_quick_tools() {
+fn home_shows_recent_files_without_quick_tools() {
     let h = harness(|_| {});
-    h.get_by_label("Quick tools");
-    for label in ["Rotate", "Merge", "Split", "Reorder"] {
-        h.get_by_label(label);
-    }
-    for label in ["Welcome to PdfCraft", "Recommended tools", "Join the ArtCraft community", "Privacy", "Open file"] {
+    h.get_by_label("Recent");
+    for label in
+        ["Quick tools", "Split", "Reorder", "Welcome to PdfCraft", "Recommended tools", "Join the ArtCraft community", "Privacy", "Open file"]
+    {
         assert!(h.query_by_label(label).is_none(), "{label} was removed from Home");
     }
+}
+
+#[test]
+fn top_bar_merge_and_rotate_start_their_workflows() {
+    // Merge opens Combine files.
     let mut h = harness(|_| {});
     h.get_by_label("Merge").click();
     h.run_steps(3);
     assert!(h.state().combine_showing());
 
+    // Rotate with nothing open asks for a PDF, then opens Rotate pages on it.
     #[cfg(not(target_arch = "wasm32"))]
     {
         use pdfcraft_ui_egui::Dialog;
-        let dir = std::env::temp_dir().join(format!("pdfcraft-home-quick-tools-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("pdfcraft-top-bar-rotate-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let file = dir.join("pages.pdf");
         std::fs::write(&file, FIXTURE).unwrap();
-        for (label, dialog) in [("Rotate", Some(Dialog::RotatePages)), ("Split", Some(Dialog::Split)), ("Reorder", None)] {
-            let mut h = harness(|_| {});
-            h.state_mut().pick_override = Some(vec![file.to_string_lossy().into_owned()]);
-            h.get_by_label(label).click();
-            h.run_steps(4);
-            assert_eq!(h.state().views.len(), 1, "{label} opens the chosen PDF");
-            assert_eq!(h.state().dialog, dialog, "{label} opens its workflow");
-            if label == "Reorder" {
-                assert!(h.state().views[0].organize);
-            }
-        }
+        let mut h = harness(|_| {});
+        h.state_mut().pick_override = Some(vec![file.to_string_lossy().into_owned()]);
+        h.get_by_label("Rotate").click();
+        h.run_steps(4);
+        assert_eq!(h.state().views.len(), 1, "Rotate opens the chosen PDF");
+        assert_eq!(h.state().dialog, Some(Dialog::RotatePages), "Rotate opens its workflow");
         let _ = std::fs::remove_dir_all(dir);
     }
 }
@@ -143,11 +143,24 @@ fn home_removes_one_recent_file_or_clears_them_all() {
 }
 
 #[test]
-fn every_catalog_tool_is_listed_without_expanding() {
+fn every_working_tool_is_listed_without_expanding() {
     let h = harness(|_| {});
     assert!(h.query_by_label("View more").is_none(), "All tools has no View more toggle");
     for g in pdfcraft_engine::catalog::TOOL_GROUPS {
-        assert!(h.query_all_by_label(g.label).count() >= 1, "tool {} missing from All tools", g.label);
+        let listed = h.query_all_by_label(g.label).count() >= 1;
+        assert_eq!(listed, g.has_ready_items(), "{}: only tools with working items are listed", g.label);
+    }
+    assert!(h.query_by_label("Use JavaScript").is_none(), "a tool that is only planned is left out");
+}
+
+#[test]
+fn merge_and_rotate_sit_in_the_top_bar_not_on_home() {
+    let h = harness(|_| {});
+    assert!(h.query_by_label("Quick tools").is_none(), "Home has no Quick tools card");
+    let edit = h.get_by_label("Edit").rect();
+    for label in ["Merge", "Rotate"] {
+        let r = h.get_by_label(label).rect();
+        assert!((r.center().y - edit.center().y).abs() < 2.0, "{label} sits in the mode bar beside Edit");
     }
 }
 
@@ -1006,7 +1019,7 @@ fn closing_the_last_active_tab_selects_the_previous_one_then_home() {
         assert!(app.session.get(ids[removed]).is_none());
     }
     assert_eq!(h.state().active, None);
-    h.get_by_label("Quick tools");
+    h.get_by_label("Recent");
 }
 
 #[test]

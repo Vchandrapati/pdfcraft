@@ -2,7 +2,7 @@
 //! right-hand panels (Comments, Bookmarks, Pages, Fields, Layers, Attachments).
 
 use egui::{Align, Align2, Color32, CornerRadius, Layout, Rect, Sense, Stroke, pos2, vec2};
-use pdfcraft_engine::catalog::{self, Availability, TOOL_GROUPS, ToolGroup};
+use pdfcraft_engine::catalog::{self, TOOL_GROUPS, ToolGroup};
 use pdfcraft_render::{DocInfo, FieldKind, OutlineItem};
 use std::fmt::Write as _;
 
@@ -54,9 +54,9 @@ fn all_tools(app: &mut PdfCraftApp, ui: &mut egui::Ui, t: &Tokens) {
     if close {
         app.left_open = false;
     }
-    // Every tool is listed; the panel scrolls when they don't fit.
+    // Every tool that works today is listed; the panel scrolls when they don't fit.
     egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
-        for g in TOOL_GROUPS {
+        for g in TOOL_GROUPS.iter().filter(|g| g.has_ready_items()) {
             if tool_row(ui, t, g).clicked() {
                 app.select_tool(g.id);
             }
@@ -82,35 +82,9 @@ fn tool_row(ui: &mut egui::Ui, t: &Tokens, g: &ToolGroup) -> egui::Response {
     press.wash(ui, rect, 6, false);
     let body = rect.translate(press.offset());
     icons::paint(ui, Rect::from_min_size(body.min + vec2(6.0, 7.0), vec2(20.0, 20.0)), g.icon, 19.0, hue(g));
-    let planned = matches!(g.availability, Availability::Planned(_));
-    let right_reserved = match g.availability {
-        Availability::Planned(m) if resp.hovered() => {
-            let hint = format!("{} · {m}", tl!("Planned"));
-            ui.fonts_mut(|f| f.layout_no_wrap(hint, theme::medium(10.5), t.text_faint).size().x) + 18.0
-        }
-        _ => 8.0,
-    };
-    // Planned tools are muted so the ones that work today stand out.
-    let fg = if planned { t.text_muted } else { t.text };
-    let clipped = row_label(ui, tl!(g.label), theme::regular(13.5), fg, body.left_center() + vec2(36.0, 0.0), rect.width() - 36.0 - right_reserved);
-    // Planned tools: a quiet milestone hint on hover instead of a chip, so the list stays calm.
-    if let Availability::Planned(m) = g.availability
-        && resp.hovered()
-    {
-        ui.painter().text(
-            body.right_center() - vec2(10.0, 0.0),
-            Align2::RIGHT_CENTER,
-            format!("{} · {m}", tl!("Planned")),
-            theme::medium(10.5),
-            t.text_faint,
-        );
-    }
-    let tip = match g.availability {
-        Availability::Ready => tl!("Available").to_string(),
-        Availability::Planned(m) => format!("{} {m} — {}", tl!("Planned for milestone"), tl!("open to see what it will include")),
-    };
-    let tip = if clipped { format!("{} — {tip}", tl!(g.label)) } else { tip };
-    theme::hand(resp).on_hover_text(tip)
+    let clipped = row_label(ui, tl!(g.label), theme::regular(13.5), t.text, body.left_center() + vec2(36.0, 0.0), rect.width() - 44.0);
+    let resp = theme::hand(resp);
+    if clipped { resp.on_hover_text(tl!(g.label)) } else { resp }
 }
 
 fn tool_detail(app: &mut PdfCraftApp, ui: &mut egui::Ui, t: &Tokens, g: &'static ToolGroup) {
@@ -121,12 +95,6 @@ fn tool_detail(app: &mut PdfCraftApp, ui: &mut egui::Ui, t: &Tokens, g: &'static
     }
     if close {
         app.left_open = false;
-    }
-    if let Availability::Planned(m) = g.availability {
-        egui::Frame::NONE.fill(t.accent_soft).corner_radius(CornerRadius::same(8)).inner_margin(egui::Margin::same(10)).show(ui, |ui| {
-            ui.set_width(ui.available_width());
-            ui.label(egui::RichText::new(format!("{} {m}.", tl!("Coming in milestone"))).color(t.text).font(theme::regular(12.0)));
-        });
     }
     if g.id == "measure" {
         crate::measure_ui::panel(app, ui, t);
@@ -171,37 +139,20 @@ fn tool_detail(app: &mut PdfCraftApp, ui: &mut egui::Ui, t: &Tokens, g: &'static
     let marks = if footer { app.active_ids().and_then(|(_, id)| app.session.get(id)).map_or(0, |d| d.redaction_marks()) } else { 0 };
     let list_h = if footer { (ui.available_height() - 52.0).max(80.0) } else { ui.available_height() };
     egui::ScrollArea::vertical().auto_shrink([false, false]).max_height(list_h).show(ui, |ui| {
-        for s in g.sections {
+        // Only what works today: planned items, and sections with nothing else, are left out.
+        for s in g.sections.iter().filter(|s| s.ready_items().next().is_some()) {
             widgets::section_title(ui, tl!(s.title));
-            for item in s.items {
+            for item in s.ready_items() {
                 if g.id == "fill_sign" && (item.command.starts_with("sign.fill.signature") || item.command.starts_with("sign.fill.initials")) {
                     continue;
                 }
                 let (rect, resp) = ui.allocate_exact_size(vec2(ui.available_width(), 34.0), Sense::click());
                 resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tl!(item.label)));
-                let ready = item.availability == Availability::Ready;
                 let press = theme::Press::track(ui, &resp);
                 press.wash(ui, rect, 6, false);
                 let body = rect.translate(press.offset());
-                let fg = if ready { t.text } else { t.text_muted };
-                icons::paint(
-                    ui,
-                    Rect::from_min_size(body.min + vec2(6.0, 8.0), vec2(18.0, 18.0)),
-                    item.icon,
-                    17.0,
-                    if ready { hue(g) } else { t.text_faint },
-                );
-                // Only planned items carry a mark: the milestone, in quiet text. Working items need none.
-                let label_right = match item.availability {
-                    Availability::Ready => body.right() - 8.0,
-                    Availability::Planned(m) => {
-                        let font = theme::medium(10.5);
-                        let w = crate::widgets::text_width(ui, m, &font);
-                        ui.painter().text(body.right_center() - vec2(10.0, 0.0), Align2::RIGHT_CENTER, m, font, t.text_faint);
-                        body.right() - w - 18.0
-                    }
-                };
-                row_label(ui, tl!(item.label), theme::regular(13.0), fg, body.left_center() + vec2(34.0, 0.0), label_right - body.left() - 34.0);
+                icons::paint(ui, Rect::from_min_size(body.min + vec2(6.0, 8.0), vec2(18.0, 18.0)), item.icon, 17.0, hue(g));
+                row_label(ui, tl!(item.label), theme::regular(13.0), t.text, body.left_center() + vec2(34.0, 0.0), body.width() - 42.0);
                 if theme::hand(resp).on_hover_text(format!("{} — {}", tl!(item.label), item.command)).clicked() {
                     run = Some(item.command);
                 }

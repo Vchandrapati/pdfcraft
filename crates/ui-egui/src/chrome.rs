@@ -390,6 +390,16 @@ pub fn mode_bar(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                         app.switch_mode(mode, true);
                     }
                 }
+                // One-click page jobs beside the modes. Merge picks its own files; Rotate asks for a
+                // document first when none is open.
+                for (label, command) in [("Merge", "page.combine"), ("Rotate", "page.rotate_dialog")] {
+                    if widgets::mode_tab(ui, tl!(label), false).clicked() {
+                        match pdfcraft_engine::commands::command(command) {
+                            Some(spec) if app.active.is_none() && command != "page.combine" => app.open_then_run(spec),
+                            _ => app.run_command(command),
+                        }
+                    }
+                }
                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                     ui.spacing_mut().item_spacing.x = 4.0;
                     let has_doc = app.active.is_some();
