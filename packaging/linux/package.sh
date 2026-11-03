@@ -20,7 +20,7 @@ set -euo pipefail
 # shellcheck source=../env.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 HERE="$ROOT/packaging/linux"
-APP_ID=ai.storyteller.pdfcraft
+APP_ID=io.github.vchandrapati.pdfcraft
 
 SKIP_BUILD=0
 FORMATS="appimage deb rpm tar cli"
@@ -40,7 +40,7 @@ case "$ARCH" in
   aarch64 | arm64) ARCH=aarch64; DEB_ARCH=arm64 ;;
   *) echo "unsupported architecture $ARCH" >&2; exit 2 ;;
 esac
-export PDFCRAFT_MAINTAINER="${PDFCRAFT_MAINTAINER:-PdfCraft maintainers <pdfcraft@storyteller.ai>}"
+export PDFCRAFT_MAINTAINER="${PDFCRAFT_MAINTAINER:-Vikil Chandrapati <79786184+Vchandrapati@users.noreply.github.com>}"
 BASENAME="pdfcraft-$VERSION-linux-$ARCH"
 
 echo "==> PdfCraft $VERSION for Linux $ARCH ($FORMATS)"

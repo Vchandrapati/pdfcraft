@@ -4,15 +4,15 @@
 #
 #   curl -fsSLO https://raw.githubusercontent.com/flatpak/flatpak-builder-tools/master/cargo/flatpak-cargo-generator.py
 #   python3 flatpak-cargo-generator.py Cargo.lock -o packaging/linux/flatpak/cargo-sources.json
-#   flatpak-builder --user --install --force-clean build-flatpak packaging/linux/flatpak/ai.storyteller.pdfcraft.yml
-#   flatpak run ai.storyteller.pdfcraft
+#   flatpak-builder --user --install --force-clean build-flatpak packaging/linux/flatpak/io.github.vchandrapati.pdfcraft.yml
+#   flatpak run io.github.vchandrapati.pdfcraft
 #
 # For Flathub, replace the `dir` source with a `git` source pinned to a release tag and commit.
-# The single-file .flatpak attached to each release comes from ai.storyteller.pdfcraft.bundle.yml,
+# The single-file .flatpak attached to each release comes from io.github.vchandrapati.pdfcraft.bundle.yml,
 # which repackages the prebuilt release binaries. Keep runtime-version and finish-args identical.
 # The Flatpak currently ships the English model but not the Tesseract executable. The sandbox cannot
 # use a host-installed Tesseract, so OCR is unavailable in this package until the runtime is bundled.
-id: ai.storyteller.pdfcraft
+id: io.github.vchandrapati.pdfcraft
 runtime: org.freedesktop.Platform
 runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
@@ -49,14 +49,14 @@ modules:
     build-commands:
       - cargo --offline build --release --locked -p pdfcraft
       - install -Dm755 target/release/pdfcraft /app/bin/pdfcraft
-      - install -Dm644 packaging/linux/ai.storyteller.pdfcraft.desktop /app/share/applications/ai.storyteller.pdfcraft.desktop
-      - install -Dm644 packaging/linux/ai.storyteller.pdfcraft.mime.xml /app/share/mime/packages/ai.storyteller.pdfcraft.xml
+      - install -Dm644 packaging/linux/io.github.vchandrapati.pdfcraft.desktop /app/share/applications/io.github.vchandrapati.pdfcraft.desktop
+      - install -Dm644 packaging/linux/io.github.vchandrapati.pdfcraft.mime.xml /app/share/mime/packages/io.github.vchandrapati.pdfcraft.xml
       - mkdir -p /app/share/icons && cp -R assets/app-icon/hicolor /app/share/icons/
       - >-
         version=$(awk '/^\[/{p=($0=="[workspace.package]");next} p&&$1=="version"{gsub(/[" ]/,"",$3);print $3;exit}' Cargo.toml);
         install -d /app/share/metainfo;
         sed -e "s/@VERSION@/$version/" -e "s/@DATE@/$(date -u +%Y-%m-%d)/"
-        packaging/linux/ai.storyteller.pdfcraft.metainfo.xml.in > /app/share/metainfo/ai.storyteller.pdfcraft.metainfo.xml
+        packaging/linux/io.github.vchandrapati.pdfcraft.metainfo.xml.in > /app/share/metainfo/io.github.vchandrapati.pdfcraft.metainfo.xml
     sources:
       - type: dir
         path: ../../..

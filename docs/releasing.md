@@ -2,7 +2,7 @@
 
 This fork has no hosted release pipeline: installers are built locally with the scripts in
 `packaging/`, one per platform. User-facing names say **PdfCraft**; files, binaries and ids stay
-lowercase (`pdfcraft-<version>-<platform>-<arch>.<ext>`, `ai.storyteller.pdfcraft`).
+lowercase (`pdfcraft-<version>-<platform>-<arch>.<ext>`, `io.github.vchandrapati.pdfcraft`).
 
 ## Version
 
@@ -56,7 +56,7 @@ so OCR is unavailable there; the web build cannot run the native executable.
 ### macOS
 
 `packaging/macos/package.sh` builds both architectures, joins them with `lipo`, and assembles
-`PdfCraft.app` from `Info.plist.in` (bundle id `ai.storyteller.pdfcraft`, macOS 11+, PDF declared
+`PdfCraft.app` from `Info.plist.in` (bundle id `io.github.vchandrapati.pdfcraft`, macOS 11+, PDF declared
 as a document type with rank Alternate, so PdfCraft is offered under Open With without taking over
 from Preview). Files opened from Finder arrive as Apple events, which
 `apps/pdfcraft/src/apple_events.rs` receives.
@@ -135,8 +135,8 @@ The AppImage carries no update information: this fork publishes no releases for 
 follow.
 
 **Flatpak:** `packaging/linux/flatpak-bundle.sh` turns each arch's tarball into a single-file bundle with
-`flatpak/ai.storyteller.pdfcraft.bundle.yml` (no Rust build; the same binaries).
-`flatpak/ai.storyteller.pdfcraft.yml` is the from-source manifest for a later Flathub submission;
+`flatpak/io.github.vchandrapati.pdfcraft.bundle.yml` (no Rust build; the same binaries).
+`flatpak/io.github.vchandrapati.pdfcraft.yml` is the from-source manifest for a later Flathub submission;
 keep the runtime and sandbox permissions (`finish-args`) of the two identical.
 Printing is not available in the Flatpak yet: it runs `lp`, which the freedesktop runtime lacks
 ; it needs the print portal. Users install the bundle with `flatpak install --user pdfcraft-<v>-linux-<arch>.flatpak`; the
