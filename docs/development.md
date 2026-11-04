@@ -153,7 +153,13 @@ softness is expected.
 
 ## Renderer fallback
 
-PdfCraft draws with wgpu, and starts again with eframe's own OpenGL renderer (glow) when wgpu fails
+On Windows PdfCraft draws with eframe's own OpenGL renderer (glow) and starts again with wgpu when
+OpenGL can't start. On a 3600x2300 window on an Intel UHD, wgpu's Direct3D 12 took 40-54 ms a frame
+while scrolling and OpenGL 13. Don't drop the frame-latency wait
+(`WGPU_DX12_USE_FRAME_LATENCY_WAITABLE_OBJECT=none`) to speed Direct3D 12 up: frames then appear to
+take 6-8 ms, but they queue faster than the GPU finishes them, which lagged scrolling by seconds.
+
+Elsewhere PdfCraft draws with wgpu, and starts again with OpenGL when wgpu fails
 before the app is created: no adapter, no device, or a window surface the device can't configure.
 The last of these was a panic, not an error, because wgpu's default error handler panics and
 eframe configures the surface before any app code runs; a 2015 Intel GPU whose driver timed out in
