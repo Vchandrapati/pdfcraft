@@ -2513,6 +2513,50 @@ mod tests {
         assert_eq!(t.column_text(&all), "日本\n語文");
     }
 
+    /// A Type0 font embedding all of Inter, showing `text` by glyph index, whose `/ToUnicode` has
+    /// only `to_unicode`'s entries (character, text it maps to).
+    fn identity_text_with_partial_to_unicode(text: &str, to_unicode: &[(char, char)]) -> String {
+        use skrifa::MetadataProvider;
+        let program = include_bytes!("../../../assets/fonts/Inter-Regular.ttf");
+        let charmap = skrifa::FontRef::new(program).unwrap().charmap();
+        let glyph = |c: char| charmap.map(c).unwrap().to_u32();
+        let mut doc = crate::test_pdf::TestPdf::new();
+        let file = doc.add_stream("", program);
+        let descriptor = doc.add(format!("<< /Type /FontDescriptor /FontName /Inter-Regular /Flags 4 /FontFile2 {file} 0 R >>"));
+        let entries: String = to_unicode.iter().map(|&(c, to)| format!("<{:04X}> <{:04X}>\n", glyph(c), to as u32)).collect();
+        let cmap = format!(
+            "/CIDInit /ProcSet findresource begin 12 dict begin begincmap /CMapName /Partial def /CMapType 2 def 1 begincodespacerange <0000> <FFFF> endcodespacerange {} beginbfchar\n{entries}endbfchar endcmap CMapName currentdict /CMap defineresource pop end end",
+            to_unicode.len()
+        );
+        let unicode = doc.add_stream("", cmap.as_bytes());
+        let font = doc.add(format!(
+            "<< /Type /Font /Subtype /Type0 /BaseFont /Inter-Regular /Encoding /Identity-H /ToUnicode {unicode} 0 R /DescendantFonts [<< /Type /Font /Subtype /CIDFontType2 /BaseFont /Inter-Regular /CIDSystemInfo << /Registry (PDFAUTOCAD) /Ordering (Indentity0) /Supplement 0 >> /FontDescriptor {descriptor} 0 R >>] >>"
+        ));
+        let codes: String = text.chars().map(|c| format!("{:04X}", glyph(c))).collect();
+        let content = doc.add_stream("", format!("BT /F1 14 Tf 1 0 0 1 20 200 Tm <{codes}> Tj ET").as_bytes());
+        let pages = doc.reserve();
+        let page = doc.add(format!(
+            "<< /Type /Page /Parent {pages} 0 R /MediaBox [0 0 400 400] /Resources << /Font << /F1 {font} 0 R >> >> /Contents {content} 0 R >>"
+        ));
+        doc.set(pages, format!("<< /Type /Pages /Kids [{page} 0 R] /Count 1 >>"));
+        let catalog = doc.add(format!("<< /Type /Catalog /Pages {pages} 0 R >>"));
+        let pdf = Pdf::new(std::sync::Arc::new(doc.finish(catalog))).unwrap();
+        extract_page(&pdf, 0, &InterpreterSettings::default()).unwrap().plain_text()
+    }
+
+    #[test]
+    fn codes_a_partial_to_unicode_leaves_out_read_through_the_embedded_fonts_cmap() {
+        // AutoCAD's `/ToUnicode` covers only the first string shown in the font ("AS BUILT"), so
+        // "COMPLETE" read as "L T" until the embedded font's `cmap` filled the gaps.
+        let partial = [('A', 'A'), ('S', 'S'), (' ', ' '), ('B', 'B'), ('U', 'U'), ('I', 'I'), ('L', 'L'), ('T', 'T')];
+        assert_eq!(identity_text_with_partial_to_unicode("COMPLETE AV", &partial).trim(), "COMPLETE AV");
+    }
+
+    #[test]
+    fn a_to_unicode_entry_outranks_the_embedded_fonts_cmap() {
+        assert_eq!(identity_text_with_partial_to_unicode("ABC", &[('B', 'Z')]).trim(), "AZC");
+    }
+
     /// An embedded TrueType font with no `/Encoding`, flagged `flags`, its `/ToUnicode` (if
     /// any) mapping only printable ASCII, as OCR engines write the text layer of a scan.
     fn ocr_layer_text(flags: i64, ascii_to_unicode: bool) -> String {

@@ -30,6 +30,8 @@ Covered by `raster::tests::tiff_predictor_packed_rgb_rows_keep_their_byte_bounda
 horizontal differencing and an 8-bit control) and
 `raster::tests::tiff_predictor_packed_rgb_image_renders_every_row`.
 
+Text extraction: for a code its `/ToUnicode` leaves out, a Type0 font with an embedded OpenType program reads the glyph's character from that program's `cmap`. AutoCAD writes a `/ToUnicode` covering only the first string shown in each font (`crates/render/src/text.rs`, `codes_a_partial_to_unicode_leaves_out_read_through_the_embedded_fonts_cmap`).
+
 Text extraction: hayro-interpret exposes `OutlineGlyph::is_vertical` from a Type0 font’s CMap writing mode. PdfCraft follows negative glyph-space y for WMode 1 so upright vertical columns can be searched (#126).
 
 Lab Bradford follow-up to #1237: Lab adapts XYZ to D65 with white-point ratios

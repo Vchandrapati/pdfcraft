@@ -90,7 +90,7 @@ impl Glyph<'_> {
     ///
     /// **For CID Fonts (Type0):**
     /// 1. `ToUnicode` cmap
-    ///
+    /// 2. PdfCraft patch: the embedded OpenType font's own `cmap`, read from glyph to character
     ///
     /// **For Type3 Fonts:**
     /// 1. `ToUnicode` cmap

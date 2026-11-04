@@ -19,7 +19,7 @@ use skrifa::raw::collections::int_set::Domain;
 use skrifa::{FontRef, GlyphId, MetadataProvider};
 use std::collections::HashMap;
 use std::ops::Deref;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 #[derive(Debug)]
 pub(crate) struct Type0Font {
@@ -45,6 +45,9 @@ pub(crate) struct Type0Font {
     /// PdfCraft patch: whether the CIDs belong to an Adobe character collection (Japan1, GB1,
     /// CNS1, Korea1), whose glyph numbering no substitute other than a CID-keyed CFF font shares.
     adobe_collection: bool,
+    /// PdfCraft patch: glyph to character from the embedded font's `cmap`, built on first need
+    /// (see [`Type0Font::embedded_unicode`]).
+    embedded_glyph_chars: OnceLock<HashMap<u32, char>>,
 }
 
 impl Type0Font {
@@ -162,6 +165,7 @@ impl Type0Font {
             fallback,
             to_unicode_is_cid_indexed,
             adobe_collection,
+            embedded_glyph_chars: OnceLock::new(),
         })
     }
 
@@ -437,11 +441,55 @@ impl Type0Font {
             } else {
                 code
             };
-            return to_unicode.lookup_bf_string(key);
+            if let Some(text) = to_unicode.lookup_bf_string(key) {
+                return Some(text);
+            }
         }
 
-        None
+        self.embedded_unicode(code).map(BfString::Char)
     }
+
+    /// PdfCraft patch: the character an embedded OpenType font's own `cmap` gives this code's
+    /// glyph, for codes `/ToUnicode` leaves out. AutoCAD writes a `/ToUnicode` covering only the
+    /// first string shown in each font, while every string uses glyphs of the complete font it
+    /// embeds. A substitute font's `cmap` says nothing about the document's codes, so it isn't
+    /// consulted, and private-use characters aren't text worth reporting.
+    fn embedded_unicode(&self, code: u32) -> Option<char> {
+        let FontType::OpenType(font) = &self.font_type else {
+            return None;
+        };
+        if self.fallback {
+            return None;
+        }
+        let glyph = self.map_code(code);
+        if glyph == GlyphId::NOTDEF {
+            return None;
+        }
+        self.embedded_glyph_chars
+            .get_or_init(|| {
+                let mut chars = HashMap::new();
+                // Lowest code point first, so a glyph that also serves U+00A0 reads as a space.
+                // Bounded: a hostile format 12 subtable can claim the whole range many times over.
+                for (code_point, glyph) in font.font_ref().charmap().mappings().take(MAX_CMAP_MAPPINGS) {
+                    if let Some(c) = char::from_u32(code_point)
+                        && !is_private_use(c)
+                    {
+                        chars.entry(glyph.to_u32()).or_insert(c);
+                    }
+                }
+                chars
+            })
+            .get(&glyph.to_u32())
+            .copied()
+    }
+}
+
+/// PdfCraft patch: the most mappings read from a font's `cmap`: one per Unicode code point.
+const MAX_CMAP_MAPPINGS: usize = 0x11_0000;
+
+/// PdfCraft patch: whether `c` is in a Unicode private use area.
+fn is_private_use(c: char) -> bool {
+    matches!(c, '\u{E000}'..='\u{F8FF}' | '\u{F0000}'..='\u{FFFFD}' | '\u{100000}'..='\u{10FFFD}')
 }
 
 impl CacheKey for Type0Font {
