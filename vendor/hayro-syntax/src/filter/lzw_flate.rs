@@ -972,6 +972,16 @@ impl PredictorParams {
 }
 
 fn apply_predictor(data: Vec<u8>, params: &PredictorParams) -> Option<Vec<u8>> {
+    apply_predictor_with(data, params, true)
+}
+
+/// PdfCraft patch: `apply_predictor`, where `byte_path` lets PNG predictors take
+/// [`png_unfilter`] (tests compare it with the bit-level path).
+fn apply_predictor_with(
+    data: Vec<u8>,
+    params: &PredictorParams,
+    byte_path: bool,
+) -> Option<Vec<u8>> {
     match params.predictor {
         1 => Some(data),
         i => {
@@ -1013,6 +1023,12 @@ fn apply_predictor(data: Vec<u8>, params: &PredictorParams) -> Option<Vec<u8>> {
             } else {
                 (params.bits_per_component, params.colors as usize)
             };
+            // PdfCraft patch: PNG predictors work on whole bytes whatever the bits per
+            // component, so they skip the bit-level readers and writers below, which took most
+            // of a page's render time on scanned drawings (about 40 ms per 1000 × 900 RGB image).
+            if is_png_predictor && byte_path && chunk_len > 0 {
+                return Some(png_unfilter(&data, row_len, chunk_len));
+            }
             let zero_row = vec![0; row_len];
             let mut prev_row = BitChunks::new(&zero_row, bit_size, chunk_len)?;
             let zero_col = BitChunk::new(0, chunk_len);
@@ -1098,6 +1114,68 @@ fn apply_predictor(data: Vec<u8>, params: &PredictorParams) -> Option<Vec<u8>> {
             Some(out)
         }
     }
+}
+
+/// PdfCraft patch: reverses PNG row filters (PNG specification §9, as ISO 32000-2 §7.4.4.4
+/// uses them): rows of `row_len` bytes, each after its filter-type byte, with `bpp` bytes per
+/// pixel (at least one). A trailing partial row is dropped and an unknown filter type copies
+/// its row, as the bit-level path does. Every index stays below `row_len`, which `cur` and `up`
+/// both have, and `i - bpp` is taken only when `i >= bpp`.
+fn png_unfilter(data: &[u8], row_len: usize, bpp: usize) -> Vec<u8> {
+    let rows = data.chunks_exact(row_len.saturating_add(1));
+    let mut out = Vec::with_capacity(rows.len().saturating_mul(row_len));
+    let zero_row = vec![0; row_len];
+    let mut prev_start = None;
+    for row in rows {
+        let Some((&filter, src)) = row.split_first() else {
+            continue;
+        };
+        let start = out.len();
+        out.extend_from_slice(src);
+        let (before, cur) = out.split_at_mut(start);
+        let up: &[u8] = match prev_start {
+            Some(p) => &before[p..],
+            None => &zero_row,
+        };
+        match filter {
+            1 => {
+                for i in bpp..row_len {
+                    cur[i] = cur[i].wrapping_add(cur[i - bpp]);
+                }
+            }
+            2 => {
+                for (c, u) in cur.iter_mut().zip(up) {
+                    *c = c.wrapping_add(*u);
+                }
+            }
+            3 => {
+                for i in 0..row_len {
+                    let left = if i >= bpp { cur[i - bpp] } else { 0 };
+                    let avg = (u16::from(left) + u16::from(up[i])) / 2;
+                    cur[i] = cur[i].wrapping_add(avg as u8);
+                }
+            }
+            4 => {
+                for i in 0..row_len {
+                    let (a, c) = if i >= bpp { (cur[i - bpp], up[i - bpp]) } else { (0, 0) };
+                    let b = up[i];
+                    let p = i16::from(a) + i16::from(b) - i16::from(c);
+                    let (pa, pb, pc) = ((p - i16::from(a)).abs(), (p - i16::from(b)).abs(), (p - i16::from(c)).abs());
+                    let pred = if pa <= pb && pa <= pc {
+                        a
+                    } else if pb <= pc {
+                        b
+                    } else {
+                        c
+                    };
+                    cur[i] = cur[i].wrapping_add(pred);
+                }
+            }
+            _ => {}
+        }
+        prev_start = Some(start);
+    }
+    out
 }
 
 fn apply<'a, T: Predictor>(
@@ -1192,7 +1270,33 @@ impl Predictor for Paeth {
 #[cfg(test)]
 #[rustfmt::skip]
 mod tests {
-    use crate::filter::lzw_flate::{PredictorParams, apply_predictor, flate, lzw};
+    use crate::filter::lzw_flate::{PredictorParams, apply_predictor, apply_predictor_with, flate, lzw};
+
+    /// PdfCraft patch: the byte path for PNG predictors gives the bit-level path's output for
+    /// every filter type (and an unknown one), pixel size and bit depth, with a partial last row.
+    #[test]
+    fn png_byte_path_matches_bit_path() {
+        let mut seed = 0x2545_f491_u32;
+        let mut next = || {
+            seed ^= seed << 13;
+            seed ^= seed >> 17;
+            seed ^= seed << 5;
+            seed as u8
+        };
+        for (colors, bpc) in [(1, 8), (3, 8), (4, 8), (1, 1), (1, 4), (3, 16), (2, 2)] {
+            let params = PredictorParams { predictor: 15, colors, bits_per_component: bpc, columns: 7, early_change: false };
+            let row = params.row_length_in_bytes() + 1;
+            let mut data = Vec::new();
+            for r in 0..12 {
+                data.push([0, 1, 2, 3, 4, 9][r % 6]);
+                data.extend((1..row).map(|_| next()));
+            }
+            data.extend([4, 1, 2]);
+            let fast = apply_predictor_with(data.clone(), &params, true);
+            let slow = apply_predictor_with(data, &params, false);
+            assert_eq!(fast, slow, "colors {colors}, bpc {bpc}");
+        }
+    }
     use crate::object::Dict;
 
     #[test]

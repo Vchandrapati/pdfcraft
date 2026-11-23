@@ -398,6 +398,19 @@ impl<'a> ImageXObject<'a> {
         }
         let dict = self.stream.dict();
         let bytes = dict.data();
+        // PdfCraft patch: only a JPEG 2000 decode reads the target size (it picks a resolution
+        // level); every other filter gives the same pixels for any target, so keying on it made
+        // the same image miss the cache at each size it was drawn (each zoom, each tile). The
+        // image's soft mask or explicit mask is decoded with the same target, so it counts too.
+        let is_jpx = |s: &Stream<'_>| {
+            s.filters()
+                .iter()
+                .any(|f| matches!(f, hayro_syntax::Filter::JpxDecode))
+        };
+        let reads_target = is_jpx(&self.stream)
+            || dict.get::<Stream<'_>>(SMASK).is_some_and(|s| is_jpx(&s))
+            || dict.get::<Stream<'_>>(MASK).is_some_and(|s| is_jpx(&s));
+        let target_dimension = target_dimension.filter(|_| reads_target);
         Some(DecodedImageKey {
             mask_output,
             dict_at: bytes.as_ptr() as usize,

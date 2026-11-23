@@ -5429,6 +5429,27 @@ endstream endobj
         assert_eq!(&first.2[..], &second.2[..]);
     }
 
+    /// One image drawn at several places, at several sizes, and in tiles is decoded once: the
+    /// decode target (only JPEG 2000 reads it) no longer splits the cache by where the image sits.
+    /// A page tiling one scanned image 80 times decoded it 80 times (4 s a page).
+    #[test]
+    fn an_image_drawn_at_many_places_and_sizes_is_decoded_once() {
+        let pdf = image_cache_pdf(
+            "q 20 0 0 20 5 5 cm /A Do Q q 20 0 0 20 60 40 cm /A Do Q q 0 20 -20 0 120 5 cm /A Do Q q 45 0 0 45 70 5 cm /A Do Q",
+            "<< /XObject << /A 5 0 R >> >>",
+            &[("<< /Type /XObject /Subtype /Image /Width 2 /Height 2 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Length 12 >>", &[90; 12])],
+        );
+        let pdf = parse(&Arc::new(pdf), None).expect("parses");
+        let settings = InterpreterSettings::default();
+        let images = SharedImageCache::new();
+        let req = RenderRequest { page: 0, kind: RequestKind::Pixels, tile: None, scale: 1.0, tag: 0, preview: false };
+        render_page(&pdf, &RenderCache::with_image_cache(&images), &settings, false, req).expect("renders");
+        assert_eq!(images.cached_bytes(), 12, "one decode of the 2 × 2 RGB image, not one per draw");
+        let zoomed = RenderRequest { scale: 3.0, tile: Some(Tile { x: 0, y: 0, w: 128, h: 128 }), ..req };
+        render_page(&pdf, &RenderCache::with_image_cache(&images), &settings, false, zoomed).expect("renders");
+        assert_eq!(images.cached_bytes(), 12, "a tile at another zoom reused the decode");
+    }
+
     /// An image drawn under a transfer function (`/TR`) is decoded with it, even when the same
     /// image was drawn without one just before (and the other way round).
     #[test]
