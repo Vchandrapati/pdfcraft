@@ -1001,12 +1001,39 @@ fn normalize_pointer_pressure(pressure: u32) -> Option<Force> {
 /// Emit a `ModifiersChanged` event whenever modifiers have changed.
 /// Returns the current modifier state
 fn update_modifiers(window: HWND, userdata: &WindowData) {
-    use crate::event::WindowEvent::ModifiersChanged;
-
     let modifiers = {
         let mut layouts = LAYOUT_CACHE.lock().unwrap();
         layouts.get_agnostic_mods()
     };
+    send_modifiers(window, userdata, modifiers);
+}
+
+/// PdfCraft patch: the modifiers for a wheel message, whose `wparam` says whether Ctrl and Shift
+/// are down (`MK_CONTROL`, `MK_SHIFT`). The thread's key state (`GetKeyState`, which
+/// `update_modifiers` reads) does not change while another application has the keyboard, so a
+/// Ctrl+wheel over a window that is not focused arrived as a plain scroll: zooming needed a click
+/// into the window first. Alt and the logo key are not in the message and keep the key state.
+fn wheel_modifiers(base: ModifiersState, wparam: WPARAM) -> ModifiersState {
+    const MK_SHIFT: usize = 0x0004;
+    const MK_CONTROL: usize = 0x0008;
+    let keys = wparam & 0xFFFF;
+    let mut modifiers = base;
+    modifiers.set(ModifiersState::CONTROL, keys & MK_CONTROL != 0);
+    modifiers.set(ModifiersState::SHIFT, keys & MK_SHIFT != 0);
+    modifiers
+}
+
+/// PdfCraft patch: `update_modifiers` for a wheel message (see [`wheel_modifiers`]).
+fn update_wheel_modifiers(window: HWND, userdata: &WindowData, wparam: WPARAM) {
+    let base = {
+        let mut layouts = LAYOUT_CACHE.lock().unwrap();
+        layouts.get_agnostic_mods()
+    };
+    send_modifiers(window, userdata, wheel_modifiers(base, wparam));
+}
+
+fn send_modifiers(window: HWND, userdata: &WindowData, modifiers: ModifiersState) {
+    use crate::event::WindowEvent::ModifiersChanged;
 
     let mut window_state = userdata.window_state.lock().unwrap();
     if window_state.modifiers_state != modifiers {
@@ -1730,7 +1757,7 @@ unsafe fn public_window_callback_inner(
             let value = (wparam >> 16) as i16;
             let value = value as f32 / WHEEL_DELTA as f32;
 
-            update_modifiers(window, userdata);
+            update_wheel_modifiers(window, userdata, wparam);
 
             userdata.send_event(Event::WindowEvent {
                 window_id: RootWindowId(WindowId(window)),
@@ -1750,7 +1777,7 @@ unsafe fn public_window_callback_inner(
             let value = (wparam >> 16) as i16;
             let value = -value as f32 / WHEEL_DELTA as f32; // NOTE: inverted! See https://github.com/rust-windowing/winit/pull/2105/
 
-            update_modifiers(window, userdata);
+            update_wheel_modifiers(window, userdata, wparam);
 
             userdata.send_event(Event::WindowEvent {
                 window_id: RootWindowId(WindowId(window)),
@@ -2680,5 +2707,24 @@ fn get_pointer_move_kind(
         PointerMoveKind::Leave
     } else {
         PointerMoveKind::None
+    }
+}
+
+#[cfg(test)]
+mod pdfcraft_wheel_modifier_tests {
+    use super::wheel_modifiers;
+    use crate::keyboard::ModifiersState;
+
+    /// PdfCraft patch: a wheel message's own key bits decide Ctrl and Shift, whatever the
+    /// thread's key state says (it is stale while another application has the keyboard).
+    #[test]
+    fn wheel_messages_carry_ctrl_and_shift() {
+        let delta = 120usize << 16;
+        assert_eq!(wheel_modifiers(ModifiersState::empty(), delta | 0x0008), ModifiersState::CONTROL);
+        assert_eq!(wheel_modifiers(ModifiersState::empty(), delta | 0x0004), ModifiersState::SHIFT);
+        assert_eq!(wheel_modifiers(ModifiersState::CONTROL | ModifiersState::ALT, delta), ModifiersState::ALT);
+        // A negative delta sets the high bits; only the low word holds keys.
+        let down = (-120i16 as u16 as usize) << 16;
+        assert_eq!(wheel_modifiers(ModifiersState::empty(), down), ModifiersState::empty());
     }
 }

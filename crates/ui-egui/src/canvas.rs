@@ -2245,8 +2245,11 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
     let zoom_delta = ui.input(|i| i.zoom_delta());
     // Exclude the previous frame's scrollbar tracks from gesture activation.
     let navigation_rect = if view.viewport_screen.is_positive() { avail.intersect(view.viewport_screen) } else { avail };
-    let navigation_enabled = app.dialog.is_none() && app.close_request.is_none() && !app.palette_open && ui.is_enabled() && ui.input(|i| i.focused);
-    if zoom_delta.is_finite() && zoom_delta > 0.0 && zoom_delta != 1.0 && navigation_enabled && ui.rect_contains_pointer(navigation_rect) {
+    let zoom_enabled = app.dialog.is_none() && app.close_request.is_none() && !app.palette_open && ui.is_enabled();
+    let navigation_enabled = zoom_enabled && ui.input(|i| i.focused);
+    // Zoom follows the pointer, not keyboard focus: Ctrl+wheel over the window while another
+    // application has the keyboard zooms, as the wheel alone already scrolls there.
+    if zoom_delta.is_finite() && zoom_delta > 0.0 && zoom_delta != 1.0 && zoom_enabled && ui.rect_contains_pointer(navigation_rect) {
         let z = view.zoom * zoom_delta;
         match ui.input(|i| i.pointer.hover_pos()) {
             Some(p) => view.zoom_at(z, p),

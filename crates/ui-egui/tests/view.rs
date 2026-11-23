@@ -137,6 +137,31 @@ fn middle_button_scrolling_keeps_page_colours_in_both_themes() {
     }
 }
 
+/// Ctrl+wheel over the window zooms while another application has the keyboard, as the wheel
+/// alone already scrolls there: zooming used to need a click into the window first.
+#[test]
+fn ctrl_wheel_zooms_without_window_focus() {
+    let mut h = harness(&[("zoom", "50")]);
+    // Another application takes the keyboard (winit reports it; kittest keeps it per frame).
+    h.input_mut().focused = false;
+    h.event(egui::Event::WindowFocused(false));
+    h.run_steps(2);
+    assert!(!h.ctx.input(|i| i.focused), "the window has lost focus");
+    let before = h.state().views[0].zoom;
+    h.hover_at(h.state().views[0].viewport_rect().center());
+    h.run_steps(1);
+    h.event(egui::Event::ModifiersChanged(Modifiers::COMMAND));
+    h.event(egui::Event::MouseWheel {
+        unit: MouseWheelUnit::Line,
+        delta: egui::vec2(0.0, 1.0),
+        phase: TouchPhase::Move,
+        modifiers: Modifiers::COMMAND,
+    });
+    h.run_steps(8);
+    let after = h.state().views[0].zoom;
+    assert!(after > before * 1.01, "Ctrl+wheel zooms an unfocused window: {before} -> {after}");
+}
+
 #[test]
 fn continuous_layout_stacks_pages_vertically() {
     let mut h = harness(&[("layout", "continuous"), ("zoom", "50")]);
