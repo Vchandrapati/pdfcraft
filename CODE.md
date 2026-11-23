@@ -3,7 +3,7 @@
 PdfCraft is a clean-room, open-source, Rust-native PDF application. It runs natively on macOS, Windows, Linux and FreeBSD, and on the web via WASM. This repository is a personal, custom fork of upstream PdfCraft (`storytold/pdfcraft`) and is not merged back (`AGENTS.md`).
 
 ## Start every session here
-1. Read `docs/architecture.md` (crates, layers, the editing model) and the README of the crate you're touching.
+1. Read `docs/architecture.md` (crates, layers, the editing model) and the README of the crate you're touching, if it has one.
 2. The user decides what to work on.
 
 ## Non-negotiables
@@ -25,7 +25,7 @@ PdfCraft is a clean-room, open-source, Rust-native PDF application. It runs nati
   - No `unsafe` (`unsafe_code = "forbid"`).
   - Every crash fix gets a synthetic regression test. See `AGENTS.md` §4.
 - **Rust only** in the product and build (`xtask`). No handwritten JS/TS.
-- **Quality gates** before every commit: `cargo fmt --check`, `cargo clippy --workspace -- -D warnings`, the tests (`cargo nextest run --workspace` plus `cargo test --workspace --doc`; plain `cargo test --workspace` without nextest) and `cargo xtask wasm`, all run by `cargo xtask ci`.
+- **Quality gates** before every commit: run `cargo xtask ci`. It runs `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, the tests (`cargo nextest run --workspace` plus `cargo test --workspace --doc`; plain `cargo test --workspace` without nextest), then `cargo xtask layers`, `wasm`, `assets` and `deny`.
 - **Commits:** one focused change per commit, with a short descriptive message. Commit only green states. End messages with the attribution line required by the environment.
 
 ## Engineering Principles
@@ -48,7 +48,14 @@ PdfCraft is a clean-room, open-source, Rust-native PDF application. It runs nati
 - `cargo xtask fuzz --time 300` mutation-fuzzes open/render/edit/save in child processes. Findings land in `fuzz-out/findings/` (git-ignored; never commit corpus-derived files). Turn every real finding into a small synthetic regression test before fixing it.
 - `cargo xtask demo-pdf` builds `dist/demo/pdfcraft-showcase.pdf` (needs Chrome) for visual checks.
 - For UI work, **look at the result**. Either launch `pdfcraft --control FILE doc.pdf` and use `pdfcraft-cli ui --control FILE screenshot --out x.png` (plus `inspect`, `click`, `key`, `type`, `command`, `set`), or take a headless shot with `cargo run -p pdfcraft-ui-egui --example shot`. Control-channel tests use kittest (`crates/ui-egui/tests/control.rs`).
-- Parallel agents: use a separate `CARGO_TARGET_DIR` per agent and separate git worktrees.
+
+## Parallel agents and disk use
+A full build takes tens of GB.
+- Use a separate git worktree per agent; each worktree's own `target/` keeps builds apart.
+- For concurrent builds in one checkout, set `CARGO_TARGET_DIR` to `target/agents/<name>`.
+- Never put a target dir in a temp or scratchpad folder, where nothing cleans it up.
+- When your task ends, delete the build output you created (`cargo clean --target-dir <dir>`) and remove your worktree.
+- When storage is tight, use the `low-disk` profile (`docs/development.md`).
 
 ## Current bootstrap debt
 - `pdfcraft-render` renders through the vendored `hayro` crate directly (`vendor/README.md`); inspection already reads through `cos`.
