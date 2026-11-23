@@ -45,22 +45,25 @@ const THUMB_H: f32 = 320.0;
 const THUMB_BYTES: usize = 24 * 1024 * 1024;
 /// Most and least memory kept for off-screen page rasters and tiles. Within those bounds the
 /// allowance follows the canvas: [`PAGE_SCREENS`] and [`TILE_SCREENS`] screenfuls of it at its
-/// device resolution, so a laptop window keeps far less than a 4K display needs.
-const PAGE_BYTES: usize = 128 * 1024 * 1024;
-const TILE_BYTES: usize = 128 * 1024 * 1024;
-const MIN_PREFETCH_BYTES: usize = 32 * 1024 * 1024;
-/// The screenful before and after the one shown.
-const PAGE_SCREENS: f32 = 2.0;
-const TILE_SCREENS: f32 = 1.5;
+/// device resolution, so a 4K display keeps more than a laptop window. The floors keep a dozen
+/// pages of a large drawing at fit width, and the tiles of several screenfuls zoomed in, so
+/// turning back a few pages, panning back or zooming back to the last level shows what was
+/// drawn instead of rendering it again.
+const PAGE_BYTES: usize = 384 * 1024 * 1024;
+const TILE_BYTES: usize = 256 * 1024 * 1024;
+const MIN_PAGE_BYTES: usize = 192 * 1024 * 1024;
+const MIN_TILE_BYTES: usize = 160 * 1024 * 1024;
+const PAGE_SCREENS: f32 = 8.0;
+const TILE_SCREENS: f32 = 8.0;
 
 /// `screens` screenfuls of a `w` x `h`-point canvas at `ppp` device pixels per point, within
-/// [`MIN_PREFETCH_BYTES`]..=`max`. Before the canvas has been drawn (no size yet) it is `max`.
-fn screen_budget(w: f32, h: f32, ppp: f32, screens: f32, max: usize) -> usize {
+/// `min..=max`. Before the canvas has been drawn (no size yet) it is `max`.
+fn screen_budget(w: f32, h: f32, ppp: f32, screens: f32, min: usize, max: usize) -> usize {
     let bytes = w * ppp * h * ppp * 4.0 * screens;
     if !(bytes.is_finite() && bytes > 0.0) {
         return max;
     }
-    (bytes as usize).clamp(MIN_PREFETCH_BYTES, max)
+    (bytes as usize).clamp(min, max)
 }
 const UPLOAD_BYTES_PER_FRAME: usize = 16 * 1024 * 1024;
 const RESULTS_PER_FRAME: usize = 8;
@@ -382,6 +385,15 @@ pub struct DocView {
     /// Sharp tiles of large pages: (page, scale tag, tile x, tile y) → texture. Tiles of an
     /// earlier zoom stay, drawn stretched, until those of the current one cover the page.
     tiles: HashMap<(usize, u64, u32, u32), TextureHandle>,
+    /// When each tile was last demanded ([`Self::tile_clock`]): tiles nothing on screen asks for
+    /// stay while the tile allowance has room, the most recently wanted first, so panning or
+    /// zooming back shows them at once.
+    tile_used: HashMap<(usize, u64, u32, u32), u64>,
+    /// Counts render queues prepared; stamps [`Self::tile_used`].
+    tile_clock: u64,
+    /// Tiles just outside the viewport, requested ahead of a pan. Unlike on-screen tiles they
+    /// are prefetch: queued after them and admitted only within the tile allowance.
+    frame_prefetch: HashSet<(usize, u64, u32, u32)>,
     /// Text layers, extracted in the background on demand (selection, find, copy).
     pub(crate) texts: HashMap<usize, Arc<PageText>>,
     pub(crate) text_failed: HashSet<usize>,
@@ -685,6 +697,9 @@ impl DocView {
             current_scale_tag: 0,
             print_pages: HashMap::new(),
             tiles: HashMap::new(),
+            tile_used: HashMap::new(),
+            tile_clock: 0,
+            frame_prefetch: HashSet::new(),
             texts: HashMap::new(),
             text_failed: HashSet::new(),
             find: None,
@@ -1470,7 +1485,7 @@ impl DocView {
         if !self.shown {
             return PAGE_BYTES;
         }
-        screen_budget(self.viewport_w, self.viewport_h, self.budget_ppp, PAGE_SCREENS, PAGE_BYTES)
+        screen_budget(self.viewport_w, self.viewport_h, self.budget_ppp, PAGE_SCREENS, MIN_PAGE_BYTES, PAGE_BYTES)
     }
 
     /// Off-screen tiles kept beside the ones on screen (see [`screen_budget`]).
@@ -1478,7 +1493,7 @@ impl DocView {
         if !self.shown {
             return TILE_BYTES;
         }
-        screen_budget(self.viewport_w, self.viewport_h, self.budget_ppp, TILE_SCREENS, TILE_BYTES)
+        screen_budget(self.viewport_w, self.viewport_h, self.budget_ppp, TILE_SCREENS, MIN_TILE_BYTES, TILE_BYTES)
     }
 
     fn prepare_render_queue(&mut self, info: &DocInfo, ppp: f32) -> Vec<RenderRequest> {
@@ -1490,7 +1505,7 @@ impl DocView {
         let mut queue = Vec::new();
         let mut pages = HashSet::new();
         let mut tiles = HashSet::new();
-        let mut tile_tags = HashSet::new();
+        self.tile_clock = self.tile_clock.wrapping_add(1);
         let mut grid = Vec::new();
         let (mut page_bytes, mut tile_bytes) = (0usize, 0usize);
         for req in requests.iter().filter(|r| r.kind == RequestKind::Pixels) {
@@ -1514,12 +1529,13 @@ impl DocView {
                 // Keyed by exact device-pixel origin: the tile side varies with the zoom
                 // (`tile_side`), so grid indices would need the scale to decode.
                 let key = (req.page, req.tag, tile.x, tile.y);
+                let visible = visible && !self.frame_prefetch.contains(&key);
                 let bytes = rgba_bytes(tile.w as usize, tile.h as usize);
                 if (!visible && tile_bytes.saturating_add(bytes) > tile_budget) || !tiles.insert(key) {
                     continue;
                 }
                 tile_bytes = tile_bytes.saturating_add(bytes);
-                tile_tags.insert(req.tag);
+                self.tile_used.insert(key, self.tile_clock);
                 if !self.tiles.contains_key(&key) || self.stale_tiles.contains(&key) {
                     queue.push(*req);
                 }
@@ -1548,9 +1564,23 @@ impl DocView {
             }
         }
         self.pages.retain(|p, _| pages.contains(p));
-        // Tiles of an earlier zoom (not a demanded scale) stay while the canvas keeps them, a
-        // bounded few under a page whose current tiles are still missing (OLD_TILES).
-        self.tiles.retain(|key, _| tiles.contains(key) || !tile_tags.contains(&key.1));
+        // Tiles no longer demanded (panned away from, or of an earlier zoom) stay while the tile
+        // allowance has room, the most recently wanted first.
+        let mut undemanded: Vec<(TileKey, u64, usize)> = self
+            .tiles
+            .iter()
+            .filter(|(key, _)| !tiles.contains(*key))
+            .map(|(key, tex)| (*key, self.tile_used.get(key).copied().unwrap_or(0), texture_bytes(tex)))
+            .collect();
+        undemanded.sort_by_key(|&(_, used, _)| std::cmp::Reverse(used));
+        for (key, _, bytes) in undemanded {
+            if tile_bytes.saturating_add(bytes) <= tile_budget {
+                tile_bytes = tile_bytes.saturating_add(bytes);
+                tiles.insert(key);
+            }
+        }
+        self.tiles.retain(|key, _| tiles.contains(key));
+        self.tile_used.retain(|key, _| self.tiles.contains_key(key) || tiles.contains(key));
         self.stale_tiles.retain(|key| self.tiles.contains_key(key));
         queue.extend(grid);
         // Opening (or turning to) a page queues its pixels alongside thumbnails and
@@ -1736,6 +1766,7 @@ impl DocView {
         }
         if let Some(t) = req.tile {
             let key = (req.page, req.tag, t.x, t.y);
+            let visible = visible && !self.frame_prefetch.contains(&key);
             self.tiles.remove(&key);
             let retained = self.tiles.values().fold(0usize, |n, tex| n.saturating_add(texture_bytes(tex)));
             visible || bytes <= self.tile_budget().saturating_sub(retained)
@@ -1888,6 +1919,26 @@ fn tile_side(scale: f32, page_max_px: u32) -> u32 {
     // interprets instead of dozens.
     by_zoom.max(page_max_px.div_ceil(4).min(4096))
 }
+
+/// The whole-page raster of a `pw` x `ph`-point page at `scale` (tagged `tag`) on a GPU whose
+/// textures are at most `max_side` pixels: `(tiled, scale, tag)`. Sharp at `scale` when small;
+/// a low-res backdrop under tiles when the page at `scale` would pass the tiling size.
+fn page_raster_scale(pw: f32, ph: f32, scale: f32, tag: u64, max_side: f32) -> (bool, f32, u64) {
+    let long = pw.max(ph).max(1.0);
+    if long * scale > TILE_THRESHOLD.min(max_side) {
+        let bs = BASE_SIDE.min(max_side) / long;
+        (true, bs, scale_tag(bs))
+    } else {
+        (false, scale, tag)
+    }
+}
+
+/// Pages either side of the current one whose whole-page rasters are prefetched (within the
+/// page allowance), so turning the page shows it drawn.
+const PREFETCH_PAGES: usize = 2;
+
+/// A tile: (page, scale tag, device-pixel x, device-pixel y).
+type TileKey = (usize, u64, u32, u32);
 
 /// Tiles of earlier zooms kept for a page while its current tiles are rendered.
 const OLD_TILES: usize = 64;
@@ -2530,6 +2581,7 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
         let mut visible_now = Vec::new();
         view.screen_rects.clear();
         view.screen_xforms.clear();
+        view.frame_prefetch.clear();
         // Visible heights (points) closer than this are equal: one page size can meet the
         // viewport a fraction of a point differently once the scroll offset is applied.
         const TIE: f32 = 0.5;
@@ -2582,14 +2634,7 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
                 // A GPU may take smaller textures than these (OpenGL drivers report as little as
                 // 2048 pixels, and uploading a bigger one aborts), so both stay within its limit.
                 let max_side = ui.ctx().input(|inp| inp.max_texture_side) as f32;
-                let tiled = pw_pt.max(ph_pt) * scale > TILE_THRESHOLD.min(max_side);
-                // Whole-page raster: sharp when small, a low-res backdrop when tiled.
-                let (want_scale, want_tag) = if tiled {
-                    let bs = BASE_SIDE.min(max_side) / pw_pt.max(ph_pt);
-                    (bs, scale_tag(bs))
-                } else {
-                    (scale, tag)
-                };
+                let (tiled, want_scale, want_tag) = page_raster_scale(pw_pt, ph_pt, scale, tag, max_side);
                 // Under tiles, a whole-page raster sharper than the backdrop (from before the page
                 // grew past the tiling size) is a better backdrop: keep demanding it as it is.
                 match view.pages.get(&i).filter(|p| tiled && p.tag != STALE_TAG && tag_scale(p.tag) >= want_scale) {
@@ -2628,40 +2673,54 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
                     let (v0, v1) = corners.iter().fold((1.0f32, 0.0f32), |(a, b), c| (a.min(c.1), b.max(c.1)));
                     let (vx0, vy0) = ((u0.max(0.0) * dw as f32) as u32, (v0.max(0.0) * dh as f32) as u32);
                     let (vx1, vy1) = (((u1.min(1.0) * dw as f32).ceil() as u32).min(dw), ((v1.min(1.0) * dh as f32).ceil() as u32).min(dh));
-                    // Tiles of earlier zooms first, stretched, the nearest scale last (on top):
-                    // until the current tiles arrive, a zoom shows them rather than the backdrop.
-                    let mut older: Vec<(f32, u32, u32, &TextureHandle)> = view
-                        .tiles
-                        .iter()
-                        .filter(|((p, t, _, _), _)| *p == i && *t != tag)
-                        .map(|((_, t, ox, oy), tex)| (tag_scale(*t), *ox, *oy, tex))
-                        .collect();
-                    older.sort_by(|a, b| (b.0 / scale).ln().abs().total_cmp(&(a.0 / scale).ln().abs()));
-                    for (s, ox, oy, tex) in older {
-                        let (ow, oh) = (device_pixels(pw_pt, s) as f32, device_pixels(ph_pt, s) as f32);
-                        let [w, h] = tex.size();
-                        let (x, y) = (ox as f32, oy as f32);
-                        xf.paint_image(painter, tex.id(), x / ow, y / oh, (x + w as f32) / ow, (y + h as f32) / oh);
-                    }
-                    // Visible tiles, nearest the viewport centre first: each tile costs a full
-                    // page interpret, so the workers sharpen what is looked at before the edges.
+                    // A ring around the visible part, up to half a viewport (and at most one
+                    // tile) deep, is prefetched so a pan finds its tiles drawn.
+                    let (mx, my) = (((vx1 - vx0.min(vx1)) / 2).min(ts), ((vy1 - vy0.min(vy1)) / 2).min(ts));
+                    let (px0, py0, px1, py1) =
+                        (vx0.saturating_sub(mx), vy0.saturating_sub(my), vx1.saturating_add(mx).min(dw), vy1.saturating_add(my).min(dh));
+                    // Tiles nearest the viewport centre first, prefetch after every visible
+                    // one: each tile costs a page interpret, so the workers sharpen what is
+                    // looked at before the edges and before what may come into view.
                     let (vcx, vcy) = ((vx0 + vx1) as f32 / 2.0, (vy0 + vy1) as f32 / 2.0);
-                    let mut coords: Vec<(u32, u32)> = Vec::new();
-                    for ty in vy0 / ts..=(vy1.saturating_sub(1)) / ts {
-                        for tx in vx0 / ts..=(vx1.saturating_sub(1)) / ts {
-                            coords.push((tx, ty));
+                    let mut coords: Vec<(bool, u32, u32)> = Vec::new();
+                    for ty in py0 / ts..=(py1.saturating_sub(1)) / ts {
+                        for tx in px0 / ts..=(px1.saturating_sub(1)) / ts {
+                            let (x, y) = (tx * ts, ty * ts);
+                            let shown = x < vx1 && x.saturating_add(ts) > vx0 && y < vy1 && y.saturating_add(ts) > vy0;
+                            coords.push((!shown, tx, ty));
                         }
                     }
                     coords.sort_by(|a, b| {
-                        let da = ((a.0 * ts + ts / 2) as f32 - vcx).abs() + ((a.1 * ts + ts / 2) as f32 - vcy).abs();
-                        let db = ((b.0 * ts + ts / 2) as f32 - vcx).abs() + ((b.1 * ts + ts / 2) as f32 - vcy).abs();
-                        da.total_cmp(&db)
+                        let da = ((a.1 * ts + ts / 2) as f32 - vcx).abs() + ((a.2 * ts + ts / 2) as f32 - vcy).abs();
+                        let db = ((b.1 * ts + ts / 2) as f32 - vcx).abs() + ((b.2 * ts + ts / 2) as f32 - vcy).abs();
+                        a.0.cmp(&b.0).then(da.total_cmp(&db))
                     });
-                    for (tx, ty) in coords {
+                    // Tiles of earlier zooms, stretched, the nearest scale last (on top), while a
+                    // current tile in view is missing: a zoom shows them rather than the backdrop.
+                    let current_missing = coords.iter().any(|&(prefetch, tx, ty)| !prefetch && !view.tiles.contains_key(&(i, tag, tx * ts, ty * ts)));
+                    if current_missing {
+                        let mut older: Vec<(f32, u32, u32, &TextureHandle)> = view
+                            .tiles
+                            .iter()
+                            .filter(|((p, t, _, _), _)| *p == i && *t != tag)
+                            .map(|((_, t, ox, oy), tex)| (tag_scale(*t), *ox, *oy, tex))
+                            .collect();
+                        older.sort_by(|a, b| (b.0 / scale).ln().abs().total_cmp(&(a.0 / scale).ln().abs()));
+                        for (s, ox, oy, tex) in older {
+                            let (ow, oh) = (device_pixels(pw_pt, s) as f32, device_pixels(ph_pt, s) as f32);
+                            let [w, h] = tex.size();
+                            let (x, y) = (ox as f32, oy as f32);
+                            xf.paint_image(painter, tex.id(), x / ow, y / oh, (x + w as f32) / ow, (y + h as f32) / oh);
+                        }
+                    }
+                    for (prefetch, tx, ty) in coords {
                         let (x, y) = (tx * ts, ty * ts);
                         let (w, h) = (ts.min(dw.saturating_sub(x)), ts.min(dh.saturating_sub(y)));
                         if w == 0 || h == 0 {
                             continue;
+                        }
+                        if prefetch {
+                            view.frame_prefetch.insert((i, tag, x, y));
                         }
                         wanted.push((i, scale, tag, Some(Tile { x, y, w, h })));
                         if let Some(tex) = view.tiles.get(&(i, tag, x, y)) {
@@ -3218,11 +3277,22 @@ fn document_body(app: &mut PdfCraftApp, index: usize, ui: &mut egui::Ui) {
     let pan_held = now_settle < view.pan_hold_until;
     let (mut wanted, visible_now) = out.inner;
     let cur = view.current;
-    wanted.sort_by_key(|w| (!visible_now.contains(&w.0), w.0.abs_diff(cur), w.3.is_some()));
-    // Tiles of far-away pages are useless: free them. Tiles of other zooms stay only while a
-    // current tile of their page is still missing, at most `OLD_TILES` of them, nearest scale first.
-    let missing: HashSet<usize> = wanted.iter().filter(|w| w.3.is_some()).map(|w| w.0).collect();
-    view.tiles.retain(|(p, t, _, _), _| p.abs_diff(cur) <= 2 && (*t == tag || missing.contains(p)));
+    // The pages either side of the current one, drawn ahead (a backdrop for a tiled page).
+    let max_side = ui.ctx().input(|inp| inp.max_texture_side) as f32;
+    for p in cur.saturating_sub(PREFETCH_PAGES)..=cur.saturating_add(PREFETCH_PAGES) {
+        let Some(pi) = info.pages.get(p) else { continue };
+        if view.errors.contains_key(&p) || wanted.iter().any(|w| w.0 == p && w.3.is_none()) {
+            continue;
+        }
+        let (_, s, t) = page_raster_scale(pi.width.max(1.0), pi.height.max(1.0), scale, tag, max_side);
+        wanted.push((p, s, t, None));
+    }
+    let prefetch = |w: &(usize, f32, u64, Option<Tile>)| w.3.is_some_and(|t| view.frame_prefetch.contains(&(w.0, w.2, t.x, t.y)));
+    wanted.sort_by_key(|w| (!visible_now.contains(&w.0), prefetch(w), w.0.abs_diff(cur), w.3.is_some()));
+    // Tiles of far-away pages are useless: free them. Tiles of other zooms and pans stay within
+    // the tile allowance (`prepare_render_queue`), at most `OLD_TILES` of other zooms, nearest
+    // scale first.
+    view.tiles.retain(|(p, _, _, _), _| p.abs_diff(cur) <= 2);
     let mut older: Vec<(f32, (usize, u64, u32, u32))> =
         view.tiles.keys().filter(|k| k.1 != tag).map(|k| ((tag_scale(k.1) / scale).ln().abs(), *k)).collect();
     if older.len() > OLD_TILES {
@@ -4877,38 +4947,40 @@ trailer << /Root 1 0 R >>
         let mut v = DocView::new(DocId(1), &info, ViewDefaults::default());
         v.frame_queue = (0..40).map(|page| RenderRequest { page, scale: 1.0, tag: 1000, ..Default::default() }).collect();
         let queue = v.prepare_render_queue(&info, 1.0);
-        assert_eq!(queue.len(), 2, "128 MiB admits two 4000-square pages, not 24");
+        assert_eq!(queue.len(), 6, "384 MiB admits six 4000-square pages, not 24");
         v.frame_queue = (0..40)
             .map(|page| RenderRequest { page, scale: 1.0, tag: 1000, tile: Some(Tile { x: 0, y: 0, w: 1024, h: 1024 }), ..Default::default() })
             .collect();
-        assert_eq!(v.prepare_render_queue(&info, 1.0).len(), 32);
+        assert_eq!(v.prepare_render_queue(&info, 1.0).len(), 40, "256 MiB admits 64 such tiles: all 40");
         assert!(!v.admit_texture(RenderRequest::default(), PAGE_BYTES + 1));
     }
 
     #[test]
     fn the_prefetch_allowance_follows_the_canvas() {
         // No canvas yet (headless, before the first frame): the former fixed allowance.
-        assert_eq!(screen_budget(0.0, 0.0, 1.0, PAGE_SCREENS, PAGE_BYTES), PAGE_BYTES);
-        assert_eq!(screen_budget(f32::NAN, 600.0, 1.0, PAGE_SCREENS, PAGE_BYTES), PAGE_BYTES);
-        // A small window keeps the floor; a 1500 x 950-point canvas at 250% two screenfuls;
-        // a huge one no more than the former allowance.
-        assert_eq!(screen_budget(800.0, 600.0, 1.0, PAGE_SCREENS, PAGE_BYTES), MIN_PREFETCH_BYTES);
-        let laptop = screen_budget(1500.0, 950.0, 2.5, PAGE_SCREENS, PAGE_BYTES);
-        assert_eq!(laptop, (1500.0f32 * 2.5 * 950.0 * 2.5 * 4.0 * 2.0) as usize);
-        assert!(laptop < PAGE_BYTES);
-        assert_eq!(screen_budget(8000.0, 4000.0, 3.0, PAGE_SCREENS, PAGE_BYTES), PAGE_BYTES);
+        let budget = |w, h, ppp| screen_budget(w, h, ppp, PAGE_SCREENS, MIN_PAGE_BYTES, PAGE_BYTES);
+        assert_eq!(budget(0.0, 0.0, 1.0), PAGE_BYTES);
+        assert_eq!(budget(f32::NAN, 600.0, 1.0), PAGE_BYTES);
+        // A small window keeps the floor; a 1500 x 950-point canvas at 250% eight screenfuls;
+        // a huge one no more than the most.
+        assert_eq!(budget(800.0, 600.0, 1.0), MIN_PAGE_BYTES);
+        let laptop = budget(1500.0, 950.0, 2.5);
+        assert_eq!(laptop, (1500.0f32 * 2.5 * 950.0 * 2.5 * 4.0 * 8.0) as usize);
+        assert!(MIN_PAGE_BYTES < laptop && laptop < PAGE_BYTES);
+        assert_eq!(budget(8000.0, 4000.0, 3.0), PAGE_BYTES);
         // The view uses its canvas: a small one admits fewer prefetched pages than headless does.
         let info = thumbnail_info(40);
         let mut v = DocView::new(DocId(1), &info, ViewDefaults::default());
         v.shown = true;
         v.viewport_w = 800.0;
         v.viewport_h = 600.0;
-        v.frame_queue = (0..40).map(|page| RenderRequest { page, scale: 1.0, tag: 1000, ..Default::default() }).collect();
+        // At twice the size, forty pages need about 440 MB: past the floor, not past the most.
+        v.frame_queue = (0..40).map(|page| RenderRequest { page, scale: 2.0, tag: 1000, ..Default::default() }).collect();
         let small = v.prepare_render_queue(&info, 1.0).len();
         let mut headless = DocView::new(DocId(1), &info, ViewDefaults::default());
-        headless.frame_queue = (0..40).map(|page| RenderRequest { page, scale: 1.0, tag: 1000, ..Default::default() }).collect();
+        headless.frame_queue = (0..40).map(|page| RenderRequest { page, scale: 2.0, tag: 1000, ..Default::default() }).collect();
         assert!(small < headless.prepare_render_queue(&info, 1.0).len());
-        assert!(!v.admit_texture(RenderRequest::default(), MIN_PREFETCH_BYTES + 1), "beyond a small canvas's allowance");
+        assert!(!v.admit_texture(RenderRequest::default(), MIN_PAGE_BYTES + 1), "beyond a small canvas's allowance");
     }
 
     #[test]
@@ -4920,22 +4992,83 @@ trailer << /Root 1 0 R >>
             p.height = 2000.0;
         }
         let mut v = DocView::new(DocId(1), &info, ViewDefaults::default());
-        // Ten 16 MB pages on screen (a zoomed-out HiDPI view) exceed the 128 MiB allowance.
-        v.frame_visible = (0..10).collect();
+        // Twenty-five 16 MB pages on screen (a zoomed-out HiDPI view) leave no room in the
+        // 384 MiB allowance for a prefetched one.
+        v.frame_visible = (0..25).collect();
         v.frame_queue = (0..40).map(|page| RenderRequest { page, scale: 1.0, tag: 1000, ..Default::default() }).collect();
         let queue = v.prepare_render_queue(&info, 1.0);
         let pages: Vec<usize> = queue.iter().map(|r| r.page).collect();
-        assert_eq!(pages, (0..10).collect::<Vec<_>>(), "every on-screen page, and no prefetch past the allowance");
+        assert_eq!(pages, (0..25).collect::<Vec<_>>(), "every on-screen page, and no prefetch past the allowance");
         v.last_queue = queue.clone();
         for req in &queue {
             assert!(v.receive_result(&ctx, solid_result(*req, 2000, 2000)) > 0, "on-screen page {} uploaded", req.page);
         }
-        assert_eq!(v.pages.len(), 10, "none evicted another on-screen page");
+        assert_eq!(v.pages.len(), 25, "none evicted another on-screen page");
         // A 5K viewport needs more 1024-pixel tiles than the tile allowance holds.
         v.frame_queue = (0..40)
             .map(|x| RenderRequest { page: 0, scale: 1.0, tag: 1000, tile: Some(Tile { x: x * TILE, y: 0, w: 1024, h: 1024 }), ..Default::default() })
             .collect();
         assert_eq!(v.prepare_render_queue(&info, 1.0).len(), 40);
+    }
+
+    /// A tile panned out of view (or of an earlier zoom) stays cached while the tile allowance
+    /// has room, so panning back shows it without rendering; past the allowance the tile wanted
+    /// longest ago goes first.
+    #[test]
+    fn tiles_panned_away_from_stay_until_the_allowance_needs_room() {
+        let ctx = egui::Context::default();
+        let mut info = thumbnail_info(1);
+        info.pages[0].width = 20000.0;
+        info.pages[0].height = 20000.0;
+        let mut v = DocView::new(DocId(1), &info, ViewDefaults::default());
+        v.frame_visible = [0].into();
+        let tile = |x: u32, tag: u64| RenderRequest {
+            page: 0,
+            scale: 1.0,
+            tag,
+            tile: Some(Tile { x: x * 2048, y: 0, w: 2048, h: 2048 }),
+            ..Default::default()
+        };
+        // Tiles 0..=9 at one zoom, then 10..=19 at another, each on screen one frame at a time:
+        // 16 MiB each, 320 MiB in all against a 256 MiB allowance.
+        let mut shown = Vec::new();
+        for (x, tag) in (0..10).map(|x| (x, 1000)).chain((10..20).map(|x| (x, 2000))) {
+            v.frame_queue = vec![tile(x, tag)];
+            let queue = v.prepare_render_queue(&info, 1.0);
+            assert_eq!(queue.len(), 1, "tile {x} is new");
+            v.last_queue = queue.clone();
+            assert!(v.receive_result(&ctx, solid_result(queue[0], 2048, 2048)) > 0);
+            shown.push((x, tag));
+        }
+        v.frame_queue = vec![tile(19, 2000)];
+        assert!(v.prepare_render_queue(&info, 1.0).is_empty(), "the tile on screen is drawn");
+        let kept: Vec<(u32, u64)> = shown.iter().copied().filter(|&(x, tag)| v.tiles.contains_key(&(0, tag, x * 2048, 0))).collect();
+        assert_eq!(kept, shown[4..].to_vec(), "the sixteen most recently wanted tiles stay, of both zooms");
+        // Panning back to a kept tile needs no render.
+        v.frame_queue = vec![tile(12, 2000)];
+        assert!(v.prepare_render_queue(&info, 1.0).is_empty(), "a tile panned back to is still cached");
+    }
+
+    /// Tiles just outside the view are prefetch: queued after every on-screen tile and taken only
+    /// within the tile allowance, never at the expense of what is on screen.
+    #[test]
+    fn prefetched_tiles_follow_the_allowance() {
+        let mut info = thumbnail_info(1);
+        info.pages[0].width = 40000.0;
+        info.pages[0].height = 2048.0;
+        let mut v = DocView::new(DocId(1), &info, ViewDefaults::default());
+        v.frame_visible = [0].into();
+        let tile =
+            |x: u32| RenderRequest { page: 0, scale: 1.0, tag: 1000, tile: Some(Tile { x: x * 2048, y: 0, w: 2048, h: 2048 }), ..Default::default() };
+        // Twenty on-screen tiles (320 MiB, past the allowance), then a prefetched one.
+        v.frame_prefetch = [(0, 1000, 20 * 2048, 0)].into();
+        v.frame_queue = (0..21).map(tile).collect();
+        let queue = v.prepare_render_queue(&info, 1.0);
+        assert_eq!(queue.len(), 20, "every on-screen tile, and no prefetch past the allowance");
+        assert!(queue.iter().all(|r| r.tile.is_some_and(|t| t.x < 20 * 2048)));
+        // With room, the prefetched tile is queued.
+        v.frame_queue = (0..2).map(tile).chain([tile(20)]).collect();
+        assert_eq!(v.prepare_render_queue(&info, 1.0).len(), 3);
     }
 
     #[test]
