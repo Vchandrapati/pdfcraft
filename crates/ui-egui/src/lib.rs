@@ -1363,6 +1363,18 @@ impl PdfCraftApp {
         };
     }
 
+    /// Move the document tab at `from` to position `to`. The document in front stays in front.
+    /// Out-of-range positions do nothing.
+    pub fn move_tab(&mut self, from: usize, to: usize) {
+        if from == to || from >= self.views.len() || to >= self.views.len() {
+            return;
+        }
+        let active = self.active_ids().map(|(_, id)| id);
+        let view = self.views.remove(from);
+        self.views.insert(to, view);
+        self.active = active.and_then(|id| self.views.iter().position(|v| v.id == id));
+    }
+
     pub fn active_ids(&self) -> Option<(usize, DocId)> {
         self.active.and_then(|i| self.views.get(i).map(|v| (i, v.id)))
     }

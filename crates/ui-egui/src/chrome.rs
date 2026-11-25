@@ -99,6 +99,8 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                     }
                     let out = area.show(ui, |ui| {
                         ui.horizontal_centered(|ui| {
+                            let mut rects: Vec<(usize, Rect)> = Vec::with_capacity(app.views.len());
+                            let mut dragged = None;
                             for i in 0..app.views.len() {
                                 let Some(doc) = app.session.get(app.views[i].id) else { continue };
                                 let (name, dirty) = (doc.display_name(), doc.dirty);
@@ -118,10 +120,15 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                                     cap,
                                     tab_h,
                                 );
-                                if changed && app.active == Some(i) && !app.combine_showing() {
+                                rects.push((i, response.rect));
+                                // Dragging a tab moves it among the others (the empty part of the
+                                // strip moves the window) and shows its document, as a click does.
+                                if response.dragged_by(egui::PointerButton::Primary) {
+                                    dragged = Some(i);
+                                } else if changed && app.active == Some(i) && !app.combine_showing() {
                                     response.scroll_to_me(Some(Align::Center));
                                 }
-                                if response.clicked() {
+                                if response.clicked() || response.drag_started_by(egui::PointerButton::Primary) {
                                     app.active = Some(i);
                                 }
                                 // Another tab's menu pairs it with the active document.
@@ -136,6 +143,19 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                             }
                             if let Some(i) = close {
                                 app.request_close_tab(i);
+                            } else if let Some((from, p)) = dragged.zip(ui.input(|i| i.pointer.interact_pos())) {
+                                // Past either end of a scrolled strip, bring more tabs into view.
+                                let strip = ui.clip_rect();
+                                let past = (strip.left() - p.x).max(0.0) - (p.x - strip.right()).max(0.0);
+                                if past != 0.0 {
+                                    ui.scroll_with_delta_animation(vec2(past.clamp(-12.0, 12.0), 0.0), egui::style::ScrollAnimation::none());
+                                    ui.ctx().request_repaint();
+                                }
+                                let to = tab_drop_index(&rects, from, p.x.max(strip.left()).min(strip.right()));
+                                if to != from {
+                                    app.move_tab(from, to);
+                                    ui.ctx().request_repaint();
+                                }
                             }
                             if app.combine_tab.open {
                                 // After the document tabs; its index can't clash with theirs.
@@ -251,6 +271,14 @@ fn tabs_overflow(natural: &[f32], budget: f32, gap: f32, min: f32) -> bool {
     narrowest + gap * natural.len().saturating_sub(1) as f32 > budget
 }
 
+/// Where the tab at `from`, dragged with the pointer at `x`, belongs: past each neighbour whose
+/// middle the pointer has crossed (so tabs of different widths don't swap back and forth).
+fn tab_drop_index(rects: &[(usize, Rect)], from: usize, x: f32) -> usize {
+    let right = rects.iter().filter(|(i, r)| *i > from && x > r.center().x).map(|(i, _)| *i).max();
+    let left = rects.iter().filter(|(i, r)| *i < from && x < r.center().x).map(|(i, _)| *i).min();
+    right.or(left).unwrap_or(from)
+}
+
 /// A scroll arrow beside the tabs; dimmed (and inert) at its end. True when clicked.
 fn arrow(ui: &mut egui::Ui, icon: &str, enabled: bool, tip: &str) -> bool {
     ui.add_enabled_ui(enabled, |ui| icons::button(ui, icon, TAB_ARROW, false, tip)).inner.clicked()
@@ -323,30 +351,40 @@ fn tab(
     let height = ui.available_height().max(height);
     let (rect, _) = ui.allocate_exact_size(vec2(width, height), Sense::hover());
     let a11y = if dirty { format!("{name} (edited)") } else { name.to_string() };
-    let resp = craft_ui::tabs::Tab::new(id, &a11y, active).focus_stroke(Stroke::new(1.0, t.accent)).show_at(ui, rect, |ui, resp| {
-        let press = theme::Press::track(ui, resp);
-        let bg = if active {
-            press.fill(t.chrome, t.chrome.lerp_to_gamma(t.hover, 0.65), t.hover)
-        } else {
-            press.fill(Color32::TRANSPARENT, t.hover, t.pressed)
-        };
-        if bg.a() > 0 {
-            ui.painter().rect_filled(rect, CornerRadius { nw: 7, ne: 7, sw: 0, se: 0 }, bg);
-        }
-        // The active tab's accent edge, so the open document reads at a glance in the dark strip.
-        if active {
-            let edge = Rect::from_min_max(rect.min + vec2(7.0, 0.0), egui::pos2(rect.max.x - 7.0, rect.min.y + 2.0));
-            ui.painter().rect_filled(edge, CornerRadius::same(1), t.accent);
-        }
-        icons::paint(
-            ui,
-            Rect::from_min_size(rect.min + vec2(6.0, (height - 16.0) / 2.0), vec2(16.0, 16.0)),
-            icon,
-            15.0,
-            if active { t.accent } else { t.text_muted },
-        );
-        ui.painter().text(rect.min + vec2(28.0, rect.height() / 2.0), Align2::LEFT_CENTER, label, font, if active { t.text } else { t.text_muted });
-    });
+    let resp = craft_ui::tabs::Tab::new(id, &a11y, active).sense(Sense::click_and_drag()).focus_stroke(Stroke::new(1.0, t.accent)).show_at(
+        ui,
+        rect,
+        |ui, resp| {
+            let press = theme::Press::track(ui, resp);
+            let bg = if active {
+                press.fill(t.chrome, t.chrome.lerp_to_gamma(t.hover, 0.65), t.hover)
+            } else {
+                press.fill(Color32::TRANSPARENT, t.hover, t.pressed)
+            };
+            if bg.a() > 0 {
+                ui.painter().rect_filled(rect, CornerRadius { nw: 7, ne: 7, sw: 0, se: 0 }, bg);
+            }
+            // The active tab's accent edge, so the open document reads at a glance in the dark strip.
+            if active {
+                let edge = Rect::from_min_max(rect.min + vec2(7.0, 0.0), egui::pos2(rect.max.x - 7.0, rect.min.y + 2.0));
+                ui.painter().rect_filled(edge, CornerRadius::same(1), t.accent);
+            }
+            icons::paint(
+                ui,
+                Rect::from_min_size(rect.min + vec2(6.0, (height - 16.0) / 2.0), vec2(16.0, 16.0)),
+                icon,
+                15.0,
+                if active { t.accent } else { t.text_muted },
+            );
+            ui.painter().text(
+                rect.min + vec2(28.0, rect.height() / 2.0),
+                Align2::LEFT_CENTER,
+                label,
+                font,
+                if active { t.text } else { t.text_muted },
+            );
+        },
+    );
     let x_rect = Rect::from_center_size(rect.right_center() - vec2(16.0, 0.0), vec2(20.0, 20.0));
     let x = ui.interact(x_rect, id.with("close"), Sense::click());
     let x_press = theme::Press::track(ui, &x);

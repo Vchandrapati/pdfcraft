@@ -81,3 +81,53 @@ fn view_side_by_side_steps_aside_for_a_third_tab_and_returns() {
     h.run_steps(6);
     assert_eq!(h.state().split_view_indices(), Some([1, 0]), "returning to either document shows both again");
 }
+
+/// Dragging a document tab reorders the tabs and never moves the window; dragging the empty part
+/// of the strip still moves it.
+#[test]
+fn dragging_a_tab_reorders_it_instead_of_moving_the_window() {
+    let mut h = two_documents();
+    let names = |h: &Harness<'static, PdfCraftApp>| -> Vec<String> {
+        h.state().views.iter().filter_map(|v| h.state().session.get(v.id).map(|d| d.name.clone())).collect()
+    };
+    // A primary drag from `a` to `b`, and whether any frame of it asked to move the window.
+    let drag = |h: &mut Harness<'static, PdfCraftApp>, a: egui::Pos2, b: egui::Pos2| {
+        let button = |pos, pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
+        let mut events = vec![egui::Event::PointerMoved(a), button(a, true)];
+        events.extend((1..=10).map(|k| egui::Event::PointerMoved(a + (b - a) * (k as f32 / 10.0))));
+        events.push(button(b, false));
+        let mut moved_window = false;
+        for e in events {
+            h.event(e);
+            h.step();
+            moved_window |= h.output().viewport_output.values().any(|v| v.commands.contains(&egui::ViewportCommand::StartDrag));
+        }
+        h.run_steps(3);
+        moved_window
+    };
+    let tab = |h: &Harness<'static, PdfCraftApp>, name: &str| h.get_by_role_and_label(egui::accesskit::Role::Tab, name).rect();
+    assert_eq!(names(&h), ["a.pdf", "b.pdf"]);
+    let front = h.state().active_ids().map(|(_, id)| id);
+
+    let (a, b) = (tab(&h, "a.pdf"), tab(&h, "b.pdf"));
+    assert!(!drag(&mut h, b.center(), egui::pos2(a.left() + 10.0, a.center().y)), "the window stays put");
+    assert_eq!(names(&h), ["b.pdf", "a.pdf"]);
+    assert_eq!(h.state().active_ids().map(|(_, id)| id), front, "the dragged document stays in front");
+
+    // A tab behind comes to the front as it is dragged.
+    let (a, b) = (tab(&h, "a.pdf"), tab(&h, "b.pdf"));
+    assert!(!drag(&mut h, a.center(), egui::pos2(b.left() + 10.0, b.center().y)));
+    assert_eq!(names(&h), ["a.pdf", "b.pdf"]);
+    assert_eq!(h.state().active, Some(0), "a.pdf was brought to the front");
+
+    // Dragged past the last tab, it stops at the end.
+    let a = tab(&h, "a.pdf");
+    assert!(!drag(&mut h, a.center(), egui::pos2(1000.0, a.center().y)));
+    assert_eq!(names(&h), ["b.pdf", "a.pdf"]);
+
+    let empty = egui::pos2(1000.0, a.center().y);
+    assert!(drag(&mut h, empty, empty + egui::vec2(60.0, 0.0)), "the empty strip moves the window");
+
+    h.state_mut().move_tab(0, 9);
+    assert_eq!(names(&h), ["b.pdf", "a.pdf"], "out of range does nothing");
+}
