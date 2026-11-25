@@ -101,6 +101,7 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                         ui.horizontal_centered(|ui| {
                             let mut rects: Vec<(usize, Rect)> = Vec::with_capacity(app.views.len());
                             let mut dragged = None;
+                            let mut duplicate = None;
                             for i in 0..app.views.len() {
                                 let Some(doc) = app.session.get(app.views[i].id) else { continue };
                                 let (name, dirty) = (doc.display_name(), doc.dirty);
@@ -131,18 +132,22 @@ pub fn tab_strip(app: &mut PdfCraftApp, ui: &mut egui::Ui) {
                                 if response.clicked() || response.drag_started_by(egui::PointerButton::Primary) {
                                     app.active = Some(i);
                                 }
-                                // Another tab's menu pairs it with the active document.
-                                if app.active.is_some_and(|a| a != i) {
-                                    response.context_menu(|ui| {
-                                        if ui.button(tl!("View side by side")).clicked() {
-                                            app.start_split(i);
-                                            ui.close();
-                                        }
-                                    });
-                                }
+                                response.context_menu(|ui| {
+                                    if ui.button(tl!("Duplicate tab")).clicked() {
+                                        duplicate = Some(i);
+                                        ui.close();
+                                    }
+                                    // Another tab's menu pairs it with the active document.
+                                    if app.active.is_some_and(|a| a != i) && ui.button(tl!("View side by side")).clicked() {
+                                        app.start_split(i);
+                                        ui.close();
+                                    }
+                                });
                             }
                             if let Some(i) = close {
                                 app.request_close_tab(i);
+                            } else if let Some(i) = duplicate {
+                                app.duplicate_tab(i);
                             } else if let Some((from, p)) = dragged.zip(ui.input(|i| i.pointer.interact_pos())) {
                                 // Past either end of a scrolled strip, bring more tabs into view.
                                 let strip = ui.clip_rect();

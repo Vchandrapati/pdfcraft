@@ -2245,6 +2245,8 @@ scroll speed	Fast	Γρήγορη
 	Other colour…	Άλλο χρώμα…
 	Recent colours	Πρόσφατα χρώματα
 	View side by side	Προβολή δίπλα-δίπλα
+	Duplicate tab	Διπλασιασμός καρτέλας
+	Couldn't duplicate the tab: {e}	Δεν ήταν δυνατός ο διπλασιασμός της καρτέλας: {e}
 	Close side by side	Κλείσιμο προβολής δίπλα-δίπλα
 	Open a second document to view side by side	Ανοίξτε δεύτερο έγγραφο για προβολή δίπλα-δίπλα
 	Preferences ({key})	Προτιμήσεις ({key})

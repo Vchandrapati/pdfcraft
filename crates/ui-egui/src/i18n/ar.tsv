@@ -2266,6 +2266,8 @@ scroll speed	Fast	سريعة
 	Other colour…	لون آخر…
 	Recent colours	الألوان الأخيرة
 	View side by side	عرض جنبًا إلى جنب
+	Duplicate tab	تكرار علامة التبويب
+	Couldn't duplicate the tab: {e}	تعذّر تكرار علامة التبويب: {e}
 	Close side by side	إغلاق العرض جنبًا إلى جنب
 	Open a second document to view side by side	افتح مستندًا ثانيًا للعرض جنبًا إلى جنب
 	Preferences ({key})	التفضيلات ({key})

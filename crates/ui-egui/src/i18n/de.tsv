@@ -2247,6 +2247,8 @@ scroll speed	Fast	Schnell
 	Other colour…	Andere Farbe…
 	Recent colours	Zuletzt verwendete Farben
 	View side by side	Nebeneinander anzeigen
+	Duplicate tab	Tab duplizieren
+	Couldn't duplicate the tab: {e}	Der Tab konnte nicht dupliziert werden: {e}
 	Close side by side	Nebeneinander-Ansicht schließen
 	Open a second document to view side by side	Öffnen Sie ein zweites Dokument, um beide nebeneinander anzuzeigen
 	Preferences ({key})	Einstellungen ({key})

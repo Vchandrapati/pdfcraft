@@ -2212,6 +2212,8 @@ scroll speed	Fast	快
 	Other colour…	其他颜色…
 	Recent colours	最近使用的颜色
 	View side by side	并排查看
+	Duplicate tab	复制标签页
+	Couldn't duplicate the tab: {e}	无法复制标签页：{e}
 	Close side by side	关闭并排查看
 	Open a second document to view side by side	打开第二个文档以并排查看
 	Preferences ({key})	首选项 ({key})

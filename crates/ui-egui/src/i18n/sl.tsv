@@ -2235,6 +2235,8 @@ scroll speed	Fast	Hitro
 	Other colour…	Druga barva…
 	Recent colours	Nedavne barve
 	View side by side	Prikaži drugo ob drugem
+	Duplicate tab	Podvoji zavihek
+	Couldn't duplicate the tab: {e}	Zavihka ni bilo mogoče podvojiti: {e}
 	Close side by side	Zapri prikaz drugo ob drugem
 	Open a second document to view side by side	Odprite drug dokument za prikaz drugo ob drugem
 	Preferences ({key})	Nastavitve ({key})

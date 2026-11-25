@@ -2247,6 +2247,8 @@ scroll speed	Fast	Rapide
 	Other colour…	Autre couleur…
 	Recent colours	Couleurs récentes
 	View side by side	Afficher côte à côte
+	Duplicate tab	Dupliquer l'onglet
+	Couldn't duplicate the tab: {e}	Impossible de dupliquer l'onglet : {e}
 	Close side by side	Fermer l’affichage côte à côte
 	Open a second document to view side by side	Ouvrez un second document pour les afficher côte à côte
 	Preferences ({key})	Préférences ({key})

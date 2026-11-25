@@ -2260,6 +2260,8 @@ scroll speed	Fast	Rápida
 	Other colour…	Outra cor…
 	Recent colours	Cores recentes
 	View side by side	Ver lado a lado
+	Duplicate tab	Duplicar guia
+	Couldn't duplicate the tab: {e}	Não foi possível duplicar a guia: {e}
 	Close side by side	Fechar visualização lado a lado
 	Open a second document to view side by side	Abra um segundo documento para ver lado a lado
 	Preferences ({key})	Preferências ({key})

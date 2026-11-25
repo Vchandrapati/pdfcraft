@@ -2245,6 +2245,8 @@ scroll speed	Fast	Gyors
 	Other colour…	Egyéb szín…
 	Recent colours	Legutóbbi színek
 	View side by side	Megjelenítés egymás mellett
+	Duplicate tab	Lap megkettőzése
+	Couldn't duplicate the tab: {e}	A lapot nem sikerült megkettőzni: {e}
 	Close side by side	Egymás melletti nézet bezárása
 	Open a second document to view side by side	Nyisson meg egy második dokumentumot az egymás melletti megjelenítéshez
 	Preferences ({key})	Beállítások ({key})

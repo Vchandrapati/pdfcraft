@@ -2235,6 +2235,8 @@ scroll speed	Fast	Hızlı
 	Other colour…	Diğer renk…
 	Recent colours	Son kullanılan renkler
 	View side by side	Yan yana görüntüle
+	Duplicate tab	Sekmeyi çoğalt
+	Couldn't duplicate the tab: {e}	Sekme çoğaltılamadı: {e}
 	Close side by side	Yan yana görünümü kapat
 	Open a second document to view side by side	Yan yana görüntülemek için ikinci bir belge açın
 	Preferences ({key})	Tercihler ({key})

@@ -131,3 +131,31 @@ fn dragging_a_tab_reorders_it_instead_of_moving_the_window() {
     h.state_mut().move_tab(0, 9);
     assert_eq!(names(&h), ["b.pdf", "a.pdf"], "out of range does nothing");
 }
+
+/// A tab's right-click menu duplicates it: an independent copy beside it, at the same page, that
+/// can't overwrite the original's file.
+#[test]
+fn a_tabs_menu_duplicates_it() {
+    let mut h = two_documents();
+    h.state_mut().views[0].go_to_page(3);
+    h.get_by_role_and_label(egui::accesskit::Role::Tab, "a.pdf").click_secondary();
+    h.run_steps(4);
+    h.get_by_label("Duplicate tab").click();
+    h.run_steps(6);
+    let app = h.state();
+    let names: Vec<_> = app.views.iter().filter_map(|v| app.session.get(v.id).map(|d| d.name.clone())).collect();
+    assert_eq!(names, ["a.pdf", "a (copy).pdf", "b.pdf"], "beside the original");
+    assert_eq!(app.active, Some(1), "the copy is in front");
+    assert_eq!(app.views[1].current, 3, "at the same page");
+    let copy = app.session.get(app.views[1].id).unwrap();
+    assert!(copy.path.is_none() && copy.dirty, "never saved: closing it asks");
+
+    // The document in front has the menu too, and a copy of it edits on its own.
+    let id = h.state().views[1].id;
+    h.state_mut().apply_edit(pdfcraft_engine::Edit::DeletePages { pages: vec![0] });
+    h.run_steps(3);
+    let pages = |h: &Harness<'static, PdfCraftApp>, i: usize| h.state().session.get(h.state().views[i].id).unwrap().info.pages.len();
+    assert_eq!((h.state().views[1].id, pages(&h, 0), pages(&h, 1)), (id, 6, 5));
+    assert!(h.state_mut().execute("file.duplicate_tab"));
+    assert_eq!((h.state().active, pages(&h, 2)), (Some(2), 5), "unsaved edits come along");
+}

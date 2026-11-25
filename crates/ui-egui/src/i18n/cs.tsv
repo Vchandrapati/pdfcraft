@@ -2318,6 +2318,8 @@ scroll speed	Fast	Rychlá
 	Other colour…	Jiná barva…
 	Recent colours	Nedávné barvy
 	View side by side	Zobrazit vedle sebe
+	Duplicate tab	Duplikovat kartu
+	Couldn't duplicate the tab: {e}	Kartu nelze duplikovat: {e}
 	Close side by side	Zavřít zobrazení vedle sebe
 	Open a second document to view side by side	Otevřete druhý dokument pro zobrazení vedle sebe
 	Preferences ({key})	Předvolby ({key})

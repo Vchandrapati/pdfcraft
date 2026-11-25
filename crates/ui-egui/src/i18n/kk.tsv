@@ -2237,6 +2237,8 @@ scroll speed	Fast	Жылдам
 	Other colour…	Басқа түс…
 	Recent colours	Соңғы түстер
 	View side by side	Қатар көрсету
+	Duplicate tab	Қойындының көшірмесін жасау
+	Couldn't duplicate the tab: {e}	Қойындының көшірмесін жасау мүмкін болмады: {e}
 	Close side by side	Қатар көрсетуді жабу
 	Open a second document to view side by side	Қатар көрсету үшін екінші құжатты ашыңыз
 	Preferences ({key})	Параметрлер ({key})

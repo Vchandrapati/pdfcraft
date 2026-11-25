@@ -2154,6 +2154,8 @@ scroll speed	Fast	快
 	Other colour…	其他顏色…
 	Recent colours	最近使用的顏色
 	View side by side	並排檢視
+	Duplicate tab	複製分頁
+	Couldn't duplicate the tab: {e}	無法複製分頁：{e}
 	Close side by side	關閉並排檢視
 	Open a second document to view side by side	開啟第二份文件以並排檢視
 	Preferences ({key})	偏好設定 ({key})

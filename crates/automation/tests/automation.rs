@@ -5195,3 +5195,19 @@ fn private_crops_with_nested_state_resize_save_reopen_through_tools() {
         assert_eq!(ok(&mut a, "page_images", json!({"doc":doc,"page":1})), original);
     }
 }
+
+/// A duplicate holds the unsaved edits, has no path of its own and leaves the original alone.
+#[test]
+fn doc_duplicate_copies_the_document_as_it_is_now() {
+    let mut a = Automation::new();
+    let doc = ok(&mut a, "doc_create", json!({ "from": "blank", "pages": 2 }))["doc"].as_u64().unwrap();
+    ok(&mut a, "comment_add", json!({ "doc": doc, "page": 1, "type": "note", "at": [20, 20], "contents": "ok" }));
+    let copy = ok(&mut a, "doc_duplicate", json!({ "doc": doc }));
+    let id = copy["doc"].as_u64().unwrap();
+    assert_ne!(id, doc);
+    let comments = |a: &mut Automation, d: u64| ok(a, "comment_list", json!({ "doc": d }))["comments"].as_array().map(Vec::len);
+    assert_eq!(comments(&mut a, id), Some(1), "unsaved edits come along");
+    ok(&mut a, "comment_add", json!({ "doc": id, "page": 1, "type": "note", "at": [60, 60], "contents": "copy only" }));
+    assert_eq!((comments(&mut a, doc), comments(&mut a, id)), (Some(1), Some(2)), "the two are independent");
+    assert!(a.call("doc_duplicate", &json!({ "doc": 999 })).is_err());
+}

@@ -168,6 +168,11 @@ impl PdfCraftApp {
             "file.save_as" => {
                 self.save_active(SaveTarget::As);
             }
+            "file.duplicate_tab" => {
+                if let Some(i) = active {
+                    self.duplicate_tab(i);
+                }
+            }
             "file.close" => {
                 if let Some(i) = active {
                     self.request_close_tab(i);

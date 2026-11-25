@@ -2246,6 +2246,8 @@ scroll speed	Fast	速い
 	Other colour…	その他の色…
 	Recent colours	最近使った色
 	View side by side	左右に並べて表示
+	Duplicate tab	タブを複製
+	Couldn't duplicate the tab: {e}	タブを複製できませんでした: {e}
 	Close side by side	並べて表示を閉じる
 	Open a second document to view side by side	並べて表示するには2つ目の文書を開いてください
 	Preferences ({key})	環境設定 ({key})

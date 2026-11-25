@@ -2268,6 +2268,8 @@ scroll speed	Fast	Швидка
 	Other colour…	Інший колір…
 	Recent colours	Нещодавні кольори
 	View side by side	Переглянути поруч
+	Duplicate tab	Дублювати вкладку
+	Couldn't duplicate the tab: {e}	Не вдалося дублювати вкладку: {e}
 	Close side by side	Закрити перегляд поруч
 	Open a second document to view side by side	Відкрийте другий документ, щоб переглядати їх поруч
 	Preferences ({key})	Налаштування ({key})

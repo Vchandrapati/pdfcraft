@@ -2933,6 +2933,29 @@ impl Session {
         self.now().map(|t| pdfcraft_cos::pdf_date(t + offset)).as_deref().and_then(parse_ymd).unwrap_or((1970, 1, 1))
     }
 
+    /// Open a copy of a document as it is now, unsaved edits included, as a new document named
+    /// "<name> (copy)". The copy has no path, so saving it asks where and never overwrites the
+    /// original, and it counts as unsaved when its content exists in no file (the original has
+    /// unsaved edits or was never saved). Its undo history starts empty.
+    pub fn duplicate(&mut self, id: DocId) -> Result<DocId, String> {
+        let doc = self.get(id).ok_or("no such document")?;
+        let stem = match doc.name.len().checked_sub(4).and_then(|at| doc.name.split_at_checked(at)) {
+            Some((stem, ext)) if ext.eq_ignore_ascii_case(".pdf") => stem,
+            _ => doc.name.as_str(),
+        };
+        let name = format!("{stem} (copy).pdf");
+        let unsaved = doc.dirty || doc.path.is_none();
+        let password = doc.editor.as_ref().and_then(|e| e.keys.reopen.clone()).or_else(|| doc.password.clone());
+        let bytes = doc.bytes.clone();
+        let new = self.open(name, None, bytes, password.as_deref()).map_err(|e| e.to_string())?;
+        if unsaved && let Some(d) = self.docs.iter_mut().find(|d| d.id == new) {
+            d.dirty = true;
+            // Unsaved work with no edit yet still needs its first recovery snapshot.
+            d.generation += 1;
+        }
+        Ok(new)
+    }
+
     /// Open a document from bytes. Rendering starts lazily when pages are requested.
     ///
     /// `password` is tried as either the user or owner password when the file is encrypted.

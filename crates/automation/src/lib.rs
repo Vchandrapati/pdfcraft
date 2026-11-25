@@ -660,6 +660,11 @@ impl Automation {
                     .collect();
                 json!({ "categories": rows })
             }
+            "doc_duplicate" => {
+                let id = self.doc(&a)?.id;
+                let new = self.session.duplicate(id).map_err(failed)?;
+                summary(self.session.get(new).ok_or_else(|| failed("the document vanished"))?)
+            }
             "doc_open_revision" => {
                 let id = self.doc(&a)?.id;
                 let n = usize::try_from(a.opt_int("revision")?.ok_or_else(|| ToolError::InvalidArgs("revision is required".into()))?).unwrap_or(0);

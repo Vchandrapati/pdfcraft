@@ -2193,6 +2193,8 @@ scroll speed	Fast	Высокая
 	Other colour…	Другой цвет…
 	Recent colours	Недавние цвета
 	View side by side	Показать рядом
+	Duplicate tab	Дублировать вкладку
+	Couldn't duplicate the tab: {e}	Не удалось дублировать вкладку: {e}
 	Close side by side	Закрыть просмотр рядом
 	Open a second document to view side by side	Откройте второй документ, чтобы просматривать их рядом
 	Preferences ({key})	Настройки ({key})

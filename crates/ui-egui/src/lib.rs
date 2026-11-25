@@ -1363,6 +1363,36 @@ impl PdfCraftApp {
         };
     }
 
+    /// Open a copy of the document in tab `index` in a new tab beside it, at the same page and
+    /// zoom, and show it. See [`Session::duplicate`].
+    pub fn duplicate_tab(&mut self, index: usize) {
+        let Some(id) = self.views.get(index).map(|v| v.id) else { return };
+        // What's typed in a field is part of the document.
+        if !self.commit_typing_in(id) {
+            return;
+        }
+        let copy = self.session.duplicate(id);
+        let new = match copy {
+            Ok(new) => new,
+            Err(e) => {
+                self.notify_fmt("Couldn't duplicate the tab: {e}", &[("e", &e)]);
+                return;
+            }
+        };
+        let Some(doc) = self.session.get(new) else { return };
+        let mut view = DocView::new(new, &doc.info, self.view_defaults);
+        let Some(at) = self.views.iter().position(|v| v.id == id) else { return };
+        if let Some(from) = self.views.get(at) {
+            (view.layout, view.continuous, view.cover, view.rotation) = (from.layout, from.continuous, from.cover, from.rotation);
+            view.set_zoom(from.zoom);
+            view.fit = from.fit;
+            view.go_to_page(from.current);
+        }
+        self.views.insert(at + 1, view);
+        self.active = Some(at + 1);
+        self.combine_tab.focused = false;
+    }
+
     /// Move the document tab at `from` to position `to`. The document in front stays in front.
     /// Out-of-range positions do nothing.
     pub fn move_tab(&mut self, from: usize, to: usize) {

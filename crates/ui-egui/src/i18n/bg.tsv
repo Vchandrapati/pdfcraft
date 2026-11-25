@@ -2209,6 +2209,8 @@ scroll speed	Fast	Висока
 	Other colour…	Друг цвят…
 	Recent colours	Последни цветове
 	View side by side	Преглед един до друг
+	Duplicate tab	Дублиране на раздела
+	Couldn't duplicate the tab: {e}	Неуспешно дублиране на раздела: {e}
 	Close side by side	Затвори изгледа един до друг
 	Open a second document to view side by side	Отворете втори документ, за да ги прегледате един до друг
 	Preferences ({key})	Настройки ({key})

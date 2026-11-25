@@ -2162,6 +2162,8 @@ scroll speed	Fast	వేగంగా
 	Other colour…	ఇతర రంగు…
 	Recent colours	ఇటీవలి రంగులు
 	View side by side	పక్కపక్కనే చూడండి
+	Duplicate tab	ట్యాబ్‌ను నకలు చేయండి
+	Couldn't duplicate the tab: {e}	ట్యాబ్‌ను నకలు చేయడం సాధ్యం కాలేదు: {e}
 	Close side by side	పక్కపక్కనే వీక్షణను మూసివేయండి
 	Open a second document to view side by side	పక్కపక్కనే చూడటానికి రెండవ పత్రాన్ని తెరవండి
 	Preferences ({key})	ప్రాధాన్యతలు ({key})
